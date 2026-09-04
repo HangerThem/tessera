@@ -1,9 +1,11 @@
+import type { Card } from '../types/Card.type'
+
 import state from '../state'
 import { CardItem } from './CardItem'
 
-export function CardList(container: HTMLElement) {
+export function CardList(container: HTMLElement, cards: Card[] = state.cards) {
   container.innerHTML = ''
-  state.cards.forEach((card, index) => {
+  cards.forEach((card, index) => {
     const el = CardItem(card, index)
     container.appendChild(el)
   })

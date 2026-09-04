@@ -157,6 +157,11 @@ body {
   letter-spacing: 0.02em;
 }
 
+.search-input {
+  margin-bottom: 16px;
+}
+
+.search-input,
 .form-field input,
 .form-field select {
   width: 100%;
@@ -180,12 +185,12 @@ body {
   padding-right: 36px;
 }
 
+.search-input:focus,
 .form-field input:focus,
 .form-field select:focus {
   border-color: var(--foreground-color);
 }
 
-/* Colour swatches */
 .color-picker-row {
   display: flex;
   gap: 8px;
