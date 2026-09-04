@@ -80,6 +80,15 @@ class State {
     this.listeners.get(channel)!.add(fn)
     return () => this.listeners.get(channel)!.delete(fn)
   }
+
+  public searchCards(query: string): Card[] {
+    const lowerQuery = query.toLowerCase()
+    return this._cards.filter(
+      (card) =>
+        card.name.toLowerCase().includes(lowerQuery) ||
+        card.barcodeValue.toLowerCase().includes(lowerQuery),
+    )
+  }
 }
 
 document.addEventListener('visibilitychange', () => {

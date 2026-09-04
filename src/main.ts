@@ -9,11 +9,18 @@ import state from './state'
 const app = document.querySelector<HTMLDivElement>('#app')!
 app.innerHTML = `
   <h1>Tessera</h1>
+  <input type="text" id="search-input" class="search-input" placeholder="Search cards..." />
   <div class="cards-container"></div>
   <button class="add-card-button" id="add-card-button"><i data-lucide="plus"></i></button>
   <div id="add-card-form"></div>
 `
 
+const searchInput = app.querySelector<HTMLInputElement>('#search-input')!
+searchInput.addEventListener('input', () => {
+  const query = searchInput.value.trim()
+  const filteredCards = state.searchCards(query)
+  CardList(app.querySelector('.cards-container')!, filteredCards)
+})
 const cardsContainer = app.querySelector<HTMLDivElement>('.cards-container')!
 const formEl = app.querySelector<HTMLFormElement>('#add-card-form')!
 const addCardButton = app.querySelector<HTMLButtonElement>('#add-card-button')!
@@ -46,6 +53,17 @@ addCardButton?.addEventListener('click', () => {
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     state.isAddCardFormVisible = false
+  }
+})
+
+history.pushState(null, '', location.href)
+
+window.addEventListener('popstate', (e) => {
+  if (state.activeCardId || state.isAddCardFormVisible) {
+    state.activeCardId = null
+    state.isAddCardFormVisible = false
+    history.pushState(null, '', location.href)
+    console.log('Back navigation intercepted')
   }
 })
 
