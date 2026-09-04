@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;900&display=swap');
 
 :root {
   --background-color: #f5f5f5;
@@ -18,9 +18,9 @@
 *,
 *:before,
 *:after {
- 	box-sizing: border-box;
- 	margin: 0;
- 	padding: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
@@ -48,11 +48,12 @@ body {
   transform: translateY(calc(var(--index) * 48px));
   display: flex;
   flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 -10px 10px -5px rgba(0, 0, 0, 0.25);
 }
 
 .card.expanded {
   z-index: 999;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   position: fixed;
   inset: 0;
   width: 100%;
@@ -60,17 +61,16 @@ body {
   transform: none;
   border-radius: 0;
   max-height: none;
+  gap: 16px;
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
+.card h2 {
+  font-size: 1.2rem;
 }
 
-.card-header h2 {
-  font-size: 1.1rem;
+.card.expanded h2 {
+  font-size: 2rem;
+  margin-inline: auto;
 }
 
 .barcode-value {
@@ -83,13 +83,235 @@ body {
   border-radius: 4px;
 }
 
+/* ── Add Card Form ── */
 #add-card-form {
+  position: fixed;
+  inset: 0;
+  background-color: var(--background-color);
+  color: var(--foreground-color);
+  padding: 24px 20px;
+  display: none;
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+#add-card-form.open {
+  display: flex;
+  animation: slideUp 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.form-header h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.form-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--foreground-color);
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: opacity 150ms;
+}
+
+.form-close-btn:hover {
+  opacity: 1;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.form-field label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  opacity: 0.6;
+  letter-spacing: 0.02em;
+}
+
+.form-field input,
+.form-field select {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
   background-color: var(--card-color);
-  padding: 16px;
-  border-radius: 12px;
+  color: var(--foreground-color);
+  font-family: var(--font-family);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 150ms;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.form-field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.form-field input:focus,
+.form-field select:focus {
+  border-color: var(--foreground-color);
+}
+
+/* Colour swatches */
+.color-picker-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.color-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2.5px solid transparent;
+  cursor: pointer;
+  transition:
+    transform 120ms,
+    border-color 120ms;
+  flex-shrink: 0;
+}
+
+.color-swatch:hover {
+  transform: scale(1.1);
+}
+.color-swatch.active {
+  border-color: var(--foreground-color);
+}
+
+.color-swatch-custom {
+  position: relative;
+  overflow: hidden;
+  background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+  border-color: none;
+}
+
+.color-swatch-custom input[type='color'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  border: none;
+  padding: 0;
+}
+
+.scan-section {
+  margin-bottom: 16px;
+}
+
+#scan-video {
+  width: 100%;
+  border-radius: 8px;
+  margin-top: 10px;
+  display: none;
+}
+
+.scan-error {
+  font-size: 0.82rem;
+  color: #e05858;
+  margin-top: 6px;
+  min-height: 1.1em;
+}
+
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--foreground-color);
+  color: var(--background-color);
+  font-family: var(--font-family);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 150ms;
+}
+
+.btn-primary:hover {
+  opacity: 0.85;
+}
+
+.btn-secondary {
+  width: 100%;
+  padding: 12px;
+  border: 1.5px solid var(--foreground-color);
+  border-radius: 8px;
+  background: none;
+  color: var(--foreground-color);
+  font-family: var(--font-family);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 150ms;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-secondary:hover {
+  background-color: var(--card-color);
+}
+
+.btn-secondary.scanning {
+  border-color: #e05858;
+  color: #e05858;
+}
+
+.add-card-button {
   position: fixed;
   bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: none;
+  right: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--card-color);
+  color: contrast-color(var(--card-color));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }

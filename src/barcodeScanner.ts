@@ -1,66 +1,76 @@
-import { BrowserMultiFormatReader, type IScannerControls } from "@zxing/browser";
-import { BarcodeFormat, DecodeHintType, NotFoundException } from "@zxing/library";
+import { BrowserMultiFormatReader, type IScannerControls } from '@zxing/browser'
+import { DecodeHintType, NotFoundException } from '@zxing/library'
+
+import type { BarcodeFormat } from './enums/barcode'
 
 export interface BarcodeScannerOptions {
-	formats?: BarcodeFormat[]
-	onDetect: (value: string, format: BarcodeFormat) => void
-	onError?: (message: string) => void
+  formats?: BarcodeFormat[]
+  onDetect: (value: string, format: BarcodeFormat) => void
+  onError?: (message: string) => void
 }
 
 export class BarcodeScanner {
-	private video: HTMLVideoElement;
-	private controls: IScannerControls | null = null;
-	private options: BarcodeScannerOptions;
+  private video: HTMLVideoElement
+  private controls: IScannerControls | null = null
+  private options: BarcodeScannerOptions
 
-	constructor(video: HTMLVideoElement, options: BarcodeScannerOptions) {
-		this.video = video;
-		this.options = options;
-	}
+  constructor(video: HTMLVideoElement, options: BarcodeScannerOptions) {
+    this.video = video
+    this.options = options
 
-	get isScanning(): boolean {
-		return this.controls !== null;
-	}
+    // Suppress ZXing warnings about multiple formats
+    console.warn = (message?: any, ...optionalParams: any[]) => {
+      if (typeof message === 'string' && message.startsWith('MultiFormatReader')) {
+        return
+      }
+      console.log(message, ...optionalParams)
+    }
+  }
 
-	async start(): Promise<void> {
-		if (this.controls) return
+  get isScanning(): boolean {
+    return this.controls !== null
+  }
 
-		const hints = new Map()
-		hints.set(DecodeHintType.TRY_HARDER, true)
-		if (this.options.formats?.length) {
-			hints.set(DecodeHintType.POSSIBLE_FORMATS, this.options.formats)
-		}
+  async start(): Promise<void> {
+    if (this.controls) return
 
-		const reader = new BrowserMultiFormatReader(hints);
+    const hints = new Map()
+    hints.set(DecodeHintType.TRY_HARDER, true)
+    if (this.options.formats?.length) {
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, this.options.formats)
+    }
 
-		try {
-			this.controls = await reader.decodeFromConstraints(
-				{
-					video: {
-						facingMode: "environment",
-					}
-				},
-				this.video,
-				(result, err) => {
-					if (result) {
-						this.options.onDetect(result.getText(), result.getBarcodeFormat())
-						this.stop()
-					}
-					if (err && !(err instanceof NotFoundException)) {
-						console.error(err);
-					}
-				}
-			);
-		} catch (e) {
-			const message =
-				e instanceof DOMException && e.name === "NotAllowedError"
-					? "Camera permission denied."
-					: "Could not access camera.";
-			this.options.onError?.(message);
-		}
-	}
+    const reader = new BrowserMultiFormatReader(hints)
 
-	stop(): void {
-		this.controls?.stop();
-		this.controls = null;
-	}
+    try {
+      this.controls = await reader.decodeFromConstraints(
+        {
+          video: {
+            facingMode: 'environment',
+          },
+        },
+        this.video,
+        (result, err) => {
+          if (result) {
+            this.options.onDetect(result.getText(), result.getBarcodeFormat() as BarcodeFormat)
+            this.stop()
+          }
+          if (err && !(err instanceof NotFoundException)) {
+            console.error(err)
+          }
+        },
+      )
+    } catch (e) {
+      const message =
+        e instanceof DOMException && e.name === 'NotAllowedError'
+          ? 'Camera permission denied.'
+          : 'Could not access camera.'
+      this.options.onError?.(message)
+    }
+  }
+
+  stop(): void {
+    this.controls?.stop()
+    this.controls = null
+  }
 }

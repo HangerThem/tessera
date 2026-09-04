@@ -2,14 +2,8 @@
   "compilerOptions": {
     "target": "es2023",
     "module": "esnext",
-    "lib": [
-      "ES2023",
-      "DOM"
-    ],
-    "types": [
-      "vite/client",
-      "vite-plugin-pwa/client"
-    ],
+    "lib": ["ES2023", "DOM"],
+    "types": ["vite/client", "vite-plugin-pwa/client"],
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
     /* Bundler mode */
@@ -21,10 +15,7 @@
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }
