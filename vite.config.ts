@@ -5,24 +5,34 @@ export default defineConfig({
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      includeAssets: [
+        'favicon.ico',
+        'favicon.svg',
+        'apple-touch-icon.png',
+        'web-app-manifest-192x192.png',
+        'web-app-manifest-512x512.png',
+      ],
       manifest: {
         name: 'Tessera',
         short_name: 'Tessera',
-        description: 'Dead simple app for managing your membership and loyalty cards.',
-        theme_color: '#0f0f0f',
-        background_color: '#0f0f0f',
-        display: 'standalone',
+        description: 'Dead simple barcode card manager',
         icons: [
-          { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
           {
-            src: 'icon-512-maskable.png',
+            src: '/web-app-manifest-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+          {
+            src: '/web-app-manifest-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
           },
         ],
+        theme_color: '#0f0f0f',
+        background_color: '#0f0f0f',
+        display: 'standalone',
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
