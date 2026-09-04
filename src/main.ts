@@ -58,7 +58,7 @@ document.addEventListener('keydown', (event) => {
 
 history.pushState(null, '', location.href)
 
-window.addEventListener('popstate', (e) => {
+window.addEventListener('popstate', () => {
   if (state.activeCardId || state.isAddCardFormVisible) {
     state.activeCardId = null
     state.isAddCardFormVisible = false
