@@ -5,7 +5,7 @@
     "node": true,
     "es2024": true
   },
-  "plugins": ["typescript", "unicorn", "import", "oxc"],
+  "plugins": ["typescript", "react", "unicorn", "import", "oxc"],
   "categories": {
     "correctness": "error",
     "suspicious": "warn",
@@ -24,7 +24,8 @@
       {
         "ignoreReadBeforeAssign": true
       }
-    ]
+    ],
+    "react/react-in-jsx-scope": "allow"
   },
-  "ignorePatterns": ["node_modules/**", "dist/**", "public/**", "**.html"]
+  "ignorePatterns": ["node_modules/**", "dist/**", "public/**"]
 }

@@ -13,11 +13,14 @@
     "format:write": "oxfmt --write"
   },
   "dependencies": {
+    "@preact/preset-vite": "^2.10.6",
+    "@preact/signals": "^2.11.2",
     "@zxing/browser": "^0.2.1",
     "@zxing/library": "^0.23.0",
     "bwip-js": "^4.11.4",
     "idb-keyval": "^6.3.0",
-    "lucide": "^1.41.0"
+    "lucide-preact": "^1.41.0",
+    "preact": "^10.29.8"
   },
   "devDependencies": {
     "oxfmt": "^0.66.0",
