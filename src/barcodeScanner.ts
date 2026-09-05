@@ -19,11 +19,12 @@ export class BarcodeScanner {
     this.options = options
 
     // Suppress ZXing warnings about multiple formats
-    console.warn = (message?: any, ...optionalParams: any[]) => {
-      if (typeof message === 'string' && message.startsWith('MultiFormatReader')) {
+    // oxlint-disable-next-line typescript/no-explicit-any
+    console.warn = (...args: any[]) => {
+      if (typeof args[0] === 'string' && args[0].startsWith('MultiFormatReader')) {
         return
       }
-      console.log(message, ...optionalParams)
+      console.log(...args)
     }
   }
 
