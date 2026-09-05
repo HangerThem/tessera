@@ -48,12 +48,12 @@ export function AddCardForm(
       <select id="card-barcode-format" required>
         <option value="" disabled selected>Select format</option>
         ${Object.keys(BarcodeFormat)
-          .filter((key) => isNaN(Number(key)))
-          .map(
-            (key) =>
-              `<option value="${BarcodeFormat[key as keyof typeof BarcodeFormat]}">${formatToLabel(key)}</option>`,
-          )
-          .join('')}
+      .filter((key) => isNaN(Number(key)))
+      .map(
+        (key) =>
+          `<option value="${BarcodeFormat[key as keyof typeof BarcodeFormat]}">${formatToLabel(key)}</option>`,
+      )
+      .join('')}
       </select>
     </div>
 
@@ -61,9 +61,9 @@ export function AddCardForm(
       <label>Card colour</label>
       <div class="color-picker-row" id="color-picker-row">
         ${PRESET_COLORS.map(
-          (c, i) =>
-            `<button type="button" class="color-swatch${i === 0 ? ' active' : ''}" data-color="${c}" style="background-color:${c};" aria-label="${c}"></button>`,
-        ).join('')}
+        (c, i) =>
+          `<button type="button" class="color-swatch${i === 0 ? ' active' : ''}" data-color="${c}" style="background-color:${c};" aria-label="${c}"></button>`,
+      ).join('')}
         <button type="button" class="color-swatch color-swatch-custom" aria-label="Custom colour">
           <input type="color" id="card-color-custom" tabindex="-1" />
         </button>
@@ -157,6 +157,7 @@ export function AddCardForm(
       barcodeFormat: Number(barcodeFormatSelect.value) as BarcodeFormat,
       color: selectedColor,
     })
+    onClose?.()
 
     scanner.stop()
     container
@@ -168,9 +169,9 @@ export function AddCardForm(
       .forEach((s, i) => s.classList.toggle('active', i === 0))
   })
 
-  ;[nameInput, barcodeValueInput, barcodeFormatSelect].forEach((el) => {
-    el.addEventListener('input', () => (el.style.borderColor = ''))
-  })
+    ;[nameInput, barcodeValueInput, barcodeFormatSelect].forEach((el) => {
+      el.addEventListener('input', () => (el.style.borderColor = ''))
+    })
 
   closeButton.addEventListener('click', () => {
     scanner.stop()
