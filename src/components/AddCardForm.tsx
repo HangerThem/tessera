@@ -1,9 +1,10 @@
+import { ScanBarcode, X } from 'lucide-preact'
 import { useEffect, useRef, useState } from 'preact/hooks'
 
 import type { Card } from '../types/Card.type'
+
 import { BarcodeScanner } from '../barcodeScanner'
-import { BarcodeFormat } from '../enums/barcode'
-import { ScanBarcode, X } from 'lucide-preact'
+import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 
 const PRESET_COLORS = [
   '#3b82f6',
@@ -29,6 +30,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
   const [name, setName] = useState('')
   const [barcodeValue, setBarcodeValue] = useState('')
   const [barcodeFormat, setBarcodeFormat] = useState<string>('')
+  const [qrCodeFormat, setQRCodeFormat] = useState<string>('')
   const [color, setColor] = useState(PRESET_COLORS[0])
   const [isScanning, setIsScanning] = useState(false)
   const [scanError, setScanError] = useState('')
@@ -94,6 +96,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
       name,
       barcodeValue,
       barcodeFormat: Number(barcodeFormat) as BarcodeFormat,
+      qrCodeFormat: qrCodeFormat ? (Number(qrCodeFormat) as QRCodeFormat) : undefined,
       isFavorite: false,
       color,
     })
@@ -156,11 +159,33 @@ export function AddCardForm({ onSave, onClose }: Props) {
           }}
           style={errors.barcodeFormat ? 'border-color: #e05858' : ''}
         >
-          <option value="" disabled>Select format</option>
+          <option value="" disabled>
+            Select format
+          </option>
           {Object.keys(BarcodeFormat)
             .filter((key) => isNaN(Number(key)))
             .map((key) => (
               <option value={BarcodeFormat[key as keyof typeof BarcodeFormat]} key={key}>
+                {formatToLabel(key)}
+              </option>
+            ))}
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="card-qr-code-format">QR code format (optional)</label>
+        <select
+          id="card-qr-code-format"
+          value={qrCodeFormat}
+          onChange={(e) => setQRCodeFormat((e.target as HTMLSelectElement).value)}
+        >
+          <option value="" disabled>
+            Select format
+          </option>
+          {Object.keys(QRCodeFormat)
+            .filter((key) => isNaN(Number(key)))
+            .map((key) => (
+              <option value={QRCodeFormat[key as keyof typeof QRCodeFormat]} key={key}>
                 {formatToLabel(key)}
               </option>
             ))}

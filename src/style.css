@@ -84,32 +84,19 @@ body {
   text-align: center;
 }
 
-.barcode-canvas {
-  border-radius: 4px;
-  max-height: 120px;
-}
-
 .barcode-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
+  max-height: 120px;
 }
 
-.barcode-wrapper--rotated {
-  flex: 1;
+.barcode-canvas {
+  border-radius: 4px;
   width: 100%;
-  position: relative;
-}
-
-.barcode-wrapper--rotated .barcode-canvas {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(90deg);
-  width: var(--rotated-size, 60vh);
-  height: auto;
-  max-width: none;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 /* ── Add Card Form ── */

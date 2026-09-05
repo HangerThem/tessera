@@ -1,8 +1,9 @@
+import { Star, Trash2 } from 'lucide-preact'
+
 import type { Card } from '../types/Card.type'
 
 import { activeCardId, favoriteCard, deleteCards } from '../store'
 import { RenderBarcode } from './BarcodeCanvas'
-import { Star, Trash2 } from 'lucide-preact'
 
 interface Props {
   card: Card
@@ -29,7 +30,7 @@ export function CardItem({ card, index }: Props) {
       <div class="card-header">
         <h2>{card.name}</h2>
       </div>
-      <RenderBarcode value={card.barcodeValue} format={card.barcodeFormat} rotate={isActive} />
+      <RenderBarcode value={card.barcodeValue} format={card.barcodeFormat} />
       <p class="barcode-value">{card.barcodeValue}</p>
       <div class="card-actions">
         <button

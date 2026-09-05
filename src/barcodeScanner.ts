@@ -1,7 +1,7 @@
 import { BrowserMultiFormatReader, type IScannerControls } from '@zxing/browser'
 import { DecodeHintType, NotFoundException } from '@zxing/library'
 
-import type { BarcodeFormat } from './enums/barcode'
+import type { BarcodeFormat } from './enums/codeFormats'
 
 export interface BarcodeScannerOptions {
   formats?: BarcodeFormat[]

@@ -1,4 +1,4 @@
-import { BarcodeFormat } from '../enums/barcode'
+import { BarcodeFormat } from '../enums/codeFormats'
 
 export const mapZXingFormatToBWIPJS = (format: BarcodeFormat): string => {
   switch (format) {
