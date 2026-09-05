@@ -10,7 +10,7 @@
   "arrowParens": "always",
   "endOfLine": "lf",
   "insertFinalNewline": true,
-  "ignorePatterns": ["node_modules/**", "dist/**", "public/**", "**.html"],
+  "ignorePatterns": ["node_modules/**", "public/**", "dist/**"],
   "sortImports": {
     "groups": [
       "type-import",

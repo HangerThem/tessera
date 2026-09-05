@@ -64,6 +64,11 @@ body {
   gap: 16px;
 }
 
+.card.expanded .barcode-wrapper--rotated {
+  flex: 1;
+  min-height: 0; /* prevents flex overflow */
+}
+
 .card h2 {
   font-size: 1.2rem;
 }
@@ -81,6 +86,30 @@ body {
 
 .barcode-canvas {
   border-radius: 4px;
+  max-height: 120px;
+}
+
+.barcode-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.barcode-wrapper--rotated {
+  flex: 1;
+  width: 100%;
+  position: relative;
+}
+
+.barcode-wrapper--rotated .barcode-canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(90deg);
+  width: var(--rotated-size, 60vh);
+  height: auto;
+  max-width: none;
 }
 
 /* ── Add Card Form ── */
