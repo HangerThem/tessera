@@ -155,6 +155,7 @@ export function AddCardForm(
       name: nameInput.value,
       barcodeValue: barcodeValueInput.value,
       barcodeFormat: Number(barcodeFormatSelect.value) as BarcodeFormat,
+      isFavorite: false,
       color: selectedColor,
     })
     onClose?.()

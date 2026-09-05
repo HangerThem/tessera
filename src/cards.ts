@@ -8,15 +8,15 @@ export async function getCards(): Promise<Card[]> {
   return (await get(CARDS_KEY)) ?? []
 }
 
-export async function saveCard(card: Card) {
+export async function saveCard(card: Card): Promise<void> {
   const cards = await getCards()
   await set(CARDS_KEY, [...cards, card])
 }
 
-export async function updateCard(card: Partial<Card> & { id: string }) {
+export async function updateCard(cardId: string, card: Partial<Omit<Card, 'id'>>): Promise<void> {
   await update(CARDS_KEY, (cards: Card[] | undefined) => {
     if (!cards) return [card as Card]
-    return cards.map((c) => (c.id === card.id ? { ...c, ...card } : c))
+    return cards.map((c) => (c.id === cardId ? { ...c, ...card } : c))
   })
 }
 

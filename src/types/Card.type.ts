@@ -5,5 +5,6 @@ export type Card = {
   name: string
   barcodeValue: string
   barcodeFormat: BarcodeFormat
+  isFavorite: boolean
   color?: string
 }
