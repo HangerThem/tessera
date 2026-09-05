@@ -6,9 +6,9 @@ import './sw'
 
 import { useEffect, useState } from 'preact/hooks'
 
+import { AddCardForm } from './components/AddCardForm'
 import { CardList } from './components/CardList'
 import { activeCardId, isAddCardFormVisible, saveCard } from './store'
-import { AddCardForm } from './components/AddCardForm'
 
 function App() {
   const [query, setQuery] = useState('')
