@@ -44,19 +44,8 @@
   }
 }
 
-*,
-*:before,
-*:after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
 body {
-  font-family: var(--font-family);
-  background-color: var(--background-color);
-  color: var(--foreground-color);
-  padding: 12px;
+  @apply min-h-screen font-sans background-background text-foreground p-3;
 }
 
 .cards-container {
