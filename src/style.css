@@ -45,7 +45,7 @@
 }
 
 body {
-  @apply min-h-screen font-sans background-background text-foreground p-3;
+  @apply min-h-screen font-sans bg-background text-foreground p-3;
 }
 
 .cards-container {
