@@ -20,7 +20,9 @@
   --color-surface-raised: var(--color-neutral-100);
 }
 
-@variant dark (&:where(.dark, .dark *)) {
+@custom-variant dark (&:where(.dark, .dark *));
+
+@variant dark {
   --color-background: var(--color-neutral-900);
   --color-foreground: var(--color-neutral-50);
   --color-surface: var(--color-neutral-800);
