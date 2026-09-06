@@ -48,11 +48,6 @@ body {
   @apply min-h-screen font-sans bg-background text-foreground p-3;
 }
 
-.cards-container {
-  position: relative;
-  min-height: 500px;
-}
-
 .card {
   position: absolute;
   width: 100%;
