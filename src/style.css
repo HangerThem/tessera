@@ -55,7 +55,6 @@ body {
   background-color: var(--background-color);
   color: var(--foreground-color);
   padding: 12px;
-  @apply font-sans bg-bacground;
 }
 
 .cards-container {
