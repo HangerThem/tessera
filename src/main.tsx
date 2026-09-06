@@ -3,6 +3,7 @@ import { render } from 'preact'
 
 import './style.css'
 import './sw'
+import "./utils/theme"
 
 import { useEffect, useState } from 'preact/hooks'
 
