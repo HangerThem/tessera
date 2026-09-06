@@ -1,4 +1,5 @@
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
+import { hashString } from './hash'
 import { createPRNG } from './prng'
 
 export const mapZXingFormatToBWIPJS = (format: BarcodeFormat | QRCodeFormat): string => {
@@ -34,7 +35,7 @@ export const mapZXingFormatToBWIPJS = (format: BarcodeFormat | QRCodeFormat): st
 
 type GenerateDecorativeBarsOptions = {
   count: number
-  seed?: number
+  seed?: number | string
 }
 
 type DecorativeBar = {
@@ -51,7 +52,8 @@ type DecorativeBar = {
  * @returns {DecorativeBar[]} An array of decorative bars with specified count, widths, and heights.
  */
 export function generateDecorativeBars({ count, seed }: GenerateDecorativeBarsOptions): DecorativeBar[] {
-  const random = createPRNG(seed)
+  const seedValue = typeof seed === 'string' ? hashString(seed) : seed
+  const random = createPRNG(seedValue)
 
   const widths = [1, 1, 1, 2, 2, 3]
 
