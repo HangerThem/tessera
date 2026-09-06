@@ -30,14 +30,14 @@ Serve the `dist/` folder with any static host (Nginx, Caddy, Coolify, etc.).
 
 ## Tech Stack
 
-| | |
-|---|---|
-| Framework | Preact + Vite |
-| Language | TypeScript |
-| Barcode scanning | ZXing |
-| Barcode rendering | BWIP-JS |
-| Storage | IDB-Keyval (IndexedDB) |
-| Icons | Lucide |
+|                   |                        |
+| ----------------- | ---------------------- |
+| Framework         | Preact + Vite          |
+| Language          | TypeScript             |
+| Barcode scanning  | ZXing                  |
+| Barcode rendering | BWIP-JS                |
+| Storage           | IDB-Keyval (IndexedDB) |
+| Icons             | Lucide                 |
 
 ## License
 
