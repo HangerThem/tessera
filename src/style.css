@@ -191,11 +191,10 @@ body {
   letter-spacing: 0.02em;
 }
 
-.search-input {
-  margin-bottom: 16px;
+.input {
+  @apply w-full p-3 border border-transparent rounded-lg bg-foreground/10 text-foreground font-sans text-sm outline-none transition-colors focus:border-foreground;
 }
 
-.search-input,
 .form-field input,
 .form-field select {
   width: 100%;
@@ -219,7 +218,6 @@ body {
   padding-right: 36px;
 }
 
-.search-input:focus,
 .form-field input:focus,
 .form-field select:focus {
   border-color: var(--foreground-color);
@@ -337,20 +335,4 @@ body {
 .btn-secondary.scanning {
   border-color: #e05858;
   color: #e05858;
-}
-
-.add-card-button {
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: none;
-  background-color: var(--card-color);
-  color: contrast-color(var(--card-color));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
 }
