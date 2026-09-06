@@ -34,7 +34,7 @@ export const mapZXingFormatToBWIPJS = (format: BarcodeFormat | QRCodeFormat): st
 }
 
 type GenerateDecorativeBarsOptions = {
-  count: number
+  count?: number
   seed?: number | string
 }
 
@@ -51,7 +51,7 @@ type DecorativeBar = {
  * @param {GenerateDecorativeBarsOptions} options - Options for generating decorative bars.
  * @returns {DecorativeBar[]} An array of decorative bars with specified count, widths, and heights.
  */
-export function generateDecorativeBars({ count, seed }: GenerateDecorativeBarsOptions): DecorativeBar[] {
+export function generateDecorativeBars({ count = 40, seed }: GenerateDecorativeBarsOptions): DecorativeBar[] {
   const seedValue = typeof seed === 'string' ? hashString(seed) : seed
   const random = createPRNG(seedValue)
 
