@@ -27,36 +27,9 @@ export function CardItem({ card, index }: Props) {
         activeCardId.value = activeCardId.value === card.id ? null : card.id
       }}
     >
-      <div class="card-header">
-        <h2>{card.name}</h2>
-      </div>
+      <h2>{card.name}</h2>
       <RenderBarcode value={card.barcodeValue} format={card.barcodeFormat} />
       <p class="barcode-value">{card.barcodeValue}</p>
-      <div class="card-actions">
-        <button
-          class="card-btn favorite-btn"
-          aria-label="Toggle favorite"
-          aria-pressed={card.isFavorite}
-          onClick={(e) => {
-            e.stopPropagation()
-            favoriteCard(card.id)
-          }}
-        >
-          <Star class={`favorite-icon ${card.isFavorite ? 'active' : ''}`} />
-        </button>
-        {isActive && (
-          <button
-            class="card-btn delete-btn"
-            aria-label="Delete card"
-            onClick={(e) => {
-              e.stopPropagation()
-              deleteCards([card.id])
-            }}
-          >
-            <Trash2 />
-          </button>
-        )}
-      </div>
     </div>
   )
 }
