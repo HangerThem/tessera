@@ -13,7 +13,7 @@ interface Props {
 }
 
 const cardStyles = tv({
-  base: 'absolute w-full max-h-[220px] rounded-xl p-4 cursor-pointer overflow-hidden flex flex-col gap-2 shadow-[0_-10px_10px_-5px_rgba(0,0,0,0.25)] [transform:translateY(calc(var(--index)*48px))]',
+  base: 'absolute w-full max-h-55 rounded-xl p-4 cursor-pointer overflow-hidden flex flex-col gap-2 shadow-[0_-10px_10px_-5px_rgba(0,0,0,0.25)] [transform:translateY(calc(var(--index)*48px))]',
   variants: {
     expanded: {
       true: 'z-[999] fixed inset-0 w-full h-full rounded-none max-h-none gap-4 [transform:none]',
