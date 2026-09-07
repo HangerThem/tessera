@@ -91,12 +91,6 @@ body {
   margin-inline: auto;
 }
 
-.barcode-value {
-  font-size: 0.8rem;
-  margin-top: 0.5rem;
-  text-align: center;
-}
-
 .barcode-wrapper {
   display: flex;
   justify-content: center;
