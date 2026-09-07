@@ -1,9 +1,8 @@
-import { Star, Trash2 } from 'lucide-preact'
 import { tv } from "tailwind-variants"
 
 import type { Card } from '../types/Card.type'
 
-import { activeCardId, favoriteCard, deleteCards } from '../store'
+import { activeCardId } from '../store'
 import { RenderBarcode } from './BarcodeCanvas'
 import { contrastColor } from '../utils/color'
 
