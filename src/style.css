@@ -48,49 +48,6 @@ body {
   @apply min-h-screen font-sans bg-background text-foreground p-3;
 }
 
-.card {
-  position: absolute;
-  width: 100%;
-  max-height: 220px;
-  border-radius: 12px;
-  padding: 16px;
-  cursor: pointer;
-  overflow: hidden;
-  background-color: var(--card-color);
-  color: contrast-color(var(--card-color));
-  transform: translateY(calc(var(--index) * 48px));
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  box-shadow: 0 -10px 10px -5px rgba(0, 0, 0, 0.25);
-}
-
-.card.expanded {
-  z-index: 999;
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  transform: none;
-  border-radius: 0;
-  max-height: none;
-  gap: 16px;
-}
-
-.card.expanded .barcode-wrapper--rotated {
-  flex: 1;
-  min-height: 0; /* prevents flex overflow */
-}
-
-.card h2 {
-  font-size: 1.2rem;
-}
-
-.card.expanded h2 {
-  font-size: 2rem;
-  margin-inline: auto;
-}
-
 .barcode-wrapper {
   display: flex;
   justify-content: center;
