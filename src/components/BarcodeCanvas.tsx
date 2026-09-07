@@ -32,8 +32,8 @@ export function RenderBarcode({ value, format }: RenderBarcodeProps) {
   }, [value, format])
 
   return (
-    <div class="barcode-wrapper">
-      <canvas ref={canvasRef} class="barcode-canvas" />
+    <div className="flex justify-center items-center w-full max-h-30">
+      <canvas ref={canvasRef} className="rounded w-full max-h-full object-contain" />
     </div>
   )
 }
