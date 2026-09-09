@@ -73,72 +73,74 @@ export function AddCardForm({ onSave, onClose }: Props) {
         </button>
       </div>
 
-      <div className="space-y-4 mb-4">
-        <Input
-          label='Card name'
-          type="text"
-          placeholder="e.g. IKEA Family"
-          autocomplete="off"
-          value={name}
-          onInput={(e) => {
-            setName((e.target as HTMLInputElement).value)
-            setErrors((prev) => ({ ...prev, name: false }))
-          }}
-        />
+      {!isScanning && (
+        <div className="space-y-4 mb-4">
+          <Input
+            label='Card name'
+            type="text"
+            placeholder="e.g. IKEA Family"
+            autocomplete="off"
+            value={name}
+            onInput={(e) => {
+              setName((e.target as HTMLInputElement).value)
+              setErrors((prev) => ({ ...prev, name: false }))
+            }}
+          />
 
-        <Input
-          label='Barcode number'
-          type="text"
-          placeholder="e.g. 123456789"
-          autocomplete="off"
-          value={barcodeValue}
-          onInput={(e) => {
-            setBarcodeValue((e.target as HTMLInputElement).value)
-            setErrors((prev) => ({ ...prev, barcodeValue: false }))
-          }}
-        />
+          <Input
+            label='Barcode number'
+            type="text"
+            placeholder="e.g. 123456789"
+            autocomplete="off"
+            value={barcodeValue}
+            onInput={(e) => {
+              setBarcodeValue((e.target as HTMLInputElement).value)
+              setErrors((prev) => ({ ...prev, barcodeValue: false }))
+            }}
+          />
 
-        <Select
-          label='Barcode format'
-          value={barcodeFormat}
-          onChange={(e) => {
-            setBarcodeFormat(Number((e.target as HTMLSelectElement).value) as BarcodeFormat)
-            setErrors((prev) => ({ ...prev, barcodeFormat: false }))
-          }}
-        >
-          <option value="" disabled>
-            Select format
-          </option>
-          {Object.keys(BarcodeFormat)
-            .filter((key) => isNaN(Number(key)))
-            .map((key) => (
-              <option value={BarcodeFormat[key as keyof typeof BarcodeFormat]} key={key}>
-                {formatToLabel(key)}
-              </option>
-            ))}
-        </Select>
+          <Select
+            label='Barcode format'
+            value={barcodeFormat}
+            onChange={(e) => {
+              setBarcodeFormat(Number((e.target as HTMLSelectElement).value) as BarcodeFormat)
+              setErrors((prev) => ({ ...prev, barcodeFormat: false }))
+            }}
+          >
+            <option value="" disabled>
+              Select format
+            </option>
+            {Object.keys(BarcodeFormat)
+              .filter((key) => isNaN(Number(key)))
+              .map((key) => (
+                <option value={BarcodeFormat[key as keyof typeof BarcodeFormat]} key={key}>
+                  {formatToLabel(key)}
+                </option>
+              ))}
+          </Select>
 
-        <Select
-          label='QR code format (optional)'
-          value={qrCodeFormat}
-          onChange={(e) =>
-            setQRCodeFormat(Number((e.target as HTMLSelectElement).value) as QRCodeFormat)
-          }
-        >
-          <option value="" disabled>
-            Select format
-          </option>
-          {Object.keys(QRCodeFormat)
-            .filter((key) => isNaN(Number(key)))
-            .map((key) => (
-              <option value={QRCodeFormat[key as keyof typeof QRCodeFormat]} key={key}>
-                {formatToLabel(key)}
-              </option>
-            ))}
-        </Select>
+          <Select
+            label='QR code format (optional)'
+            value={qrCodeFormat}
+            onChange={(e) =>
+              setQRCodeFormat(Number((e.target as HTMLSelectElement).value) as QRCodeFormat)
+            }
+          >
+            <option value="" disabled>
+              Select format
+            </option>
+            {Object.keys(QRCodeFormat)
+              .filter((key) => isNaN(Number(key)))
+              .map((key) => (
+                <option value={QRCodeFormat[key as keyof typeof QRCodeFormat]} key={key}>
+                  {formatToLabel(key)}
+                </option>
+              ))}
+          </Select>
 
-        <ColorPicker allowCustom value={color} onChange={setColor} />
-      </div>
+          <ColorPicker allowCustom value={color} onChange={setColor} />
+        </div>
+      )}
 
 
       <div class="scan-section">
@@ -159,11 +161,13 @@ export function AddCardForm({ onSave, onClose }: Props) {
         {scanError && <p class="scan-error">{scanError}</p>}
       </div>
 
-      <div class="form-actions">
-        <button type="button" class="btn-primary" onClick={handleSubmit}>
-          Save Card
-        </button>
-      </div>
+      {!isScanning && (
+        <div class="form-actions">
+          <button type="button" class="btn-primary" onClick={handleSubmit}>
+            Save Card
+          </button>
+        </div>
+      )}
     </div>
   )
 }
