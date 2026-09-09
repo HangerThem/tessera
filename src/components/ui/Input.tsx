@@ -5,17 +5,16 @@ const input = tv({
     root: 'flex flex-col',
     label: 'text-sm font-medium',
     field: [
-      'w-full border-[1.5px] border-transparent rounded-[8px]',
-      'bg-[var(--card-color)] text-[var(--foreground-color)]',
-      'font-[var(--font-family)] text-[0.95rem]',
-      'outline-none transition-[border-color] duration-150',
+      'w-full border border-transparent rounded-md',
+      'bg-foreground/5 text-foreground text-sm focus:border-foreground/50',
+      'outline-none transition-colors duration-150',
       'appearance-none',
     ],
   },
   variants: {
     size: {
       small:  { field: 'py-2 px-2.5' },
-      medium: { field: 'py-[11px] px-3' },
+      medium: { field: 'p-3' },
       large:  { field: 'py-3.5 px-4' },
     },
     error: {
