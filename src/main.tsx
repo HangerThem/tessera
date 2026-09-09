@@ -10,6 +10,7 @@ import { useEffect, useState } from 'preact/hooks'
 import { AddCardForm } from './components/AddCardForm'
 import { CardList } from './components/CardList'
 import { activeCardId, isAddCardFormVisible, saveCard } from './store'
+import { Input } from './components/ui/Input'
 
 function App() {
   const [query, setQuery] = useState('')
@@ -40,9 +41,8 @@ function App() {
   return (
     <>
       <h1 className="text-2xl font-bold mb-1">Tessera</h1>
-      <input
+      <Input
         type="text"
-        className="input mb-2"
         placeholder="Search cards..."
         value={query}
         onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
