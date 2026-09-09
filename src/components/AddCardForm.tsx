@@ -30,7 +30,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
   const [name, setName] = useState('')
   const [barcodeValue, setBarcodeValue] = useState('')
   const [barcodeFormat, setBarcodeFormat] = useState<string>('')
-  const [qrCodeFormat, setQRCodeFormat] = useState<string>('')
+  const [qrCodeFormat, setQRCodeFormat] = useState<QRCodeFormat>(QRCodeFormat.QR_CODE)
   const [color, setColor] = useState(PRESET_COLORS[0])
   const [errors, setErrors] = useState<Record<string, boolean>>({})
 
@@ -142,7 +142,9 @@ export function AddCardForm({ onSave, onClose }: Props) {
         <select
           id="card-qr-code-format"
           value={qrCodeFormat}
-          onChange={(e) => setQRCodeFormat((e.target as HTMLSelectElement).value)}
+          onChange={(e) =>
+            setQRCodeFormat(Number((e.target as HTMLSelectElement).value) as QRCodeFormat)
+          }
         >
           <option value="" disabled>
             Select format
