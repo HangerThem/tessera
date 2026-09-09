@@ -3,7 +3,7 @@ import { tv } from 'tailwind-variants'
 const input = tv({
   slots: {
     root: 'flex flex-col',
-    label: 'text-sm font-medium',
+    label: 'text-sm font-medium text-foreground/70',
     field: [
       'w-full border border-transparent rounded-md',
       'bg-foreground/5 text-foreground text-sm focus:border-foreground/50',
