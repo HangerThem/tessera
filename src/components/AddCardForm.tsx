@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from 'framer-motion'
 import { ScanBarcode, X } from 'lucide-preact'
 import { useEffect, useState } from 'preact/hooks'
 
@@ -5,10 +6,11 @@ import type { Card } from '../types/Card.type'
 
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner'
+import { isAddCardFormVisible } from '../store'
+import { Button } from './ui/Button'
+import ColorPicker, { PRESET_COLORS } from './ui/ColorPicker'
 import { Input } from './ui/Input'
 import { Select } from './ui/Select'
-import ColorPicker, { PRESET_COLORS } from './ui/ColorPicker'
-import { Button } from './ui/Button'
 
 function formatToLabel(key: string): string {
   return key.replace(/_/g, ' ').replace(/\w\S*/g, (w) => w[0] + w.slice(1).toLowerCase())
@@ -66,109 +68,113 @@ export function AddCardForm({ onSave, onClose }: Props) {
   }
 
   return (
-    <div id="add-card-form" class="open">
-      <div className="form-header">
-        <h2>New Card</h2>
-        <button type="button" class="form-close-btn" aria-label="Close" onClick={handleClose}>
-          <X />
-        </button>
-      </div>
-
-      {!isScanning && (
-        <div className="space-y-4 mb-4">
-          <Input
-            label='Card name'
-            type="text"
-            placeholder="e.g. IKEA Family"
-            autocomplete="off"
-            value={name}
-            onInput={(e) => {
-              setName((e.target as HTMLInputElement).value)
-              setErrors((prev) => ({ ...prev, name: false }))
-            }}
-          />
-
-          <Input
-            label='Barcode number'
-            type="text"
-            placeholder="e.g. 123456789"
-            autocomplete="off"
-            value={barcodeValue}
-            onInput={(e) => {
-              setBarcodeValue((e.target as HTMLInputElement).value)
-              setErrors((prev) => ({ ...prev, barcodeValue: false }))
-            }}
-          />
-
-          <Select
-            label='Barcode format'
-            value={barcodeFormat}
-            onChange={(e) => {
-              setBarcodeFormat(Number((e.target as HTMLSelectElement).value) as BarcodeFormat)
-              setErrors((prev) => ({ ...prev, barcodeFormat: false }))
-            }}
-          >
-            <option value="" disabled>
-              Select format
-            </option>
-            {Object.keys(BarcodeFormat)
-              .filter((key) => isNaN(Number(key)))
-              .map((key) => (
-                <option value={BarcodeFormat[key as keyof typeof BarcodeFormat]} key={key}>
-                  {formatToLabel(key)}
-                </option>
-              ))}
-          </Select>
-
-          <Select
-            label='QR code format (optional)'
-            value={qrCodeFormat}
-            onChange={(e) =>
-              setQRCodeFormat(Number((e.target as HTMLSelectElement).value) as QRCodeFormat)
-            }
-          >
-            <option value="" disabled>
-              Select format
-            </option>
-            {Object.keys(QRCodeFormat)
-              .filter((key) => isNaN(Number(key)))
-              .map((key) => (
-                <option value={QRCodeFormat[key as keyof typeof QRCodeFormat]} key={key}>
-                  {formatToLabel(key)}
-                </option>
-              ))}
-          </Select>
-
-          <ColorPicker allowCustom value={color} onChange={setColor} />
-        </div>
-      )}
-
-
-      <div class="scan-section">
-        <Button
-          type="button"
-          onClick={toggle}
-          variant='secondary'
+    <AnimatePresence>
+      {isAddCardFormVisible.value && (
+        <motion.div
+          class="inset-0 fixed bg-background backdrop-blur-sm z-50 flex flex-col p-4"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 50 }}
         >
-          <ScanBarcode />
-          {isScanning ? 'Stop Scanning' : 'Scan Barcode'}
-        </Button>
-        <video
-          ref={videoRef}
-          id="scan-video"
-          playsInline
-          style={isScanning ? 'display:block' : 'display:none'}
-        />
-        {scanError && <p class="scan-error">{scanError}</p>}
-      </div>
+          <div className="form-header">
+            <h2>New Card</h2>
+            <button type="button" class="form-close-btn" aria-label="Close" onClick={handleClose}>
+              <X />
+            </button>
+          </div>
 
-      {!isScanning && (
-        <div class="form-actions">
-          <Button type="submit" onClick={handleSubmit}>
-            Save Card
-          </Button>
-        </div>
+          {!isScanning && (
+            <div className="space-y-4 mb-4">
+              <Input
+                label="Card name"
+                type="text"
+                placeholder="e.g. IKEA Family"
+                autocomplete="off"
+                value={name}
+                onInput={(e) => {
+                  setName((e.target as HTMLInputElement).value)
+                  setErrors((prev) => ({ ...prev, name: false }))
+                }}
+              />
+
+              <Input
+                label="Barcode number"
+                type="text"
+                placeholder="e.g. 123456789"
+                autocomplete="off"
+                value={barcodeValue}
+                onInput={(e) => {
+                  setBarcodeValue((e.target as HTMLInputElement).value)
+                  setErrors((prev) => ({ ...prev, barcodeValue: false }))
+                }}
+              />
+
+              <Select
+                label="Barcode format"
+                value={barcodeFormat}
+                onChange={(e) => {
+                  setBarcodeFormat(Number((e.target as HTMLSelectElement).value) as BarcodeFormat)
+                  setErrors((prev) => ({ ...prev, barcodeFormat: false }))
+                }}
+              >
+                <option value="" disabled>
+                  Select format
+                </option>
+                {Object.keys(BarcodeFormat)
+                  .filter((key) => isNaN(Number(key)))
+                  .map((key) => (
+                    <option value={BarcodeFormat[key as keyof typeof BarcodeFormat]} key={key}>
+                      {formatToLabel(key)}
+                    </option>
+                  ))}
+              </Select>
+
+              <Select
+                label="QR code format (optional)"
+                value={qrCodeFormat}
+                onChange={(e) =>
+                  setQRCodeFormat(Number((e.target as HTMLSelectElement).value) as QRCodeFormat)
+                }
+              >
+                <option value="" disabled>
+                  Select format
+                </option>
+                {Object.keys(QRCodeFormat)
+                  .filter((key) => isNaN(Number(key)))
+                  .map((key) => (
+                    <option value={QRCodeFormat[key as keyof typeof QRCodeFormat]} key={key}>
+                      {formatToLabel(key)}
+                    </option>
+                  ))}
+              </Select>
+
+              <ColorPicker allowCustom value={color} onChange={setColor} />
+            </div>
+          )}
+
+          <div class="scan-section">
+            <Button type="button" onClick={toggle} variant="secondary">
+              <ScanBarcode />
+              {isScanning ? 'Stop Scanning' : 'Scan Barcode'}
+            </Button>
+            <video
+              ref={videoRef}
+              id="scan-video"
+              playsInline
+              style={isScanning ? 'display:block' : 'display:none'}
+            />
+            {scanError && <p class="scan-error">{scanError}</p>}
+          </div>
+
+          {!isScanning && (
+            <div class="form-actions">
+              <Button type="submit" onClick={handleSubmit}>
+                Save Card
+              </Button>
+            </div>
+          )}
+        </motion.div>
       )}
-    </div>
+    </AnimatePresence>
   )
 }

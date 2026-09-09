@@ -3,14 +3,14 @@ import { render } from 'preact'
 
 import './style.css'
 import './sw'
-import "./utils/theme"
+import './utils/theme'
 
 import { useEffect, useState } from 'preact/hooks'
 
 import { AddCardForm } from './components/AddCardForm'
 import { CardList } from './components/CardList'
-import { activeCardId, isAddCardFormVisible, saveCard } from './store'
 import { Input } from './components/ui/Input'
+import { activeCardId, isAddCardFormVisible, saveCard } from './store'
 
 function App() {
   const [query, setQuery] = useState('')
@@ -54,12 +54,10 @@ function App() {
       >
         <Plus />
       </button>
-      {isAddCardFormVisible.value === true && (
-        <AddCardForm
-          onSave={async (card) => saveCard(card)}
-          onClose={() => (isAddCardFormVisible.value = false)}
-        />
-      )}
+      <AddCardForm
+        onSave={async (card) => saveCard(card)}
+        onClose={() => (isAddCardFormVisible.value = false)}
+      />
     </>
   )
 }
