@@ -29,7 +29,7 @@ interface Props {
 export function AddCardForm({ onSave, onClose }: Props) {
   const [name, setName] = useState('')
   const [barcodeValue, setBarcodeValue] = useState('')
-  const [barcodeFormat, setBarcodeFormat] = useState<string>('')
+  const [barcodeFormat, setBarcodeFormat] = useState<BarcodeFormat>(BarcodeFormat.CODE_128)
   const [qrCodeFormat, setQRCodeFormat] = useState<QRCodeFormat>(QRCodeFormat.QR_CODE)
   const [color, setColor] = useState(PRESET_COLORS[0])
   const [errors, setErrors] = useState<Record<string, boolean>>({})
@@ -37,7 +37,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
   const { isScanning, scanError, videoRef, toggle, stop } = useBarcodeScanner({
     onDetect: (value, format) => {
       setBarcodeValue(value)
-      setBarcodeFormat(String(format))
+      setBarcodeFormat(Number(format) as BarcodeFormat)
     },
   })
 
@@ -119,7 +119,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
           id="card-barcode-format"
           value={barcodeFormat}
           onChange={(e) => {
-            setBarcodeFormat((e.target as HTMLSelectElement).value)
+            setBarcodeFormat(Number((e.target as HTMLSelectElement).value) as BarcodeFormat)
             setErrors((prev) => ({ ...prev, barcodeFormat: false }))
           }}
           style={errors.barcodeFormat ? 'border-color: #e05858' : ''}
