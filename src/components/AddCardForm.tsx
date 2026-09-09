@@ -8,6 +8,7 @@ import { useBarcodeScanner } from '../hooks/useBarcodeScanner'
 import { Input } from './ui/Input'
 import { Select } from './ui/Select'
 import ColorPicker, { PRESET_COLORS } from './ui/ColorPicker'
+import { Button } from './ui/Button'
 
 function formatToLabel(key: string): string {
   return key.replace(/_/g, ' ').replace(/\w\S*/g, (w) => w[0] + w.slice(1).toLowerCase())
@@ -144,14 +145,14 @@ export function AddCardForm({ onSave, onClose }: Props) {
 
 
       <div class="scan-section">
-        <button
+        <Button
           type="button"
-          class={`btn-secondary ${isScanning ? 'scanning' : ''}`}
           onClick={toggle}
+          variant='secondary'
         >
           <ScanBarcode />
           {isScanning ? 'Stop Scanning' : 'Scan Barcode'}
-        </button>
+        </Button>
         <video
           ref={videoRef}
           id="scan-video"
@@ -163,9 +164,9 @@ export function AddCardForm({ onSave, onClose }: Props) {
 
       {!isScanning && (
         <div class="form-actions">
-          <button type="button" class="btn-primary" onClick={handleSubmit}>
+          <Button type="submit" onClick={handleSubmit}>
             Save Card
-          </button>
+          </Button>
         </div>
       )}
     </div>
