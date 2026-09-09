@@ -7,17 +7,7 @@ import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner'
 import { Input } from './ui/Input'
 import { Select } from './ui/Select'
-
-const PRESET_COLORS = [
-  '#3b82f6',
-  '#10b981',
-  '#f59e0b',
-  '#ef4444',
-  '#8b5cf6',
-  '#ec4899',
-  '#06b6d4',
-  '#84cc16',
-]
+import ColorPicker, { PRESET_COLORS } from './ui/ColorPicker'
 
 function formatToLabel(key: string): string {
   return key.replace(/_/g, ' ').replace(/\w\S*/g, (w) => w[0] + w.slice(1).toLowerCase())
@@ -33,7 +23,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
   const [barcodeValue, setBarcodeValue] = useState('')
   const [barcodeFormat, setBarcodeFormat] = useState<BarcodeFormat>(BarcodeFormat.CODE_128)
   const [qrCodeFormat, setQRCodeFormat] = useState<QRCodeFormat>(QRCodeFormat.QR_CODE)
-  const [color, setColor] = useState(PRESET_COLORS[0])
+  const [color, setColor] = useState<string>(PRESET_COLORS[0])
   const [errors, setErrors] = useState<Record<string, boolean>>({})
 
   const { isScanning, scanError, videoRef, toggle, stop } = useBarcodeScanner({
@@ -146,32 +136,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
           ))}
       </Select>
 
-      <div class="form-field">
-        <label>Card colour</label>
-        <div class="color-picker-row">
-          {PRESET_COLORS.map((c) => (
-            <button
-              key={c}
-              type="button"
-              class={`color-swatch ${color === c ? 'active' : ''}`}
-              style={{ backgroundColor: c }}
-              aria-label={c}
-              onClick={() => setColor(c)}
-            />
-          ))}
-          <button
-            type="button"
-            class={`color-swatch color-swatch-custom ${!PRESET_COLORS.includes(color) ? 'active' : ''}`}
-            aria-label="Custom colour"
-          >
-            <input
-              type="color"
-              tabIndex={-1}
-              onInput={(e) => setColor((e.target as HTMLInputElement).value)}
-            />
-          </button>
-        </div>
-      </div>
+      <ColorPicker allowCustom value={color} onChange={setColor} />
 
       <div class="scan-section">
         <button
