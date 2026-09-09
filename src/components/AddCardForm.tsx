@@ -6,6 +6,7 @@ import type { Card } from '../types/Card.type'
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner'
 import { Input } from './ui/Input'
+import { Select } from './ui/Select'
 
 const PRESET_COLORS = [
   '#3b82f6',
@@ -106,51 +107,44 @@ export function AddCardForm({ onSave, onClose }: Props) {
         }}
       />
 
-      <div class="form-field">
-        <label for="card-barcode-format">Barcode format</label>
-        <select
-          id="card-barcode-format"
-          value={barcodeFormat}
-          onChange={(e) => {
-            setBarcodeFormat(Number((e.target as HTMLSelectElement).value) as BarcodeFormat)
-            setErrors((prev) => ({ ...prev, barcodeFormat: false }))
-          }}
-          style={errors.barcodeFormat ? 'border-color: #e05858' : ''}
-        >
-          <option value="" disabled>
-            Select format
-          </option>
-          {Object.keys(BarcodeFormat)
-            .filter((key) => isNaN(Number(key)))
-            .map((key) => (
-              <option value={BarcodeFormat[key as keyof typeof BarcodeFormat]} key={key}>
-                {formatToLabel(key)}
-              </option>
-            ))}
-        </select>
-      </div>
+      <Select
+        label='Barcode format'
+        value={barcodeFormat}
+        onChange={(e) => {
+          setBarcodeFormat(Number((e.target as HTMLSelectElement).value) as BarcodeFormat)
+          setErrors((prev) => ({ ...prev, barcodeFormat: false }))
+        }}
+      >
+        <option value="" disabled>
+          Select format
+        </option>
+        {Object.keys(BarcodeFormat)
+          .filter((key) => isNaN(Number(key)))
+          .map((key) => (
+            <option value={BarcodeFormat[key as keyof typeof BarcodeFormat]} key={key}>
+              {formatToLabel(key)}
+            </option>
+          ))}
+      </Select>
 
-      <div class="form-field">
-        <label for="card-qr-code-format">QR code format (optional)</label>
-        <select
-          id="card-qr-code-format"
-          value={qrCodeFormat}
-          onChange={(e) =>
-            setQRCodeFormat(Number((e.target as HTMLSelectElement).value) as QRCodeFormat)
-          }
-        >
-          <option value="" disabled>
-            Select format
-          </option>
-          {Object.keys(QRCodeFormat)
-            .filter((key) => isNaN(Number(key)))
-            .map((key) => (
-              <option value={QRCodeFormat[key as keyof typeof QRCodeFormat]} key={key}>
-                {formatToLabel(key)}
-              </option>
-            ))}
-        </select>
-      </div>
+      <Select
+        label='QR code format (optional)'
+        value={qrCodeFormat}
+        onChange={(e) =>
+          setQRCodeFormat(Number((e.target as HTMLSelectElement).value) as QRCodeFormat)
+        }
+      >
+        <option value="" disabled>
+          Select format
+        </option>
+        {Object.keys(QRCodeFormat)
+          .filter((key) => isNaN(Number(key)))
+          .map((key) => (
+            <option value={QRCodeFormat[key as keyof typeof QRCodeFormat]} key={key}>
+              {formatToLabel(key)}
+            </option>
+          ))}
+      </Select>
 
       <div class="form-field">
         <label>Card colour</label>
