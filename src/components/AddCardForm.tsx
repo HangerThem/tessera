@@ -76,9 +76,13 @@ export function AddCardForm({ onSave, onClose }: Props) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 50 }}
         >
-          <div className="form-header">
-            <h2>New Card</h2>
-            <button type="button" class="form-close-btn" aria-label="Close" onClick={handleClose}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">New Card</h2>
+            <button
+              type="button"
+              className="text-foreground/50 hover:text-foreground cursor-pointer transition-colors"
+              onClick={handleClose}
+            >
               <X />
             </button>
           </div>
@@ -152,26 +156,19 @@ export function AddCardForm({ onSave, onClose }: Props) {
             </div>
           )}
 
-          <div class="scan-section">
+          <div className="mb-4 space-y-2">
             <Button type="button" onClick={toggle} variant="secondary">
               <ScanBarcode />
               {isScanning ? 'Stop Scanning' : 'Scan Barcode'}
             </Button>
-            <video
-              ref={videoRef}
-              id="scan-video"
-              playsInline
-              style={isScanning ? 'display:block' : 'display:none'}
-            />
+            {isScanning && <video ref={videoRef} playsInline className="rounded-md" />}
             {scanError && <p class="scan-error">{scanError}</p>}
           </div>
 
           {!isScanning && (
-            <div class="form-actions">
-              <Button type="submit" onClick={handleSubmit}>
-                Save Card
-              </Button>
-            </div>
+            <Button type="submit" onClick={handleSubmit}>
+              Save Card
+            </Button>
           )}
         </motion.div>
       )}
