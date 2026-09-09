@@ -5,6 +5,7 @@ import type { Card } from '../types/Card.type'
 
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner'
+import { Input } from './ui/Input'
 
 const PRESET_COLORS = [
   '#3b82f6',
@@ -81,37 +82,29 @@ export function AddCardForm({ onSave, onClose }: Props) {
         </button>
       </div>
 
-      <div class="form-field">
-        <label for="card-name">Card name</label>
-        <input
-          id="card-name"
-          type="text"
-          placeholder="e.g. IKEA Family"
-          autocomplete="off"
-          value={name}
-          onInput={(e) => {
-            setName((e.target as HTMLInputElement).value)
-            setErrors((prev) => ({ ...prev, name: false }))
-          }}
-          style={errors.name ? 'border-color: #e05858' : ''}
-        />
-      </div>
+      <Input
+        label='Card name'
+        type="text"
+        placeholder="e.g. IKEA Family"
+        autocomplete="off"
+        value={name}
+        onInput={(e) => {
+          setName((e.target as HTMLInputElement).value)
+          setErrors((prev) => ({ ...prev, name: false }))
+        }}
+      />
 
-      <div class="form-field">
-        <label for="card-barcode-value">Barcode number</label>
-        <input
-          id="card-barcode-value"
-          type="text"
-          placeholder="e.g. 123456789"
-          autocomplete="off"
-          value={barcodeValue}
-          onInput={(e) => {
-            setBarcodeValue((e.target as HTMLInputElement).value)
-            setErrors((prev) => ({ ...prev, barcodeValue: false }))
-          }}
-          style={errors.barcodeValue ? 'border-color: #e05858' : ''}
-        />
-      </div>
+      <Input
+        label='Barcode number'
+        type="text"
+        placeholder="e.g. 123456789"
+        autocomplete="off"
+        value={barcodeValue}
+        onInput={(e) => {
+          setBarcodeValue((e.target as HTMLInputElement).value)
+          setErrors((prev) => ({ ...prev, barcodeValue: false }))
+        }}
+      />
 
       <div class="form-field">
         <label for="card-barcode-format">Barcode format</label>
