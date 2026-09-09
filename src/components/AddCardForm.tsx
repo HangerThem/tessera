@@ -1,10 +1,10 @@
 import { ScanBarcode, X } from 'lucide-preact'
-import { useEffect, useRef, useState } from 'preact/hooks'
+import { useEffect, useState } from 'preact/hooks'
 
 import type { Card } from '../types/Card.type'
 
-import { BarcodeScanner } from '../barcodeScanner'
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
+import { useBarcodeScanner } from '../hooks/useBarcodeScanner'
 
 const PRESET_COLORS = [
   '#3b82f6',
@@ -32,55 +32,20 @@ export function AddCardForm({ onSave, onClose }: Props) {
   const [barcodeFormat, setBarcodeFormat] = useState<string>('')
   const [qrCodeFormat, setQRCodeFormat] = useState<string>('')
   const [color, setColor] = useState(PRESET_COLORS[0])
-  const [isScanning, setIsScanning] = useState(false)
-  const [scanError, setScanError] = useState('')
   const [errors, setErrors] = useState<Record<string, boolean>>({})
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const scannerRef = useRef<BarcodeScanner | null>(null)
 
-  const handleScan = async () => {
-    if (!videoRef.current) return
-
-    if (isScanning) {
-      scannerRef.current?.stop()
-      setIsScanning(false)
-      return
-    }
-
-    setScanError('')
-    setIsScanning(true)
-  }
-
-  useEffect(() => {
-    if (!isScanning || !videoRef.current) return
-
-    if (!scannerRef.current) {
-      scannerRef.current = new BarcodeScanner(videoRef.current, {
-        onDetect: (value, format) => {
-          setBarcodeValue(value)
-          setBarcodeFormat(String(format))
-          setIsScanning(false)
-          setScanError('')
-        },
-        onError: (message) => {
-          setScanError(message)
-          setIsScanning(false)
-        },
-      })
-    }
-
-    scannerRef.current.start()
-
-    return () => {
-      scannerRef.current?.stop()
-    }
-  }, [isScanning])
+  const { isScanning, scanError, videoRef, toggle, stop } = useBarcodeScanner({
+    onDetect: (value, format) => {
+      setBarcodeValue(value)
+      setBarcodeFormat(String(format))
+    },
+  })
 
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.muted = true
     }
-  }, [])
+  }, [videoRef])
 
   const handleSubmit = () => {
     const nextErrors = {
@@ -103,7 +68,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
   }
 
   const handleClose = () => {
-    scannerRef.current?.stop()
+    stop()
     onClose()
   }
 
@@ -223,7 +188,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
         <button
           type="button"
           class={`btn-secondary ${isScanning ? 'scanning' : ''}`}
-          onClick={handleScan}
+          onClick={toggle}
         >
           <ScanBarcode />
           {isScanning ? 'Stop Scanning' : 'Scan Barcode'}
