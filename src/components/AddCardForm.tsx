@@ -32,7 +32,11 @@ export function AddCardForm({ onSave, onClose }: Props) {
   const { isScanning, scanError, videoRef, toggle, stop } = useBarcodeScanner({
     onDetect: (value, format) => {
       setBarcodeValue(value)
-      setBarcodeFormat(Number(format) as BarcodeFormat)
+      if (format in BarcodeFormat) {
+        setBarcodeFormat(format as BarcodeFormat)
+      } else if (format in QRCodeFormat) {
+        setQRCodeFormat(format as QRCodeFormat)
+      }
     },
   })
 
@@ -47,6 +51,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
       name: !name,
       barcodeValue: !barcodeValue,
       barcodeFormat: !barcodeFormat,
+      qrCodeFormat: !qrCodeFormat,
     }
     setErrors(nextErrors)
     if (Object.values(nextErrors).some(Boolean)) return
