@@ -3,7 +3,7 @@ import { CardItem } from './CardItem'
 
 export function CardList() {
   return (
-    <div class="cards-container">
+    <div class="relative">
       {cards.value.map((card, index) => (
         <CardItem key={card.id} card={card} index={index} />
       ))}

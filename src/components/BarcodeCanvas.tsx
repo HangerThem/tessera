@@ -1,18 +1,17 @@
 import { toCanvas } from 'bwip-js/browser'
+import { useEffect, useRef } from 'preact/hooks'
+
+import type { BarcodeFormat } from '../enums/codeFormats'
 
 import { mapZXingFormatToBWIPJS } from '../utils/barcode'
-import type { BarcodeFormat } from '../enums/barcode'
-import { useEffect, useRef } from 'preact/hooks'
 
 type RenderBarcodeProps = {
   value: string
   format: BarcodeFormat
-  rotate: boolean
 }
 
-export function RenderBarcode({ value, format, rotate }: RenderBarcodeProps) {
+export function RenderBarcode({ value, format }: RenderBarcodeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const wrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -23,7 +22,7 @@ export function RenderBarcode({ value, format, rotate }: RenderBarcodeProps) {
         bcid: bwipjsFormat,
         text: value,
         scale: 3,
-        height: 8,
+        height: 10,
         backgroundcolor: 'FFFFFF',
         padding: 2,
       })
@@ -32,15 +31,9 @@ export function RenderBarcode({ value, format, rotate }: RenderBarcodeProps) {
     }
   }, [value, format])
 
-  useEffect(() => {
-    if (!rotate || !wrapperRef.current || !canvasRef.current) return
-    const h = wrapperRef.current.getBoundingClientRect().height
-    canvasRef.current.style.width = `${h}px`
-  }, [rotate])
-
   return (
-    <div ref={wrapperRef} class={`barcode-wrapper ${rotate ? 'barcode-wrapper--rotated' : ''}`}>
-      <canvas ref={canvasRef} class="barcode-canvas" />
+    <div className="flex justify-center items-center w-full max-h-30">
+      <canvas ref={canvasRef} className="rounded w-full max-h-full object-contain" />
     </div>
   )
 }

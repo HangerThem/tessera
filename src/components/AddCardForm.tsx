@@ -1,20 +1,14 @@
-import { useEffect, useRef, useState } from 'preact/hooks'
+import { ScanBarcode, X } from 'lucide-preact'
+import { useEffect, useState } from 'preact/hooks'
 
 import type { Card } from '../types/Card.type'
-import { BarcodeScanner } from '../barcodeScanner'
-import { BarcodeFormat } from '../enums/barcode'
-import { ScanBarcode, X } from 'lucide-preact'
 
-const PRESET_COLORS = [
-  '#3b82f6',
-  '#10b981',
-  '#f59e0b',
-  '#ef4444',
-  '#8b5cf6',
-  '#ec4899',
-  '#06b6d4',
-  '#84cc16',
-]
+import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
+import { useBarcodeScanner } from '../hooks/useBarcodeScanner'
+import { Button } from './ui/Button'
+import ColorPicker, { PRESET_COLORS } from './ui/ColorPicker'
+import { Input } from './ui/Input'
+import { Select } from './ui/Select'
 
 function formatToLabel(key: string): string {
   return key.replace(/_/g, ' ').replace(/\w\S*/g, (w) => w[0] + w.slice(1).toLowerCase())
@@ -28,63 +22,34 @@ interface Props {
 export function AddCardForm({ onSave, onClose }: Props) {
   const [name, setName] = useState('')
   const [barcodeValue, setBarcodeValue] = useState('')
-  const [barcodeFormat, setBarcodeFormat] = useState<string>('')
-  const [color, setColor] = useState(PRESET_COLORS[0])
-  const [isScanning, setIsScanning] = useState(false)
-  const [scanError, setScanError] = useState('')
+  const [barcodeFormat, setBarcodeFormat] = useState<BarcodeFormat>(BarcodeFormat.CODE_128)
+  const [qrCodeFormat, setQRCodeFormat] = useState<QRCodeFormat>(QRCodeFormat.QR_CODE)
+  const [color, setColor] = useState<string>(PRESET_COLORS[0])
   const [errors, setErrors] = useState<Record<string, boolean>>({})
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const scannerRef = useRef<BarcodeScanner | null>(null)
 
-  const handleScan = async () => {
-    if (!videoRef.current) return
-
-    if (isScanning) {
-      scannerRef.current?.stop()
-      setIsScanning(false)
-      return
-    }
-
-    setScanError('')
-    setIsScanning(true)
-  }
-
-  useEffect(() => {
-    if (!isScanning || !videoRef.current) return
-
-    if (!scannerRef.current) {
-      scannerRef.current = new BarcodeScanner(videoRef.current, {
-        onDetect: (value, format) => {
-          setBarcodeValue(value)
-          setBarcodeFormat(String(format))
-          setIsScanning(false)
-          setScanError('')
-        },
-        onError: (message) => {
-          setScanError(message)
-          setIsScanning(false)
-        },
-      })
-    }
-
-    scannerRef.current.start()
-
-    return () => {
-      scannerRef.current?.stop()
-    }
-  }, [isScanning])
+  const { isScanning, scanError, videoRef, toggle, stop } = useBarcodeScanner({
+    onDetect: (value, format) => {
+      setBarcodeValue(value)
+      if (format in BarcodeFormat) {
+        setBarcodeFormat(format as BarcodeFormat)
+      } else if (format in QRCodeFormat) {
+        setQRCodeFormat(format as QRCodeFormat)
+      }
+    },
+  })
 
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.muted = true
     }
-  }, [])
+  }, [videoRef])
 
   const handleSubmit = () => {
     const nextErrors = {
       name: !name,
       barcodeValue: !barcodeValue,
       barcodeFormat: !barcodeFormat,
+      qrCodeFormat: !qrCodeFormat,
     }
     setErrors(nextErrors)
     if (Object.values(nextErrors).some(Boolean)) return
@@ -94,129 +59,119 @@ export function AddCardForm({ onSave, onClose }: Props) {
       name,
       barcodeValue,
       barcodeFormat: Number(barcodeFormat) as BarcodeFormat,
+      qrCodeFormat: qrCodeFormat ? (Number(qrCodeFormat) as QRCodeFormat) : undefined,
       isFavorite: false,
       color,
     })
   }
 
   const handleClose = () => {
-    scannerRef.current?.stop()
+    stop()
     onClose()
   }
 
   return (
-    <div id="add-card-form" class="open">
-      <div class="form-header">
-        <h2>New Card</h2>
-        <button type="button" class="form-close-btn" aria-label="Close" onClick={handleClose}>
+    <div
+      class="inset-0 fixed bg-background backdrop-blur-sm z-50 flex flex-col p-4 animate-in fade-in slide-in-from-bottom-8 duration-200"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold">New Card</h2>
+        <button
+          type="button"
+          className="text-foreground/50 hover:text-foreground cursor-pointer transition-colors"
+          onClick={handleClose}
+        >
           <X />
         </button>
       </div>
 
-      <div class="form-field">
-        <label for="card-name">Card name</label>
-        <input
-          id="card-name"
-          type="text"
-          placeholder="e.g. IKEA Family"
-          autocomplete="off"
-          value={name}
-          onInput={(e) => {
-            setName((e.target as HTMLInputElement).value)
-            setErrors((prev) => ({ ...prev, name: false }))
-          }}
-          style={errors.name ? 'border-color: #e05858' : ''}
-        />
-      </div>
+      {!isScanning && (
+        <div className="space-y-4 mb-4">
+          <Input
+            label="Card name"
+            type="text"
+            placeholder="e.g. IKEA Family"
+            autocomplete="off"
+            value={name}
+            onInput={(e) => {
+              setName((e.target as HTMLInputElement).value)
+              setErrors((prev) => ({ ...prev, name: false }))
+            }}
+            error={errors.name ? 'Please enter a card name' : undefined}
+          />
 
-      <div class="form-field">
-        <label for="card-barcode-value">Barcode number</label>
-        <input
-          id="card-barcode-value"
-          type="text"
-          placeholder="e.g. 123456789"
-          autocomplete="off"
-          value={barcodeValue}
-          onInput={(e) => {
-            setBarcodeValue((e.target as HTMLInputElement).value)
-            setErrors((prev) => ({ ...prev, barcodeValue: false }))
-          }}
-          style={errors.barcodeValue ? 'border-color: #e05858' : ''}
-        />
-      </div>
+          <Input
+            label="Barcode number"
+            type="text"
+            placeholder="e.g. 123456789"
+            autocomplete="off"
+            value={barcodeValue}
+            onInput={(e) => {
+              setBarcodeValue((e.target as HTMLInputElement).value)
+              setErrors((prev) => ({ ...prev, barcodeValue: false }))
+            }}
+            error={errors.barcodeValue ? 'Please enter a barcode number' : undefined}
+          />
 
-      <div class="form-field">
-        <label for="card-barcode-format">Barcode format</label>
-        <select
-          id="card-barcode-format"
-          value={barcodeFormat}
-          onChange={(e) => {
-            setBarcodeFormat((e.target as HTMLSelectElement).value)
-            setErrors((prev) => ({ ...prev, barcodeFormat: false }))
-          }}
-          style={errors.barcodeFormat ? 'border-color: #e05858' : ''}
-        >
-          <option value="" disabled>Select format</option>
-          {Object.keys(BarcodeFormat)
-            .filter((key) => isNaN(Number(key)))
-            .map((key) => (
-              <option value={BarcodeFormat[key as keyof typeof BarcodeFormat]} key={key}>
-                {formatToLabel(key)}
-              </option>
-            ))}
-        </select>
-      </div>
-
-      <div class="form-field">
-        <label>Card colour</label>
-        <div class="color-picker-row">
-          {PRESET_COLORS.map((c) => (
-            <button
-              key={c}
-              type="button"
-              class={`color-swatch ${color === c ? 'active' : ''}`}
-              style={{ backgroundColor: c }}
-              aria-label={c}
-              onClick={() => setColor(c)}
-            />
-          ))}
-          <button
-            type="button"
-            class={`color-swatch color-swatch-custom ${!PRESET_COLORS.includes(color) ? 'active' : ''}`}
-            aria-label="Custom colour"
+          <Select
+            label="Barcode format"
+            value={barcodeFormat}
+            onChange={(e) => {
+              setBarcodeFormat(Number((e.target as HTMLSelectElement).value) as BarcodeFormat)
+              setErrors((prev) => ({ ...prev, barcodeFormat: false }))
+            }}
+            error={errors.barcodeFormat ? 'Please select a barcode format' : undefined}
           >
-            <input
-              type="color"
-              tabIndex={-1}
-              onInput={(e) => setColor((e.target as HTMLInputElement).value)}
-            />
-          </button>
-        </div>
-      </div>
+            <option value="" disabled>
+              Select format
+            </option>
+            {Object.keys(BarcodeFormat)
+              .filter((key) => isNaN(Number(key)))
+              .map((key) => (
+                <option value={BarcodeFormat[key as keyof typeof BarcodeFormat]} key={key}>
+                  {formatToLabel(key)}
+                </option>
+              ))}
+          </Select>
 
-      <div class="scan-section">
-        <button
-          type="button"
-          class={`btn-secondary ${isScanning ? 'scanning' : ''}`}
-          onClick={handleScan}
-        >
+          <Select
+            label="QR code format (optional)"
+            value={qrCodeFormat}
+            onChange={(e) =>
+              setQRCodeFormat(Number((e.target as HTMLSelectElement).value) as QRCodeFormat)
+            }
+            error={errors.qrCodeFormat ? 'Please select a QR code format' : undefined}
+          >
+            <option value="" disabled>
+              Select format
+            </option>
+            {Object.keys(QRCodeFormat)
+              .filter((key) => isNaN(Number(key)))
+              .map((key) => (
+                <option value={QRCodeFormat[key as keyof typeof QRCodeFormat]} key={key}>
+                  {formatToLabel(key)}
+                </option>
+              ))}
+          </Select>
+
+          <ColorPicker allowCustom value={color} onChange={setColor} />
+        </div>
+      )}
+
+      <div className="mb-4">
+        <Button type="button" onClick={toggle} variant="secondary">
           <ScanBarcode />
           {isScanning ? 'Stop Scanning' : 'Scan Barcode'}
-        </button>
-        <video
-          ref={videoRef}
-          id="scan-video"
-          playsInline
-          style={isScanning ? 'display:block' : 'display:none'}
-        />
-        {scanError && <p class="scan-error">{scanError}</p>}
+        </Button>
+        {isScanning && <video ref={videoRef} playsInline className="rounded-md mt-2" />}
+        {scanError && <p className="text-red-500 text-xs mt-1">{scanError}</p>}
       </div>
 
-      <div class="form-actions">
-        <button type="button" class="btn-primary" onClick={handleSubmit}>
+      {!isScanning && (
+        <Button type="submit" onClick={handleSubmit}>
           Save Card
-        </button>
-      </div>
+        </Button>
+      )}
     </div>
   )
 }
