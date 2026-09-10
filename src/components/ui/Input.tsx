@@ -13,9 +13,9 @@ const input = tv({
   },
   variants: {
     size: {
-      small:  { field: 'py-2 px-2.5' },
+      small: { field: 'py-2 px-2.5' },
       medium: { field: 'p-3' },
-      large:  { field: 'py-3.5 px-4' },
+      large: { field: 'py-3.5 px-4' },
     },
     error: {
       true: { field: 'input-error' },
@@ -43,6 +43,7 @@ export const Input = ({ label, error, size = 'medium', ...props }: InputProps) =
         </label>
       )}
       <input className={field()} {...props} />
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   )
 }
