@@ -1,6 +1,4 @@
-import { BrowserMultiFormatReader, type IScannerControls } from '@zxing/browser'
-import { DecodeHintType, NotFoundException } from '@zxing/library'
-
+import type { IScannerControls } from '@zxing/browser'
 import type { BarcodeFormat } from './enums/codeFormats'
 
 export interface BarcodeScannerOptions {
@@ -18,12 +16,9 @@ export class BarcodeScanner {
     this.video = video
     this.options = options
 
-    // Suppress ZXing warnings about multiple formats
     // oxlint-disable-next-line typescript/no-explicit-any
     console.warn = (...args: any[]) => {
-      if (typeof args[0] === 'string' && args[0].startsWith('MultiFormatReader')) {
-        return
-      }
+      if (typeof args[0] === 'string' && args[0].startsWith('MultiFormatReader')) return
       console.log(...args)
     }
   }
@@ -35,6 +30,11 @@ export class BarcodeScanner {
   async start(): Promise<void> {
     if (this.controls) return
 
+    const [{ BrowserMultiFormatReader }, { DecodeHintType, NotFoundException }] = await Promise.all([
+      import('@zxing/browser'),
+      import('@zxing/library'),
+    ])
+
     const hints = new Map()
     hints.set(DecodeHintType.TRY_HARDER, true)
     if (this.options.formats?.length) {
@@ -45,11 +45,7 @@ export class BarcodeScanner {
 
     try {
       this.controls = await reader.decodeFromConstraints(
-        {
-          video: {
-            facingMode: 'environment',
-          },
-        },
+        { video: { facingMode: 'environment' } },
         this.video,
         (result, err) => {
           if (result) {
