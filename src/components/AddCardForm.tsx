@@ -99,6 +99,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
                   setName((e.target as HTMLInputElement).value)
                   setErrors((prev) => ({ ...prev, name: false }))
                 }}
+                error={errors.name ? 'Please enter a card name' : undefined}
               />
 
               <Input
@@ -111,6 +112,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
                   setBarcodeValue((e.target as HTMLInputElement).value)
                   setErrors((prev) => ({ ...prev, barcodeValue: false }))
                 }}
+                error={errors.barcodeValue ? 'Please enter a barcode number' : undefined}
               />
 
               <Select
@@ -120,6 +122,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
                   setBarcodeFormat(Number((e.target as HTMLSelectElement).value) as BarcodeFormat)
                   setErrors((prev) => ({ ...prev, barcodeFormat: false }))
                 }}
+                error={errors.barcodeFormat ? 'Please select a barcode format' : undefined}
               >
                 <option value="" disabled>
                   Select format
@@ -139,6 +142,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
                 onChange={(e) =>
                   setQRCodeFormat(Number((e.target as HTMLSelectElement).value) as QRCodeFormat)
                 }
+                error={errors.qrCodeFormat ? 'Please select a QR code format' : undefined}
               >
                 <option value="" disabled>
                   Select format
@@ -162,7 +166,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
               {isScanning ? 'Stop Scanning' : 'Scan Barcode'}
             </Button>
             {isScanning && <video ref={videoRef} playsInline className="rounded-md" />}
-            {scanError && <p class="scan-error">{scanError}</p>}
+            {scanError && <p className="text-red-500 text-xs">{scanError}</p>}
           </div>
 
           {!isScanning && (
