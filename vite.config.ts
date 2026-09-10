@@ -4,6 +4,20 @@ import { VitePWA } from 'vite-plugin-pwa'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('@zxing/browser') || id.includes('@zxing/library')) {
+            return 'zxing'
+          }
+          if (id.includes('bwip-js')) {
+            return 'bwip'
+          }
+        },
+      },
+    },
+  },
   plugins: [
     tailwindcss(),
     preact(),
@@ -39,7 +53,17 @@ export default defineConfig({
         display: 'standalone',
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+        globPatterns: ['**/*.{css,html,ico,png,svg,webmanifest}', '**/index-*.js'],
+        runtimeCaching: [
+          {
+            urlPattern: /\/assets\/(zxing|bwip)-.*\.js$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'heavy-chunks',
+              expiration: { maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
+        ],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
