@@ -90,3 +90,31 @@ export function formatBarcodeValue(format: BarcodeFormat | QRCodeFormat, value: 
       return value
   }
 }
+
+const VISIBLE_LENGTH = 4
+
+/** * Encodes a barcode value by masking all but the last four characters.
+ * The masked characters are replaced with asterisks (*).
+ *
+ * @param {BarcodeFormat | QRCodeFormat} format - The format of the barcode.
+ * @param {string} value - The value of the barcode to be encoded.
+ * @returns {string} The encoded barcode value with masked characters.
+ */
+export function encodeBarcodeValue(format: BarcodeFormat | QRCodeFormat, value: string): string {
+  const formattedValue = formatBarcodeValue(format, value)
+  let visibleCount = 0
+
+  return formattedValue
+    .split('')
+    .toReversed()
+    .map((char) => {
+      if (char === ' ') return char
+      if (visibleCount < VISIBLE_LENGTH) {
+        visibleCount += 1
+        return char
+      }
+      return '*'
+    })
+    .toReversed()
+    .join('')
+}
