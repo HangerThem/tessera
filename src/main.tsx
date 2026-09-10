@@ -54,10 +54,12 @@ function App() {
       >
         <Plus />
       </button>
-      <AddCardForm
-        onSave={async (card) => saveCard(card)}
-        onClose={() => (isAddCardFormVisible.value = false)}
-      />
+      {isAddCardFormVisible.value && (
+        <AddCardForm
+          onSave={async (card) => saveCard(card)}
+          onClose={() => (isAddCardFormVisible.value = false)}
+        />
+      )}
     </>
   )
 }
