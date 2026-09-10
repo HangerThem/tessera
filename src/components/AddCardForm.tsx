@@ -160,13 +160,13 @@ export function AddCardForm({ onSave, onClose }: Props) {
             </div>
           )}
 
-          <div className="mb-4 space-y-2">
+          <div className="mb-4">
             <Button type="button" onClick={toggle} variant="secondary">
               <ScanBarcode />
               {isScanning ? 'Stop Scanning' : 'Scan Barcode'}
             </Button>
-            {isScanning && <video ref={videoRef} playsInline className="rounded-md" />}
-            {scanError && <p className="text-red-500 text-xs">{scanError}</p>}
+            {isScanning && <video ref={videoRef} playsInline className="rounded-md mt-2" />}
+            {scanError && <p className="text-red-500 text-xs mt-1">{scanError}</p>}
           </div>
 
           {!isScanning && (
