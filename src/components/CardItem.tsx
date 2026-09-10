@@ -9,11 +9,10 @@ import { contrastColor } from '../utils/color'
 
 interface Props {
   card: Card
-  index: number
 }
 
 const cardStyles = tv({
-  base: 'absolute w-full max-h-55 rounded-xl py-3 px-4 cursor-pointer overflow-hidden flex flex-col gap-8 shadow-[0_-10px_10px_-5px_rgba(0,0,0,0.25)]',
+  base: 'w-full max-h-55 rounded-xl py-3 px-4 cursor-pointer overflow-hidden flex flex-col gap-8 shadow-[0_-10px_10px_-5px_rgba(0,0,0,0.25)]',
   variants: {
     expanded: {
       true: 'z-[999] fixed inset-0 w-full h-full rounded-none max-h-none gap-4 [transform:none]',
@@ -21,9 +20,7 @@ const cardStyles = tv({
   },
 })
 
-const CARD_OFFSET = 48
-
-export function CardItem({ card, index }: Props) {
+export function CardItem({ card }: Props) {
   const isActive = activeCardId.value === card.id
   const decorativeBars = generateDecorativeBars({ count: 20, seed: card.id })
 
@@ -33,9 +30,6 @@ export function CardItem({ card, index }: Props) {
       style={{
         backgroundColor: card.color ?? '#fff',
         color: card.color ? contrastColor(card.color) : '#000',
-        ...(!isActive && {
-          transform: `translateY(${index * CARD_OFFSET}px)`,
-        }),
       }}
       onClick={(e) => {
         if ((e.target as HTMLElement).closest('button')) return

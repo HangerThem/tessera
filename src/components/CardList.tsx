@@ -3,9 +3,9 @@ import { CardItem } from './CardItem'
 
 export function CardList() {
   return (
-    <div class="relative">
-      {cards.value.map((card, index) => (
-        <CardItem key={card.id} card={card} index={index} />
+    <div class="relative space-y-3 mt-2">
+      {cards.value.map((card) => (
+        <CardItem key={card.id} card={card} />
       ))}
     </div>
   )
