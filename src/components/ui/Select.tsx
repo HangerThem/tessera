@@ -43,6 +43,7 @@ export const Select = ({ label, error, size = 'medium', ...props }: SelectProps)
         </label>
       )}
       <select className={field()} {...props} />
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   )
 }
