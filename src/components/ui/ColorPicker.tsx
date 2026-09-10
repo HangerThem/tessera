@@ -20,7 +20,7 @@ export default function ColorPicker({ colors, allowCustom, value, onChange }: Co
 	return (
 		<div className="flex flex-col">
 			<label className="text-sm font-medium text-foreground/70">Card colour</label>
-			<div className="flex flex-wrap gap-2 mt-1">
+			<div className="flex flex-wrap gap-2 mt-1 justify-between">
 				{(colors || PRESET_COLORS).map((c) => (
 					<button
 						key={c}
