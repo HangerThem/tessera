@@ -1,8 +1,7 @@
 import { toCanvas } from 'bwip-js/browser'
-import { useEffect, useRef } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
 
 import { BarcodeFormat, type QRCodeFormat } from '../enums/codeFormats'
-
 import { isQRCodeFormat, mapZXingFormatToBWIPJS } from '../utils/barcode'
 import { tv } from 'tailwind-variants'
 
@@ -11,46 +10,53 @@ type RenderBarcodeProps = {
   format: BarcodeFormat | QRCodeFormat
 }
 
-const styles = tv({
+const { wrapper, canvas } = tv({
   slots: {
-    wrapper: 'flex justify-center items-center w-full',
-    canvas: 'rounded w-full max-h-full',
+    wrapper: 'flex justify-center items-center w-full overflow-hidden',
+    canvas: 'rounded max-w-full max-h-full',
   },
   variants: {
     format: {
       qrcode: {
-        wrapper: 'aspect-square max-h-40 w-auto',
+        wrapper: 'w-40 h-40',
       },
       barcode: {
-        wrapper: 'max-h-30',
-      }
-    }
+        wrapper: 'h-20',
+      },
+    },
   },
-})
+})()
 
 export function RenderBarcode({ value, format }: RenderBarcodeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const { wrapper, canvas } = styles()
   const isQRCode = isQRCodeFormat(format)
 
   useEffect(() => {
-    if (!canvasRef.current) return
+    const el = canvasRef.current
+    if (!el) return
+
     const bwipjsFormat = mapZXingFormatToBWIPJS(format)
+
+    el.width = 0
+    el.height = 0
+
     if (!bwipjsFormat) return
+
     try {
-      toCanvas(canvasRef.current, {
+      toCanvas(el, {
         bcid: bwipjsFormat,
         text: value,
-        scale: 2,
-        height: isQRCode ? 100 : 20,
-        width: 100,
+        scale: 1,
+        height: isQRCode ? 50 : 30,
+        width: isQRCode ? 50 : 200,
         backgroundcolor: 'FFFFFF',
-        padding: 10,
+        padding: 4,
       })
     } catch (err) {
       console.error('Error rendering barcode:', err)
     }
-  }, [value, format, isQRCode])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, format])
 
   return (
     <div className={wrapper({ format: isQRCode ? 'qrcode' : 'barcode' })}>
