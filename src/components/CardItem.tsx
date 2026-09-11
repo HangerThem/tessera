@@ -33,7 +33,7 @@ export function CardItem({ card }: Props) {
         </button>
       </div>
       <div className="flex flex-col gap-2">
-        <p className="text-sm" style={{ color: card.color ? contrastColor(card.color) : '#000' }}>
+        <p className="text-sm font-mono opacity-70" style={{ color: card.color ? contrastColor(card.color) : '#000' }}>
           {encodeBarcodeValue(card.barcodeFormat, card.barcodeValue)}
         </p>
         <div className="flex gap-2 items-end justify-between">
