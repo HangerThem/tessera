@@ -1,5 +1,4 @@
 import { QrCodeIcon, Star } from 'lucide-preact'
-import { tv } from 'tailwind-variants'
 
 import type { Card } from '../types/Card.type'
 
@@ -10,30 +9,19 @@ import { contrastColor } from '../utils/color'
 interface Props {
   card: Card
 }
-
-const cardStyles = tv({
-  base: 'w-full max-h-55 rounded-xl py-3 px-4 cursor-pointer overflow-hidden flex flex-col gap-8 shadow-[0_-10px_10px_-5px_rgba(0,0,0,0.25)]',
-  variants: {
-    expanded: {
-      true: 'z-[999] fixed inset-0 w-full h-full rounded-none max-h-none gap-4 [transform:none]',
-    },
-  },
-})
-
 export function CardItem({ card }: Props) {
-  const isActive = activeCardId.value === card.id
   const decorativeBars = generateDecorativeBars({ count: 20, seed: card.id })
 
   return (
     <div
-      className={cardStyles({ expanded: isActive })}
+      className="'w-full max-h-55 rounded-xl py-3 px-4 cursor-pointer overflow-hidden flex flex-col gap-8 shadow-[0_-10px_10px_-5px_rgba(0,0,0,0.25)]"
       style={{
         backgroundColor: card.color ?? '#fff',
         color: card.color ? contrastColor(card.color) : '#000',
       }}
       onClick={(e) => {
         if ((e.target as HTMLElement).closest('button')) return
-        activeCardId.value = activeCardId.value === card.id ? null : card.id
+        activeCardId.value = card.id
       }}
     >
       <div className="flex items-center justify-between">
