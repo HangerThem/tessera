@@ -27,7 +27,10 @@ function App() {
     }
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') isAddCardFormVisible.value = false
+      if (e.key === 'Escape') {
+        isAddCardFormVisible.value = false
+        activeCardId.value = null
+      }
     }
 
     window.addEventListener('popstate', onPopState)
