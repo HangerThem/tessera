@@ -1,17 +1,37 @@
 import { toCanvas } from 'bwip-js/browser'
 import { useEffect, useRef } from 'preact/hooks'
 
-import type { BarcodeFormat } from '../enums/codeFormats'
+import { BarcodeFormat, type QRCodeFormat } from '../enums/codeFormats'
 
-import { mapZXingFormatToBWIPJS } from '../utils/barcode'
+import { isQRCodeFormat, mapZXingFormatToBWIPJS } from '../utils/barcode'
+import { tv } from 'tailwind-variants'
 
 type RenderBarcodeProps = {
   value: string
-  format: BarcodeFormat
+  format: BarcodeFormat | QRCodeFormat
 }
+
+const styles = tv({
+  slots: {
+    wrapper: 'flex justify-center items-center w-full',
+    canvas: 'rounded w-full max-h-full',
+  },
+  variants: {
+    format: {
+      qrcode: {
+        wrapper: 'aspect-square',
+      },
+      barcode: {
+        wrapper: 'max-h-30',
+      }
+    }
+  },
+})
 
 export function RenderBarcode({ value, format }: RenderBarcodeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const { wrapper, canvas } = styles()
+  const isQRCode = isQRCodeFormat(format)
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -21,19 +41,20 @@ export function RenderBarcode({ value, format }: RenderBarcodeProps) {
       toCanvas(canvasRef.current, {
         bcid: bwipjsFormat,
         text: value,
-        scale: 3,
-        height: 10,
+        scale: 2,
+        height: isQRCode ? 109 : 20,
+        width: 100,
         backgroundcolor: 'FFFFFF',
-        padding: 2,
+        padding: 10,
       })
     } catch (err) {
       console.error('Error rendering barcode:', err)
     }
-  }, [value, format])
+  }, [value, format, isQRCode])
 
   return (
-    <div className="flex justify-center items-center w-full max-h-30">
-      <canvas ref={canvasRef} className="rounded w-full max-h-full object-contain" />
+    <div className={wrapper({ format: isQRCode ? 'qrcode' : 'barcode' })}>
+      <canvas ref={canvasRef} className={canvas()} />
     </div>
   )
 }
