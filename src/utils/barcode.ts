@@ -127,3 +127,12 @@ export function encodeBarcodeValue(format: BarcodeFormat | QRCodeFormat, value: 
     .toReversed()
     .join('')
 }
+
+/** * Formats a barcode format key into a human-readable label.
+ *
+ * @param {string} key - The barcode format key to be formatted.
+ * @returns {string} The formatted label with spaces and capitalized words.
+ */
+export function formatBarcodeFormatToLabel(key: string): string {
+  return key.replace(/_/g, ' ').replace(/\w\S*/g, (w) => w[0] + w.slice(1).toLowerCase())
+}
