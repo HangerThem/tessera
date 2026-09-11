@@ -33,6 +33,15 @@ export const mapZXingFormatToBWIPJS = (format: BarcodeFormat | QRCodeFormat): st
   }
 }
 
+/** * Determines if the given format is a QR code format.
+ *
+ * @param {BarcodeFormat | QRCodeFormat} format - The barcode format to check.
+ * @returns {boolean} True if the format is a QR code format, false otherwise.
+ */
+export function isQRCodeFormat(format: BarcodeFormat | QRCodeFormat): boolean {
+  return Object.values(QRCodeFormat).includes(format as QRCodeFormat)
+}
+
 type GenerateDecorativeBarsOptions = {
   count?: number
   seed?: number | string
