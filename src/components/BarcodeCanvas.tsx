@@ -19,7 +19,7 @@ const styles = tv({
   variants: {
     format: {
       qrcode: {
-        wrapper: 'aspect-square',
+        wrapper: 'aspect-square max-h-40 w-auto',
       },
       barcode: {
         wrapper: 'max-h-30',
@@ -42,7 +42,7 @@ export function RenderBarcode({ value, format }: RenderBarcodeProps) {
         bcid: bwipjsFormat,
         text: value,
         scale: 2,
-        height: isQRCode ? 109 : 20,
+        height: isQRCode ? 100 : 20,
         width: 100,
         backgroundcolor: 'FFFFFF',
         padding: 10,
