@@ -1,39 +1,66 @@
 import { toCanvas } from 'bwip-js/browser'
 import { useEffect, useRef } from 'preact/hooks'
+import { tv } from 'tailwind-variants'
 
-import type { BarcodeFormat } from '../enums/codeFormats'
-
-import { mapZXingFormatToBWIPJS } from '../utils/barcode'
+import { BarcodeFormat, type QRCodeFormat } from '../enums/codeFormats'
+import { isQRCodeFormat, mapZXingFormatToBWIPJS } from '../utils/barcode'
 
 type RenderBarcodeProps = {
   value: string
-  format: BarcodeFormat
+  format: BarcodeFormat | QRCodeFormat
 }
+
+const { wrapper, canvas } = tv({
+  slots: {
+    wrapper: 'flex justify-center items-center w-full overflow-hidden',
+    canvas: 'rounded max-w-full max-h-full',
+  },
+  variants: {
+    format: {
+      qrcode: {
+        wrapper: 'w-40 h-40',
+      },
+      barcode: {
+        wrapper: 'h-20',
+      },
+    },
+  },
+})()
 
 export function RenderBarcode({ value, format }: RenderBarcodeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const isQRCode = isQRCodeFormat(format)
 
   useEffect(() => {
-    if (!canvasRef.current) return
+    const el = canvasRef.current
+    if (!el) return
+
     const bwipjsFormat = mapZXingFormatToBWIPJS(format)
+
+    el.width = 0
+    el.height = 0
+
     if (!bwipjsFormat) return
+
     try {
-      toCanvas(canvasRef.current, {
+      toCanvas(el, {
         bcid: bwipjsFormat,
         text: value,
-        scale: 3,
-        height: 10,
+        scale: 1,
+        height: isQRCode ? 50 : 30,
+        width: isQRCode ? 50 : 200,
         backgroundcolor: 'FFFFFF',
-        padding: 2,
+        padding: 4,
       })
     } catch (err) {
       console.error('Error rendering barcode:', err)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, format])
 
   return (
-    <div className="flex justify-center items-center w-full max-h-30">
-      <canvas ref={canvasRef} className="rounded w-full max-h-full object-contain" />
+    <div className={wrapper({ format: isQRCode ? 'qrcode' : 'barcode' })}>
+      <canvas ref={canvasRef} className={canvas()} />
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import type { IScannerControls } from '@zxing/browser'
+
 import type { BarcodeFormat } from './enums/codeFormats'
 
 export interface BarcodeScannerOptions {
@@ -30,10 +31,9 @@ export class BarcodeScanner {
   async start(): Promise<void> {
     if (this.controls) return
 
-    const [{ BrowserMultiFormatReader }, { DecodeHintType, NotFoundException }] = await Promise.all([
-      import('@zxing/browser'),
-      import('@zxing/library'),
-    ])
+    const [{ BrowserMultiFormatReader }, { DecodeHintType, NotFoundException }] = await Promise.all(
+      [import('@zxing/browser'), import('@zxing/library')],
+    )
 
     const hints = new Map()
     hints.set(DecodeHintType.TRY_HARDER, true)

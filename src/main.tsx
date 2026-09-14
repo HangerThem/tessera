@@ -7,10 +7,11 @@ import './utils/theme'
 
 import { useEffect, useState } from 'preact/hooks'
 
+import { ActiveCard } from './components/ActiveCard'
 import { AddCardForm } from './components/AddCardForm'
 import { CardList } from './components/CardList'
 import { Input } from './components/ui/Input'
-import { activeCardId, isAddCardFormVisible, saveCard } from './store'
+import { activeCardId, cards, isAddCardFormVisible, saveCard } from './store'
 
 function App() {
   const [query, setQuery] = useState('')
@@ -26,7 +27,10 @@ function App() {
     }
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') isAddCardFormVisible.value = false
+      if (e.key === 'Escape') {
+        isAddCardFormVisible.value = false
+        activeCardId.value = null
+      }
     }
 
     window.addEventListener('popstate', onPopState)
@@ -47,6 +51,9 @@ function App() {
         value={query}
         onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
       />
+      {activeCardId.value && (
+        <ActiveCard card={cards.value.find((c) => c.id === activeCardId.value)!} />
+      )}
       <CardList />
       <button
         className="fixed bottom-4 right-4 p-3 rounded-full bg-foreground/10 text-foreground shadow-lg hover:bg-foreground/30 transition-colors cursor-pointer"
