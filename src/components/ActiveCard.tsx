@@ -1,6 +1,6 @@
 import { BarcodeFormat } from '@zxing/library'
 import { BarcodeIcon, CreditCard, NotepadText, QrCodeIcon, ShareIcon, Star, Trash2, XIcon } from 'lucide-preact'
-import { useState } from 'preact/hooks'
+import { useCallback, useEffect, useState } from 'preact/hooks'
 import { tv } from 'tailwind-variants'
 
 import type { Card } from '../types/Card.type'
@@ -60,6 +60,17 @@ export function ActiveCard({ card }: ActiveCardProps) {
   const [isDeleteConfirmVisible, setIsDeleteConfirmVisible] = useState(false)
   const isDark = isDarkColor(card.color ?? '#fff')
   const { root: noteRootClass, input: noteInputClass } = noteInputStyle({ dark: isDark })
+  const [canShare, setCanShare] = useState<boolean | null>(null)
+
+  const checkCanShare = useCallback(async () => {
+    if (!navigator.canShare) return false
+    if (!navigator.canShare({ files: [] })) return false
+    return true
+  }, [])
+
+  useEffect(() => {
+    checkCanShare().then((isSupported) => setCanShare(isSupported))
+  }, [checkCanShare])
 
   return (
     <>
@@ -156,10 +167,13 @@ export function ActiveCard({ card }: ActiveCardProps) {
             </p>
           </div>
         </div>
-        <button className={shareButtonStyle({ dark: isDark })}>
-          <ShareIcon className="w-5 h-5" />
-          <span className="text-sm">Share</span>
-        </button>
+
+        {canShare && (
+          <button className={shareButtonStyle({ dark: isDark })}>
+            <ShareIcon className="w-5 h-5" />
+            <span className="text-sm">Share</span>
+          </button>
+        )}
 
         <div className={noteRootClass()}>
           <NotepadText className="w-5 h-5" />
