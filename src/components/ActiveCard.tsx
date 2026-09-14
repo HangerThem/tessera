@@ -153,7 +153,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
           </div>
           <div>
             <div className="flex items-center justify-center">
-              <RenderBarcode
+              <BarcodeCanvas
                 format={
                   displayFormat === 'barcode'
                     ? card.barcodeFormat
