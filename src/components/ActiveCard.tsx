@@ -1,5 +1,5 @@
 import { BarcodeFormat } from '@zxing/library'
-import { BarcodeIcon, CreditCard, ImageUpIcon, NotepadText, QrCodeIcon, ShareIcon, Star, Trash2, XIcon } from 'lucide-preact'
+import { BarcodeIcon, Copy, CreditCard, ImageUpIcon, NotepadText, QrCodeIcon, ShareIcon, Star, Trash2, XIcon } from 'lucide-preact'
 import { useEffect, useState } from 'preact/hooks'
 import { tv } from 'tailwind-variants'
 
@@ -62,6 +62,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
   const { root: noteRootClass, input: noteInputClass } = noteInputStyle({ dark: isDark })
   const [canShareText, setCanShareText] = useState(false)
   const [canShareFiles, setCanShareFiles] = useState(false)
+  const [justCopied, setJustCopied] = useState(false)
 
   useEffect(() => {
     if (!navigator.share || !navigator.canShare) return
@@ -106,6 +107,16 @@ export function ActiveCard({ card }: ActiveCardProps) {
       })
     } catch (err) {
       if ((err as DOMException).name !== 'AbortError') console.error(err)
+    }
+  }
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(card.barcodeValue)
+      setJustCopied(true)
+      setTimeout(() => setJustCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy text: ', err)
     }
   }
 
@@ -199,9 +210,18 @@ export function ActiveCard({ card }: ActiveCardProps) {
                 value={card.barcodeValue}
               />
             </div>
-            <p className="text-sm text-black text-center font-mono">
-              {formatBarcodeValue(card.barcodeFormat, card.barcodeValue)}
-            </p>
+            <div className="flex items-center justify-between gap-2 mt-2">
+              <p className="text-sm text-neutral-500 text-center font-mono select-none">
+                {formatBarcodeValue(card.barcodeFormat, card.barcodeValue)}
+              </p>
+              <button onClick={handleCopy} className="cursor-pointer flex">
+                {justCopied ? (
+                  <span className="text-xs text-neutral-500">Copied!</span>
+                ) : (
+                  <Copy className="w-4 h-4 text-neutral-500" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
