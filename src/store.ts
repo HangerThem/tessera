@@ -12,6 +12,7 @@ import {
 export const cards = signal<Card[]>([])
 export const activeCardId = signal<string | null>(null)
 export const isAddCardFormVisible = signal(false)
+export const editCardId = signal<string | null>(null)
 
 export const activeCard = computed(
   () => cards.value.find((c) => c.id === activeCardId.value) ?? null,
@@ -56,12 +57,21 @@ export async function refreshCards(): Promise<void> {
 /** Persists a new card and refreshes the list. */
 export async function saveCard(card: Card): Promise<void> {
   isAddCardFormVisible.value = false
+  editCardId.value = null
   activeCardId.value = null
   await saveCardToDB(card)
   await refreshCards()
 }
 
 /** Updates a card and refreshes the list. */
+export async function updateCardById(id: string, data: Partial<Card>): Promise<void> {
+  editCardId.value = null
+  activeCardId.value = null
+  await updateCard(id, data)
+  await refreshCards()
+}
+
+/** Deletes a card and refreshes the list. */
 export async function deleteCard(id: string): Promise<void> {
   if (activeCardId.value === id) {
     activeCardId.value = null
