@@ -66,12 +66,14 @@ function App() {
   return (
     <>
       <h1 className="text-2xl font-bold mb-1">Tessera</h1>
-      <Input
-        type="text"
-        placeholder="Search cards..."
-        value={query}
-        onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
-      />
+      <div className="sticky top-0 bg-background/90 backdrop-blur-sm z-10 py-2">
+        <Input
+          type="text"
+          placeholder="Search cards..."
+          value={query}
+          onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
+        />
+      </div>
       {activeCardId.value && (
         <ActiveCard card={cards.value.find((c) => c.id === activeCardId.value)!} />
       )}
