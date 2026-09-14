@@ -10,9 +10,16 @@ import { useEffect, useState } from 'preact/hooks'
 import { ActiveCard } from './components/ActiveCard'
 import { AddCardForm } from './components/AddCardForm'
 import { CardList } from './components/CardList'
-import { Input } from './components/ui/Input'
-import { activeCardId, cards, editCardId, isAddCardFormVisible, saveCard, updateCardById } from './store'
 import { EditCardForm } from './components/EditCardForm'
+import { Input } from './components/ui/Input'
+import {
+  activeCardId,
+  cards,
+  editCardId,
+  isAddCardFormVisible,
+  saveCard,
+  updateCardById,
+} from './store'
 
 function App() {
   const [query, setQuery] = useState('')
@@ -65,7 +72,7 @@ function App() {
           onClose={() => (editCardId.value = null)}
         />
       )}
-      <CardList />
+      <CardList cards={cards.value} />
       <button
         className="fixed bottom-4 right-4 p-3 rounded-full bg-foreground/10 text-foreground shadow-lg hover:bg-foreground/30 transition-colors cursor-pointer"
         onClick={() => (isAddCardFormVisible.value = !isAddCardFormVisible.value)}

@@ -1,10 +1,10 @@
-import { cards } from '../store'
+import type { Card } from '../types/Card.type'
 import { CardItem } from './CardItem'
 
-export function CardList() {
+export function CardList({ cards }: { cards: Card[] }) {
   return (
     <div class="relative space-y-3 mt-2">
-      {cards.value.map((card) => (
+      {cards.map((card) => (
         <CardItem key={card.id} card={card} />
       ))}
     </div>
