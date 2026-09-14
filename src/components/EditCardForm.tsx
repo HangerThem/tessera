@@ -48,7 +48,7 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
       barcodeValue: !barcodeValue,
       barcodeFormat: !barcodeFormat,
       color: !color,
-      qrCodeFormat: !qrCodeFormat,
+      qrCodeFormat: qrCodeFormat === undefined,
     }
     setErrors(nextErrors)
     if (Object.values(nextErrors).some(Boolean)) return
@@ -58,7 +58,7 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
       name,
       barcodeValue,
       barcodeFormat: Number(barcodeFormat) as BarcodeFormat,
-      qrCodeFormat: qrCodeFormat ? (Number(qrCodeFormat) as QRCodeFormat) : undefined,
+      qrCodeFormat: Number(qrCodeFormat) as QRCodeFormat,
       isFavorite: false,
       color,
     })
@@ -81,7 +81,7 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
           <X />
         </button>
       </div>
-      
+
       {!isScanning && (
         <div className="space-y-4 mb-4">
           <Input

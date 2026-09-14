@@ -49,7 +49,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
       name: !name,
       barcodeValue: !barcodeValue,
       barcodeFormat: !barcodeFormat,
-      qrCodeFormat: !qrCodeFormat,
+      qrCodeFormat: qrCodeFormat === undefined,
     }
     setErrors(nextErrors)
     if (Object.values(nextErrors).some(Boolean)) return
@@ -59,7 +59,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
       name,
       barcodeValue,
       barcodeFormat: Number(barcodeFormat) as BarcodeFormat,
-      qrCodeFormat: qrCodeFormat ? (Number(qrCodeFormat) as QRCodeFormat) : undefined,
+      qrCodeFormat: Number(qrCodeFormat) as QRCodeFormat,
       isFavorite: false,
       color,
     })
