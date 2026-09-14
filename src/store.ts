@@ -61,6 +61,15 @@ export async function saveCard(card: Card): Promise<void> {
   await refreshCards()
 }
 
+/** Updates a card and refreshes the list. */
+export async function deleteCard(id: string): Promise<void> {
+  if (activeCardId.value === id) {
+    activeCardId.value = null
+  }
+  await deleteCardsFromDB([id])
+  await refreshCards()
+}
+
 /** Deletes cards by id and refreshes the list. */
 export async function deleteCards(ids: string[]): Promise<void> {
   await deleteCardsFromDB(ids)
