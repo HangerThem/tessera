@@ -61,7 +61,7 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
       barcodeValue,
       barcodeFormat: Number(barcodeFormat) as BarcodeFormat,
       qrCodeFormat: Number(qrCodeFormat) as QRCodeFormat,
-      isFavorite: false,
+      isFavorite: initialCard.isFavorite,
       color,
     })
   }
