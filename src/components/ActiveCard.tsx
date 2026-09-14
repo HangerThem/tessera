@@ -1,15 +1,15 @@
 import { BarcodeFormat } from '@zxing/library'
-import { BarcodeIcon, CreditCard, NotepadText, QrCodeIcon, ShareIcon, Star, Trash2, XIcon } from 'lucide-preact'
-import { useCallback, useEffect, useState } from 'preact/hooks'
+import { BarcodeIcon, CreditCard, ImageUpIcon, NotepadText, QrCodeIcon, ShareIcon, Star, Trash2, XIcon } from 'lucide-preact'
+import { useEffect, useState } from 'preact/hooks'
 import { tv } from 'tailwind-variants'
 
 import type { Card } from '../types/Card.type'
 
 import { deleteCard, favoriteCard } from '../store'
-import { formatBarcodeValue } from '../utils/barcode'
+import { formatBarcodeValue, renderBarcode } from '../utils/barcode'
 import { contrastColor, isDarkColor } from '../utils/color'
 import { formatToLabel } from '../utils/text'
-import { RenderBarcode } from './BarcodeCanvas'
+import { BarcodeCanvas } from './BarcodeCanvas'
 import { Button } from './ui/Button'
 
 interface ActiveCardProps {
@@ -46,7 +46,7 @@ const noteInputStyle = tv({
 })
 
 const shareButtonStyle = tv({
-  base: 'gap-2 cursor-pointer flex items-center justify-center bg-neutral-50/20 hover:bg-neutral-50/40 border border-neutral-50/50 py-4 rounded-lg transition-colors',
+  base: 'gap-2 cursor-pointer flex items-center justify-center bg-neutral-50/20 hover:bg-neutral-50/40 border border-neutral-50/50 py-4 rounded-lg transition-colors flex-1',
   variants: {
     dark: {
       false: 'bg-neutral-900/20 hover:bg-neutral-900/40 border border-neutral-900/30',
@@ -60,17 +60,54 @@ export function ActiveCard({ card }: ActiveCardProps) {
   const [isDeleteConfirmVisible, setIsDeleteConfirmVisible] = useState(false)
   const isDark = isDarkColor(card.color ?? '#fff')
   const { root: noteRootClass, input: noteInputClass } = noteInputStyle({ dark: isDark })
-  const [canShare, setCanShare] = useState<boolean | null>(null)
-
-  const checkCanShare = useCallback(async () => {
-    if (!navigator.canShare) return false
-    if (!navigator.canShare({ files: [] })) return false
-    return true
-  }, [])
+  const [canShareText, setCanShareText] = useState(false)
+  const [canShareFiles, setCanShareFiles] = useState(false)
 
   useEffect(() => {
-    checkCanShare().then((isSupported) => setCanShare(isSupported))
-  }, [checkCanShare])
+    if (!navigator.share || !navigator.canShare) return
+    setCanShareText(true)
+    // Probe file sharing with a dummy PNG file
+    const probe = new File([''], 'probe.png', { type: 'image/png' })
+    setCanShareFiles(navigator.canShare({ files: [probe] }))
+  }, [])
+
+  const handleShareText = async () => {
+    try {
+      await navigator.share({
+        title: card.name,
+        text: `${card.name}: ${formatBarcodeValue(card.barcodeFormat, card.barcodeValue)}`,
+      })
+    } catch (err) {
+      if ((err as DOMException).name !== 'AbortError') console.error(err)
+    }
+  }
+
+  const handleShareImage = async () => {
+    const offscreen = document.createElement('canvas')
+    const isQRCode = displayFormat === 'qr'
+    const format = isQRCode
+      ? BarcodeFormat[card.qrCodeFormat ?? card.barcodeFormat]
+      : BarcodeFormat[card.barcodeFormat]
+
+    renderBarcode({ element: offscreen, value: card.barcodeValue, format, isQRCode })
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      offscreen.toBlob(resolve, 'image/png')
+    )
+    if (!blob) return
+
+    const file = new File([blob], `${card.name}-${isQRCode ? 'qr' : 'barcode'}.png`, { type: 'image/png' })
+
+    try {
+      await navigator.share({
+        title: card.name,
+        text: formatBarcodeValue(card.barcodeFormat, card.barcodeValue),
+        files: [file],
+      })
+    } catch (err) {
+      if ((err as DOMException).name !== 'AbortError') console.error(err)
+    }
+  }
 
   return (
     <>
@@ -168,13 +205,22 @@ export function ActiveCard({ card }: ActiveCardProps) {
           </div>
         </div>
 
-        {canShare && (
-          <button className={shareButtonStyle({ dark: isDark })}>
-            <ShareIcon className="w-5 h-5" />
-            <span className="text-sm">Share</span>
-          </button>
+        {(canShareText || canShareFiles) && (
+          <div className="flex gap-2 w-full">
+            {canShareText && (
+              <button className={shareButtonStyle({ dark: isDark })} onClick={handleShareText}>
+                <ShareIcon className="w-5 h-5" />
+                <span className="text-sm">Share</span>
+              </button>
+            )}
+            {canShareFiles && (
+              <button className={shareButtonStyle({ dark: isDark })} onClick={handleShareImage}>
+                <ImageUpIcon className="w-5 h-5" />
+                <span className="text-sm">Share as Image</span>
+              </button>
+            )}
+          </div>
         )}
-
         <div className={noteRootClass()}>
           <NotepadText className="w-5 h-5" />
           <input type="text" className={noteInputClass()} placeholder="Add a note..." />
