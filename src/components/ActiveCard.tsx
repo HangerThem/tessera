@@ -1,11 +1,11 @@
 import { BarcodeFormat } from '@zxing/library'
-import { BarcodeIcon, CreditCard, NotepadText, QrCodeIcon, ShareIcon, Star } from 'lucide-preact'
+import { BarcodeIcon, CreditCard, NotepadText, QrCodeIcon, ShareIcon, Star, Trash2 } from 'lucide-preact'
 import { useState } from 'preact/hooks'
 import { tv } from 'tailwind-variants'
 
 import type { Card } from '../types/Card.type'
 
-import { favoriteCard } from '../store'
+import { deleteCard, favoriteCard } from '../store'
 import { formatBarcodeValue } from '../utils/barcode'
 import { contrastColor, isDarkColor } from '../utils/color'
 import { formatToLabel } from '../utils/text'
@@ -67,7 +67,17 @@ export function ActiveCard({ card }: ActiveCardProps) {
         color: card.color ? contrastColor(card.color) : '#000',
       }}
     >
-      <h1 className="text-2xl font-bold">Tessera</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Tessera</h1>
+        <div className="flex gap-2">
+          <button
+            className="cursor-pointer p-2 rounded-lg hover:bg-black/10 transition-colors"
+            onClick={() => deleteCard(card.id)}
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
       <div className="flex flex-col gap-2 p-2 bg-white rounded-xl shadow">
         <div className="flex items-center gap-2 border-b border-neutral-200 pb-2">
           <div
