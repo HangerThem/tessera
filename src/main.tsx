@@ -20,9 +20,12 @@ import {
   saveCard,
   updateCardById,
 } from './store'
+import { fuzzySearch } from './lib/fuzzy'
+import type { Card } from './types/Card.type'
 
 function App() {
   const [query, setQuery] = useState('')
+  const [filteredCards, setFilteredCards] = useState(cards.value)
 
   useEffect(() => {
     history.pushState(null, '', location.href)
@@ -51,6 +54,15 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    if (query.trim() === '') {
+      setFilteredCards(cards.value)
+    } else {
+      const results = fuzzySearch<Card>(cards.value, query, { keys: (c) => c.name, maxErrors: 1 })
+      setFilteredCards(results.map((r) => r.item))
+    }
+  }, [query])
+
   return (
     <>
       <h1 className="text-2xl font-bold mb-1">Tessera</h1>
@@ -72,7 +84,7 @@ function App() {
           onClose={() => (editCardId.value = null)}
         />
       )}
-      <CardList cards={cards.value} />
+      <CardList cards={filteredCards} />
       <button
         className="fixed bottom-4 right-4 p-3 rounded-full bg-foreground/10 text-foreground shadow-lg hover:bg-foreground/30 transition-colors cursor-pointer"
         onClick={() => (isAddCardFormVisible.value = !isAddCardFormVisible.value)}
