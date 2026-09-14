@@ -4,7 +4,7 @@ import type { Card } from '../types/Card.type'
 
 import { favoriteCard } from '../store'
 import { formatBarcodeValue } from '../utils/barcode'
-import { contrastColor } from '../utils/color'
+import { contrastColor, isDarkColor } from '../utils/color'
 import { RenderBarcode } from './BarcodeCanvas'
 import { useState } from 'preact/hooks'
 import { BarcodeFormat } from '@zxing/library'
@@ -25,8 +25,39 @@ const buttonStyle = tv({
   }
 })
 
+const noteInputStyle = tv({
+  slots: {
+    root: "flex items-center justify-center gap-2 px-2 py-3 rounded-lg",
+    input: "outline-none w-full text-sm",
+  },
+  variants: {
+    dark: {
+      false: {
+        root: "bg-neutral-900/20 border border-neutral-900/30",
+        input: "text-black placeholder:text-black/50",
+      },
+      true: {
+        root: "bg-neutral-50/20 border border-neutral-50/30",
+        input: "text-white placeholder:text-white/50",
+      }
+    }
+  }
+})
+
+const shareButtonStyle = tv({
+  base: "gap-2 cursor-pointer flex items-center justify-center bg-neutral-50/20 hover:bg-neutral-50/40 border border-neutral-50/50 py-4 rounded-lg transition-colors",
+  variants: {
+    dark: {
+      false: "bg-neutral-900/20 hover:bg-neutral-900/40 border border-neutral-900/30",
+      true: "bg-neutral-50/20 hover:bg-neutral-50/40 border border-neutral-50/30",
+    }
+  }
+})
+
 export function ActiveCard({ card }: ActiveCardProps) {
   const [displayFormat, setDisplayFormat] = useState<'barcode' | 'qr'>('barcode')
+  const isDark = isDarkColor(card.color ?? '#fff')
+  const { root: noteRootClass, input: noteInputClass } = noteInputStyle({ dark: isDark })
 
   return (
     <div
@@ -84,17 +115,16 @@ export function ActiveCard({ card }: ActiveCardProps) {
           </p>
         </div>
       </div>
-
-      <button className="gap-2 cursor-pointer flex items-center justify-center bg-neutral-50/20 hover:bg-neutral-50/40 border border-neutral-50/50 py-4 rounded-lg transition-colors">
+      <button className={shareButtonStyle({ dark: isDark })}>
         <ShareIcon className="w-5 h-5" />
         <span className="text-sm">
           Share
         </span>
       </button>
 
-      <div className="flex items-center justify-center gap-2 px-2 py-3 rounded-lg bg-neutral-50/20">
+      <div className={noteRootClass()}>
         <NotepadText className="w-5 h-5" />
-        <input type="text" className="outline-none w-full text-sm" placeholder="Add a note..." />
+        <input type="text" className={noteInputClass()} placeholder="Add a note..." />
       </div>
     </div>
   )
