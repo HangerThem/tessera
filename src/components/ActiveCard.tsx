@@ -9,10 +9,21 @@ import { RenderBarcode } from './BarcodeCanvas'
 import { useState } from 'preact/hooks'
 import { BarcodeFormat } from '@zxing/library'
 import { formatToLabel } from '../utils/text'
+import { tv } from 'tailwind-variants'
 
 interface ActiveCardProps {
   card: Card
 }
+
+const buttonStyle = tv({
+  base: 'gap-2 cursor-pointer flex-1 flex items-center justify-center hover:text-white hover:bg-black p-1 rounded transition-colors',
+  variants: {
+    active: {
+      true: 'bg-black text-white',
+      false: 'bg-neutral-50 text-black hover:text-white hover:bg-black',
+    },
+  }
+})
 
 export function ActiveCard({ card }: ActiveCardProps) {
   const [displayFormat, setDisplayFormat] = useState<'barcode' | 'qr'>('barcode')
@@ -51,13 +62,13 @@ export function ActiveCard({ card }: ActiveCardProps) {
           </button>
         </div>
         <div className="flex gap-2 items-center justify-center p-2 rounded-lg bg-neutral-100">
-          <button className="gap-2 cursor-pointer flex-1 flex items-center justify-center bg-neutral-50 text-black hover:text-white hover:bg-black p-1 rounded transition-colors" onClick={() => setDisplayFormat('qr')}>
+          <button className={buttonStyle({ active: displayFormat === 'qr' })} onClick={() => setDisplayFormat('qr')}>
             <QrCodeIcon className="w-5 h-5" />
             <span className="text-sm">
               QR Code
             </span>
           </button>
-          <button className="gap-2 cursor-pointer flex-1 flex items-center justify-center bg-neutral-50 text-black hover:text-white hover:bg-black p-1 rounded transition-colors" onClick={() => setDisplayFormat('barcode')}>
+          <button className={buttonStyle({ active: displayFormat === 'barcode' })} onClick={() => setDisplayFormat('barcode')}>
             <BarcodeIcon className="w-5 h-5" />
             <span className="text-sm">
               Barcode
