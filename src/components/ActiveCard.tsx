@@ -1,5 +1,5 @@
 import { BarcodeFormat } from '@zxing/library'
-import { BarcodeIcon, CreditCard, NotepadText, QrCodeIcon, ShareIcon, Star, Trash2 } from 'lucide-preact'
+import { BarcodeIcon, CreditCard, NotepadText, QrCodeIcon, ShareIcon, Star, Trash2, XIcon } from 'lucide-preact'
 import { useState } from 'preact/hooks'
 import { tv } from 'tailwind-variants'
 
@@ -10,6 +10,7 @@ import { formatBarcodeValue } from '../utils/barcode'
 import { contrastColor, isDarkColor } from '../utils/color'
 import { formatToLabel } from '../utils/text'
 import { RenderBarcode } from './BarcodeCanvas'
+import { Button } from './ui/Button'
 
 interface ActiveCardProps {
   card: Card
@@ -56,92 +57,115 @@ const shareButtonStyle = tv({
 
 export function ActiveCard({ card }: ActiveCardProps) {
   const [displayFormat, setDisplayFormat] = useState<'barcode' | 'qr'>('barcode')
+  const [isDeleteConfirmVisible, setIsDeleteConfirmVisible] = useState(false)
   const isDark = isDarkColor(card.color ?? '#fff')
   const { root: noteRootClass, input: noteInputClass } = noteInputStyle({ dark: isDark })
 
   return (
-    <div
-      className="z-999 fixed inset-0 p-3 overflow-hidden flex flex-col gap-4"
-      style={{
-        backgroundColor: card.color ?? '#fff',
-        color: card.color ? contrastColor(card.color) : '#000',
-      }}
-    >
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Tessera</h1>
-        <div className="flex gap-2">
-          <button
-            className="cursor-pointer p-2 rounded-lg hover:bg-black/10 transition-colors"
-            onClick={() => deleteCard(card.id)}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-      <div className="flex flex-col gap-2 p-2 bg-white rounded-xl shadow">
-        <div className="flex items-center gap-2 border-b border-neutral-200 pb-2">
-          <div
-            className="flex items-center justify-center p-2 rounded-lg"
-            style={{
-              backgroundColor: card.color ?? '#fff',
-              color: card.color ? contrastColor(card.color) : '#000',
-            }}
-          >
-            <CreditCard className="w-6 h-6" />
+    <>
+      {isDeleteConfirmVisible && (
+        <div className="fixed inset-0 bg-black/50 z-100 flex items-center justify-center">
+          <div className="bg-background p-3 text-foreground rounded-lg max-w-90">
+            <h2 className="text-lg font-bold">Are you sure?</h2>
+            <p className="text-sm text-foreground/70 mt-2">
+              This action will permanently delete the card "{card.name}". This cannot be undone.
+            </p>
+            <div className="flex gap-2 mt-4 justify-end">
+              <Button variant="primary" size='small' onClick={() => setIsDeleteConfirmVisible(false)}>
+                <XIcon className="w-4 h-4" />
+                Cancel
+              </Button>
+              <Button variant="secondary" size='small' onClick={() => deleteCard(card.id)}>
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </Button>
+            </div>
           </div>
-          <div className="mr-auto">
-            <p className="text-sm text-black font-bold">{card.name}</p>
-            <p className="text-xs text-neutral-500">
-              {formatToLabel(BarcodeFormat[card.barcodeFormat])}
+        </div>
+      )}
+      <div
+        className="z-50 fixed inset-0 p-3 overflow-hidden flex flex-col gap-4"
+        style={{
+          backgroundColor: card.color ?? '#fff',
+          color: card.color ? contrastColor(card.color) : '#000',
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Tessera</h1>
+          <div className="flex gap-2">
+            <button
+              className="cursor-pointer p-2 rounded-lg hover:bg-black/10 transition-colors"
+              onClick={() => setIsDeleteConfirmVisible(true)}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2 p-2 bg-white rounded-xl shadow">
+          <div className="flex items-center gap-2 border-b border-neutral-200 pb-2">
+            <div
+              className="flex items-center justify-center p-2 rounded-lg"
+              style={{
+                backgroundColor: card.color ?? '#fff',
+                color: card.color ? contrastColor(card.color) : '#000',
+              }}
+            >
+              <CreditCard className="w-6 h-6" />
+            </div>
+            <div className="mr-auto">
+              <p className="text-sm text-black font-bold">{card.name}</p>
+              <p className="text-xs text-neutral-500">
+                {formatToLabel(BarcodeFormat[card.barcodeFormat])}
+              </p>
+            </div>
+            <button onClick={() => favoriteCard(card.id)} className="cursor-pointer">
+              <Star
+                className={`w-5 h-5 text-black ${card.isFavorite ? 'fill-current' : 'fill-none'}`}
+              />
+            </button>
+          </div>
+          <div className="flex gap-2 items-center justify-center p-2 rounded-lg bg-neutral-100">
+            <button
+              className={buttonStyle({ active: displayFormat === 'qr' })}
+              onClick={() => setDisplayFormat('qr')}
+            >
+              <QrCodeIcon className="w-5 h-5" />
+              <span className="text-sm">QR Code</span>
+            </button>
+            <button
+              className={buttonStyle({ active: displayFormat === 'barcode' })}
+              onClick={() => setDisplayFormat('barcode')}
+            >
+              <BarcodeIcon className="w-5 h-5" />
+              <span className="text-sm">Barcode</span>
+            </button>
+          </div>
+          <div>
+            <div className="flex items-center justify-center">
+              <RenderBarcode
+                format={
+                  displayFormat === 'barcode'
+                    ? card.barcodeFormat
+                    : (card.qrCodeFormat ?? card.barcodeFormat)
+                }
+                value={card.barcodeValue}
+              />
+            </div>
+            <p className="text-sm text-black text-center font-mono">
+              {formatBarcodeValue(card.barcodeFormat, card.barcodeValue)}
             </p>
           </div>
-          <button onClick={() => favoriteCard(card.id)} className="cursor-pointer">
-            <Star
-              className={`w-5 h-5 text-black ${card.isFavorite ? 'fill-current' : 'fill-none'}`}
-            />
-          </button>
         </div>
-        <div className="flex gap-2 items-center justify-center p-2 rounded-lg bg-neutral-100">
-          <button
-            className={buttonStyle({ active: displayFormat === 'qr' })}
-            onClick={() => setDisplayFormat('qr')}
-          >
-            <QrCodeIcon className="w-5 h-5" />
-            <span className="text-sm">QR Code</span>
-          </button>
-          <button
-            className={buttonStyle({ active: displayFormat === 'barcode' })}
-            onClick={() => setDisplayFormat('barcode')}
-          >
-            <BarcodeIcon className="w-5 h-5" />
-            <span className="text-sm">Barcode</span>
-          </button>
-        </div>
-        <div>
-          <div className="flex items-center justify-center">
-            <RenderBarcode
-              format={
-                displayFormat === 'barcode'
-                  ? card.barcodeFormat
-                  : (card.qrCodeFormat ?? card.barcodeFormat)
-              }
-              value={card.barcodeValue}
-            />
-          </div>
-          <p className="text-sm text-black text-center font-mono">
-            {formatBarcodeValue(card.barcodeFormat, card.barcodeValue)}
-          </p>
-        </div>
-      </div>
-      <button className={shareButtonStyle({ dark: isDark })}>
-        <ShareIcon className="w-5 h-5" />
-        <span className="text-sm">Share</span>
-      </button>
+        <button className={shareButtonStyle({ dark: isDark })}>
+          <ShareIcon className="w-5 h-5" />
+          <span className="text-sm">Share</span>
+        </button>
 
-      <div className={noteRootClass()}>
-        <NotepadText className="w-5 h-5" />
-        <input type="text" className={noteInputClass()} placeholder="Add a note..." />
+        <div className={noteRootClass()}>
+          <NotepadText className="w-5 h-5" />
+          <input type="text" className={noteInputClass()} placeholder="Add a note..." />
+        </div>
       </div>
-    </div>
+    </>
   )
 }
