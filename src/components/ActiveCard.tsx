@@ -1,11 +1,11 @@
 import { BarcodeFormat } from '@zxing/library'
-import { BarcodeIcon, Copy, CreditCard, ImageUpIcon, NotepadText, QrCodeIcon, ShareIcon, Star, Trash2, XIcon } from 'lucide-preact'
+import { BarcodeIcon, Copy, CreditCard, Edit, ImageUpIcon, NotepadText, QrCodeIcon, ShareIcon, Star, Trash2, XIcon } from 'lucide-preact'
 import { useEffect, useState } from 'preact/hooks'
 import { tv } from 'tailwind-variants'
 
 import type { Card } from '../types/Card.type'
 
-import { deleteCard, favoriteCard } from '../store'
+import { deleteCard, editCardId, favoriteCard } from '../store'
 import { formatBarcodeValue, renderBarcode } from '../utils/barcode'
 import { contrastColor, isDarkColor } from '../utils/color'
 import { formatToLabel } from '../utils/text'
@@ -152,6 +152,12 @@ export function ActiveCard({ card }: ActiveCardProps) {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Tessera</h1>
           <div className="flex gap-2">
+            <button
+              className="cursor-pointer p-2 rounded-lg hover:bg-black/10 transition-colors"
+              onClick={() => editCardId.value = card.id}
+            >
+              <Edit className="w-4 h-4" />
+            </button>
             <button
               className="cursor-pointer p-2 rounded-lg hover:bg-black/10 transition-colors"
               onClick={() => setIsDeleteConfirmVisible(true)}

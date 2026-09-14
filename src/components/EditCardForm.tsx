@@ -9,22 +9,20 @@ import { Button } from './ui/Button'
 import ColorPicker, { PRESET_COLORS } from './ui/ColorPicker'
 import { Input } from './ui/Input'
 import { Select } from './ui/Select'
+import { formatToLabel } from '../utils/text'
 
-function formatToLabel(key: string): string {
-  return key.replace(/_/g, ' ').replace(/\w\S*/g, (w) => w[0] + w.slice(1).toLowerCase())
-}
-
-interface Props {
+interface EditCardFormProps {
+  initialCard: Card
   onSave: (card: Card) => void
   onClose: () => void
 }
 
-export function AddCardForm({ onSave, onClose }: Props) {
-  const [name, setName] = useState('')
-  const [barcodeValue, setBarcodeValue] = useState('')
-  const [barcodeFormat, setBarcodeFormat] = useState<BarcodeFormat>(BarcodeFormat.CODE_128)
-  const [qrCodeFormat, setQRCodeFormat] = useState<QRCodeFormat>(QRCodeFormat.QR_CODE)
-  const [color, setColor] = useState<string>(PRESET_COLORS[0])
+export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps) {
+  const [name, setName] = useState(initialCard.name)
+  const [barcodeValue, setBarcodeValue] = useState(initialCard.barcodeValue)
+  const [barcodeFormat, setBarcodeFormat] = useState<BarcodeFormat>(initialCard.barcodeFormat)
+  const [qrCodeFormat, setQRCodeFormat] = useState<QRCodeFormat>(initialCard.qrCodeFormat ?? QRCodeFormat.QR_CODE)
+  const [color, setColor] = useState<string>(initialCard.color ?? PRESET_COLORS[0])
   const [errors, setErrors] = useState<Record<string, boolean>>({})
 
   const { isScanning, scanError, videoRef, toggle, stop } = useBarcodeScanner({
@@ -49,13 +47,14 @@ export function AddCardForm({ onSave, onClose }: Props) {
       name: !name,
       barcodeValue: !barcodeValue,
       barcodeFormat: !barcodeFormat,
+      color: !color,
       qrCodeFormat: qrCodeFormat === undefined,
     }
     setErrors(nextErrors)
     if (Object.values(nextErrors).some(Boolean)) return
 
     onSave({
-      id: crypto.randomUUID(),
+      id: initialCard.id,
       name,
       barcodeValue,
       barcodeFormat: Number(barcodeFormat) as BarcodeFormat,
@@ -73,7 +72,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
   return (
     <div class="inset-0 fixed bg-background backdrop-blur-sm z-50 flex flex-col p-4 animate-in fade-in slide-in-from-bottom-8 duration-200">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">New Card</h2>
+        <h2 className="text-xl font-bold">Edit Card</h2>
         <button
           type="button"
           className="text-foreground/50 hover:text-foreground cursor-pointer transition-colors"
