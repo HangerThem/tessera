@@ -1,5 +1,17 @@
 import { BarcodeFormat } from '@zxing/library'
-import { BarcodeIcon, Copy, CreditCard, Edit, ImageUpIcon, NotepadText, QrCodeIcon, ShareIcon, Star, Trash2, XIcon } from 'lucide-preact'
+import {
+  BarcodeIcon,
+  Copy,
+  CreditCard,
+  Edit,
+  ImageUpIcon,
+  NotepadText,
+  QrCodeIcon,
+  ShareIcon,
+  Star,
+  Trash2,
+  XIcon,
+} from 'lucide-preact'
 import { useEffect, useState } from 'preact/hooks'
 import { tv } from 'tailwind-variants'
 
@@ -92,12 +104,12 @@ export function ActiveCard({ card }: ActiveCardProps) {
 
     renderBarcode({ element: offscreen, value: card.barcodeValue, format, isQRCode })
 
-    const blob = await new Promise<Blob | null>((resolve) =>
-      offscreen.toBlob(resolve, 'image/png')
-    )
+    const blob = await new Promise<Blob | null>((resolve) => offscreen.toBlob(resolve, 'image/png'))
     if (!blob) return
 
-    const file = new File([blob], `${card.name}-${isQRCode ? 'qr' : 'barcode'}.png`, { type: 'image/png' })
+    const file = new File([blob], `${card.name}-${isQRCode ? 'qr' : 'barcode'}.png`, {
+      type: 'image/png',
+    })
 
     try {
       await navigator.share({
@@ -130,11 +142,15 @@ export function ActiveCard({ card }: ActiveCardProps) {
               This action will permanently delete the card "{card.name}". This cannot be undone.
             </p>
             <div className="flex gap-2 mt-4 justify-end">
-              <Button variant="primary" size='small' onClick={() => setIsDeleteConfirmVisible(false)}>
+              <Button
+                variant="primary"
+                size="small"
+                onClick={() => setIsDeleteConfirmVisible(false)}
+              >
                 <XIcon className="w-4 h-4" />
                 Cancel
               </Button>
-              <Button variant="secondary" size='small' onClick={() => deleteCard(card.id)}>
+              <Button variant="secondary" size="small" onClick={() => deleteCard(card.id)}>
                 <Trash2 className="w-4 h-4" />
                 Delete
               </Button>
@@ -154,7 +170,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
           <div className="flex gap-2">
             <button
               className="cursor-pointer p-2 rounded-lg hover:bg-black/10 transition-colors"
-              onClick={() => editCardId.value = card.id}
+              onClick={() => (editCardId.value = card.id)}
             >
               <Edit className="w-4 h-4" />
             </button>
