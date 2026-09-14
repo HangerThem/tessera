@@ -1,9 +1,9 @@
 import { toCanvas } from 'bwip-js/browser'
 import { useEffect, useRef } from 'preact/hooks'
+import { tv } from 'tailwind-variants'
 
 import { BarcodeFormat, type QRCodeFormat } from '../enums/codeFormats'
 import { isQRCodeFormat, mapZXingFormatToBWIPJS } from '../utils/barcode'
-import { tv } from 'tailwind-variants'
 
 type RenderBarcodeProps = {
   value: string

@@ -33,14 +33,17 @@ export function CardItem({ card }: Props) {
         </button>
       </div>
       <div className="flex flex-col gap-2">
-        <p className="text-sm font-mono opacity-70" style={{ color: card.color ? contrastColor(card.color) : '#000' }}>
+        <p
+          className="text-sm font-mono opacity-70"
+          style={{ color: card.color ? contrastColor(card.color) : '#000' }}
+        >
           {encodeBarcodeValue(card.barcodeFormat, card.barcodeValue)}
         </p>
         <div className="flex gap-2 items-end justify-between">
           <div className="flex gap-px items-end">
-            {decorativeBars.map((bar, i) => (
+            {decorativeBars.map((bar) => (
               <div
-                key={i}
+                key={`${card.id}-${bar.width}-${bar.height}`}
                 className="rounded-md"
                 style={{
                   width: `${bar.width * 2}px`,

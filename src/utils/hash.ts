@@ -1,6 +1,6 @@
 /**
  * Hashes a string using the DJB2 algorithm.
- * 
+ *
  * @param str The string to hash.
  * @returns The hash value as a number.
  */

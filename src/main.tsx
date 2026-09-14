@@ -7,11 +7,11 @@ import './utils/theme'
 
 import { useEffect, useState } from 'preact/hooks'
 
+import { ActiveCard } from './components/ActiveCard'
 import { AddCardForm } from './components/AddCardForm'
 import { CardList } from './components/CardList'
 import { Input } from './components/ui/Input'
 import { activeCardId, cards, isAddCardFormVisible, saveCard } from './store'
-import { ActiveCard } from './components/ActiveCard'
 
 function App() {
   const [query, setQuery] = useState('')

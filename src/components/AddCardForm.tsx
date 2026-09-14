@@ -71,9 +71,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
   }
 
   return (
-    <div
-      class="inset-0 fixed bg-background backdrop-blur-sm z-50 flex flex-col p-4 animate-in fade-in slide-in-from-bottom-8 duration-200"
-    >
+    <div class="inset-0 fixed bg-background backdrop-blur-sm z-50 flex flex-col p-4 animate-in fade-in slide-in-from-bottom-8 duration-200">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold">New Card</h2>
         <button
