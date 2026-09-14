@@ -11,7 +11,8 @@ import { ActiveCard } from './components/ActiveCard'
 import { AddCardForm } from './components/AddCardForm'
 import { CardList } from './components/CardList'
 import { Input } from './components/ui/Input'
-import { activeCardId, cards, isAddCardFormVisible, saveCard } from './store'
+import { activeCardId, cards, editCardId, isAddCardFormVisible, saveCard, updateCardById } from './store'
+import { EditCardForm } from './components/EditCardForm'
 
 function App() {
   const [query, setQuery] = useState('')
@@ -30,6 +31,7 @@ function App() {
       if (e.key === 'Escape') {
         isAddCardFormVisible.value = false
         activeCardId.value = null
+        editCardId.value = null
       }
     }
 
@@ -53,6 +55,15 @@ function App() {
       />
       {activeCardId.value && (
         <ActiveCard card={cards.value.find((c) => c.id === activeCardId.value)!} />
+      )}
+      {editCardId.value && (
+        <EditCardForm
+          initialCard={cards.value.find((c) => c.id === editCardId.value)!}
+          onSave={async (card) => {
+            await updateCardById(editCardId.value!, card)
+          }}
+          onClose={() => (editCardId.value = null)}
+        />
       )}
       <CardList />
       <button
