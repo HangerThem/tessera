@@ -66,7 +66,7 @@ export async function saveCard(card: Card): Promise<void> {
 /** Updates a card and refreshes the list. */
 export async function updateCardById(id: string, data: Partial<Card>): Promise<void> {
   editCardId.value = null
-  activeCardId.value = null
+  activeCardId.value = id
   await updateCard(id, data)
   await refreshCards()
 }
