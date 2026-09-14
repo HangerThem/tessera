@@ -1,4 +1,5 @@
 import { toCanvas } from 'bwip-js/browser'
+
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { hashString } from './hash'
 import { createPRNG } from './prng'

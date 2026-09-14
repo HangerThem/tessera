@@ -5,11 +5,11 @@ import type { Card } from '../types/Card.type'
 
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner'
+import { formatToLabel } from '../utils/text'
 import { Button } from './ui/Button'
 import ColorPicker, { PRESET_COLORS } from './ui/ColorPicker'
 import { Input } from './ui/Input'
 import { Select } from './ui/Select'
-import { formatToLabel } from '../utils/text'
 
 interface EditCardFormProps {
   initialCard: Card
@@ -21,7 +21,9 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
   const [name, setName] = useState(initialCard.name)
   const [barcodeValue, setBarcodeValue] = useState(initialCard.barcodeValue)
   const [barcodeFormat, setBarcodeFormat] = useState<BarcodeFormat>(initialCard.barcodeFormat)
-  const [qrCodeFormat, setQRCodeFormat] = useState<QRCodeFormat>(initialCard.qrCodeFormat ?? QRCodeFormat.QR_CODE)
+  const [qrCodeFormat, setQRCodeFormat] = useState<QRCodeFormat>(
+    initialCard.qrCodeFormat ?? QRCodeFormat.QR_CODE,
+  )
   const [color, setColor] = useState<string>(initialCard.color ?? PRESET_COLORS[0])
   const [errors, setErrors] = useState<Record<string, boolean>>({})
 
