@@ -1,3 +1,4 @@
+import { toCanvas } from 'bwip-js/browser'
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { hashString } from './hash'
 import { createPRNG } from './prng'
@@ -126,4 +127,37 @@ export function encodeBarcodeValue(format: BarcodeFormat | QRCodeFormat, value: 
     })
     .toReversed()
     .join('')
+}
+
+type RenderBarcodeOptions = {
+  element: HTMLCanvasElement
+  value: string
+  format: string
+  isQRCode: boolean
+}
+
+/** * Renders a barcode or QR code onto a given HTML canvas element using the bwip-js library.
+ *
+ * @param {RenderBarcodeOptions} options - The options for rendering the barcode.
+ * @param {HTMLCanvasElement} options.element - The canvas element where the barcode will be rendered.
+ * @param {string} options.value - The value to encode in the barcode.
+ * @param {string} options.format - The format of the barcode (e.g., 'code128', 'qrcode').
+ * @param {boolean} options.isQRCode - A flag indicating whether the format is a QR code.
+ */
+export function renderBarcode({ element, value, format, isQRCode }: RenderBarcodeOptions): void {
+  const width = isQRCode ? 50 : 200
+  const height = isQRCode ? 50 : 30
+
+  element.width = width
+  element.height = height
+
+  toCanvas(element, {
+    bcid: format,
+    text: value,
+    scale: 1,
+    height: isQRCode ? 50 : 30,
+    width: isQRCode ? 50 : 200,
+    backgroundcolor: 'FFFFFF',
+    padding: 4,
+  })
 }
