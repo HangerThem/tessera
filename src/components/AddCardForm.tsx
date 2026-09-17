@@ -9,10 +9,7 @@ import { Button } from './ui/Button'
 import ColorPicker, { PRESET_COLORS } from './ui/ColorPicker'
 import { Input } from './ui/Input'
 import { Select } from './ui/Select'
-
-function formatToLabel(key: string): string {
-  return key.replace(/_/g, ' ').replace(/\w\S*/g, (w) => w[0] + w.slice(1).toLowerCase())
-}
+import { formatToLabel } from '../utils/text'
 
 interface Props {
   onSave: (card: Card) => void
