@@ -1,4 +1,4 @@
-import { QrCodeIcon, Star } from 'lucide-preact'
+import { CreditCard, Star } from 'lucide-preact'
 
 import type { Card } from '../types/Card.type'
 
@@ -55,7 +55,7 @@ export function CardItem({ card }: Props) {
             ))}
           </div>
           <button>
-            <QrCodeIcon className="w-5 h-5" />
+            <CreditCard className="w-5 h-5" />
           </button>
         </div>
       </div>
