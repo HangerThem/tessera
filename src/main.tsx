@@ -88,7 +88,7 @@ function App() {
       )}
       <CardList cards={filteredCards} />
       <button
-        className="fixed bottom-4 right-4 p-3 rounded-full bg-foreground/10 text-foreground shadow-lg hover:bg-foreground/30 transition-colors cursor-pointer"
+        className="fixed bottom-4 right-4 p-3 rounded-full bg-background text-foreground shadow-lg hover:bg-foreground hover:text-background transition-colors cursor-pointer"
         onClick={() => (isAddCardFormVisible.value = !isAddCardFormVisible.value)}
       >
         <Plus />
