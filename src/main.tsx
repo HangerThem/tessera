@@ -58,7 +58,7 @@ function App() {
     if (query.trim() === '') {
       setFilteredCards(cards.value)
     } else {
-      const results = fuzzySearch<Card>(cards.value, query, { keys: (c) => c.name, maxErrors: 1 })
+      const results = fuzzySearch<Card>(cards.value, query, { keys: (c) => [c.name, c.barcodeValue], maxErrors: 1 })
       setFilteredCards(results.map((r) => r.item))
     }
   }, [query])
