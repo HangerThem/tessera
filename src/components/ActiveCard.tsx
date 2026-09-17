@@ -132,6 +132,14 @@ export function ActiveCard({ card }: ActiveCardProps) {
     }
   }
 
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [])
+
   return (
     <>
       {isDeleteConfirmVisible && (
