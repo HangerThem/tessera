@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-preact'
+import { CreditCard, Plus } from 'lucide-preact'
 import { render } from 'preact'
 
 import './style.css'
@@ -86,7 +86,33 @@ function App() {
           onClose={() => (editCardId.value = null)}
         />
       )}
-      <CardList cards={filteredCards} />
+      {filteredCards.length > 0 ? (
+        <CardList cards={filteredCards} />
+      ) : (
+        <div className="text-center mt-8">
+          {query.trim() === '' ? (
+            <div className="flex flex-col items-center gap-2 min-h-40 justify-center">
+              <CreditCard className="w-10 h-10" />
+              <div>
+                <p className="text-sm text-foreground/70">
+                  No cards yet
+                </p>
+                <p className="text-sm text-foreground/70">
+                  Click the + button to add one.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2 min-h-40 justify-center">
+              <CreditCard className="w-10 h-10" />
+              <p className="text-sm text-foreground/70 max-w-80 w-full text-center">
+                No cards found for
+                <span className="block truncate">"{query}"</span>
+              </p>
+            </div>
+          )}
+        </div>
+      )}
       <button
         className="fixed bottom-4 right-4 p-3 rounded-full bg-background text-foreground shadow-lg hover:bg-foreground hover:text-background transition-colors cursor-pointer"
         onClick={() => (isAddCardFormVisible.value = !isAddCardFormVisible.value)}
