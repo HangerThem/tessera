@@ -5,7 +5,7 @@ import {
   CreditCard,
   Edit,
   ImageUpIcon,
-  NotepadText,
+  // NotepadText,
   QrCodeIcon,
   ShareIcon,
   Star,
@@ -38,24 +38,24 @@ const buttonStyle = tv({
   },
 })
 
-const noteInputStyle = tv({
-  slots: {
-    root: 'flex items-center justify-center gap-2 px-2 py-3 rounded-lg',
-    input: 'outline-none w-full text-sm',
-  },
-  variants: {
-    dark: {
-      false: {
-        root: 'bg-neutral-900/20 border border-neutral-900/30',
-        input: 'text-black placeholder:text-black/50',
-      },
-      true: {
-        root: 'bg-neutral-50/20 border border-neutral-50/30',
-        input: 'text-white placeholder:text-white/50',
-      },
-    },
-  },
-})
+// const noteInputStyle = tv({
+//   slots: {
+//     root: 'flex items-center justify-center gap-2 px-2 py-3 rounded-lg',
+//     input: 'outline-none w-full text-sm',
+//   },
+//   variants: {
+//     dark: {
+//       false: {
+//         root: 'bg-neutral-900/20 border border-neutral-900/30',
+//         input: 'text-black placeholder:text-black/50',
+//       },
+//       true: {
+//         root: 'bg-neutral-50/20 border border-neutral-50/30',
+//         input: 'text-white placeholder:text-white/50',
+//       },
+//     },
+//   },
+// })
 
 const shareButtonStyle = tv({
   base: 'gap-2 cursor-pointer flex items-center justify-center bg-neutral-50/20 hover:bg-neutral-50/40 border border-neutral-50/50 py-4 rounded-lg transition-colors flex-1',
@@ -71,7 +71,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
   const [displayFormat, setDisplayFormat] = useState<'barcode' | 'qr'>('barcode')
   const [isDeleteConfirmVisible, setIsDeleteConfirmVisible] = useState(false)
   const isDark = isDarkColor(card.color ?? '#fff')
-  const { root: noteRootClass, input: noteInputClass } = noteInputStyle({ dark: isDark })
+  // const { root: noteRootClass, input: noteInputClass } = noteInputStyle({ dark: isDark })
   const [canShareText, setCanShareText] = useState(false)
   const [canShareFiles, setCanShareFiles] = useState(false)
   const [justCopied, setJustCopied] = useState(false)
@@ -271,10 +271,11 @@ export function ActiveCard({ card }: ActiveCardProps) {
             )}
           </div>
         )}
-        <div className={noteRootClass()}>
+        {/* TODO: Add note functionality */}
+        {/* <div className={noteRootClass()}>
           <NotepadText className="w-5 h-5" />
           <input type="text" className={noteInputClass()} placeholder="Add a note..." />
-        </div>
+        </div> */}
       </div>
     </>
   )
