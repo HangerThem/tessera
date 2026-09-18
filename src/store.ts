@@ -5,6 +5,7 @@ import type { Card } from './types/Card.type'
 import {
   deleteCards as deleteCardsFromDB,
   getCards,
+  migrateIfNeeded,
   saveCard as saveCardToDB,
   updateCard,
 } from './cards'
@@ -106,4 +107,5 @@ export function searchCards(query: string): Card[] {
   )
 }
 
+await migrateIfNeeded()
 await refreshCards()
