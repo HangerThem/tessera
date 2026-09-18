@@ -10,6 +10,7 @@ import { Button } from './ui/Button'
 import ColorPicker, { PRESET_COLORS } from './ui/ColorPicker'
 import { Input } from './ui/Input'
 import { Select } from './ui/Select'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 
 interface Props {
   onSave: (card: Card) => void
@@ -23,6 +24,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
   const [qrCodeFormat, setQRCodeFormat] = useState<QRCodeFormat>(QRCodeFormat.QR_CODE)
   const [color, setColor] = useState<string>(PRESET_COLORS[0])
   const [errors, setErrors] = useState<Record<string, boolean>>({})
+  const dialogRef = useFocusTrap<HTMLDivElement>(true)
 
   const { isScanning, scanError, videoRef, toggle, stop } = useBarcodeScanner({
     onDetect: (value, format) => {
@@ -68,9 +70,16 @@ export function AddCardForm({ onSave, onClose }: Props) {
   }
 
   return (
-    <div class="inset-0 fixed bg-background backdrop-blur-sm z-50 flex flex-col p-4 animate-in fade-in slide-in-from-bottom-8 duration-200">
+    <div
+      class="inset-0 fixed bg-background backdrop-blur-sm z-50 flex flex-col p-4 animate-in fade-in slide-in-from-bottom-8 duration-200"
+      ref={dialogRef}
+      tabIndex={-1}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="add-card-form-title"
+    >
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">New Card</h2>
+        <h2 className="text-xl font-bold" id="add-card-form-title">New Card</h2>
         <button
           type="button"
           className="text-foreground/50 hover:text-foreground cursor-pointer transition-colors"
