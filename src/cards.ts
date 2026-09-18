@@ -15,10 +15,14 @@ export async function saveCard(card: Card): Promise<void> {
 }
 
 export async function updateCard(cardId: string, data: Partial<Omit<Card, 'id'>>): Promise<void> {
-  await update<Card>(cardId, (existing) => {
-    if (!existing) throw new Error(`Card not found: ${cardId}`)
-    return { ...existing, ...data }
-  }, cardStore)
+  await update<Card>(
+    cardId,
+    (existing) => {
+      if (!existing) throw new Error(`Card not found: ${cardId}`)
+      return { ...existing, ...data }
+    },
+    cardStore,
+  )
 }
 
 export async function deleteCard(id: string): Promise<void> {

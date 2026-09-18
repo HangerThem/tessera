@@ -1,4 +1,5 @@
 import type { Card } from '../types/Card.type'
+
 import { CardItem } from './CardItem'
 
 export function CardList({ cards }: { cards: Card[] }) {

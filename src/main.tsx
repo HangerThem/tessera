@@ -7,11 +7,14 @@ import './utils/theme'
 
 import { useEffect, useState } from 'preact/hooks'
 
+import type { Card } from './types/Card.type'
+
 import { ActiveCard } from './components/ActiveCard'
 import { AddCardForm } from './components/AddCardForm'
 import { CardList } from './components/CardList'
 import { EditCardForm } from './components/EditCardForm'
 import { Input } from './components/ui/Input'
+import { fuzzySearch } from './lib/fuzzy'
 import {
   activeCardId,
   cards,
@@ -20,8 +23,6 @@ import {
   saveCard,
   updateCardById,
 } from './store'
-import { fuzzySearch } from './lib/fuzzy'
-import type { Card } from './types/Card.type'
 
 function App() {
   const [query, setQuery] = useState('')
@@ -53,9 +54,13 @@ function App() {
     }
   }, [])
 
-  const filteredCards = query.trim() === ''
-    ? cards.value
-    : fuzzySearch<Card>(cards.value, query, { keys: (c) => [c.name, c.barcodeValue], maxErrors: 1 }).map((r) => r.item)
+  const filteredCards =
+    query.trim() === ''
+      ? cards.value
+      : fuzzySearch<Card>(cards.value, query, {
+          keys: (c) => [c.name, c.barcodeValue],
+          maxErrors: 1,
+        }).map((r) => r.item)
 
   return (
     <>
@@ -88,12 +93,8 @@ function App() {
             <div className="flex flex-col items-center gap-2 min-h-40 justify-center">
               <CreditCard className="w-10 h-10" />
               <div>
-                <p className="text-sm text-foreground/70">
-                  No cards yet
-                </p>
-                <p className="text-sm text-foreground/70">
-                  Click the + button to add one.
-                </p>
+                <p className="text-sm text-foreground/70">No cards yet</p>
+                <p className="text-sm text-foreground/70">Click the + button to add one.</p>
               </div>
             </div>
           ) : (
