@@ -167,6 +167,9 @@ export function ActiveCard({ card }: ActiveCardProps) {
         </div>
       )}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={card.name}
         className="z-50 fixed inset-0 p-3 overflow-hidden flex flex-col gap-4"
         style={{
           backgroundColor: card.color ?? '#fff',
