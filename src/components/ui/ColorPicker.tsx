@@ -29,7 +29,7 @@ export default function ColorPicker({ colors, allowCustom, value, onChange }: Co
             type="button"
             className={`w-8 h-8 rounded-full cursor-pointer ${c === value ? 'border-2 border-foreground' : ''}`}
             style={{ backgroundColor: c }}
-            aria-label={`Select colour ${c}`}
+            aria-label={`Select colour ${colorOptions[c]}`}
             aria-pressed={c === value}
             onClick={() => onChange(c)}
           />
