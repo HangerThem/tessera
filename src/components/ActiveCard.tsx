@@ -225,7 +225,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
                 {formatToLabel(BarcodeFormat[card.barcodeFormat])}
               </p>
             </div>
-            <button aria-label={card.isFavorite ? 'Unfavorite card' : 'Favorite card'} onClick={() => favoriteCard(card.id)} className="cursor-pointer">
+            <button aria-label={card.isFavorite ? 'Unmark as favorite' : 'Mark as favorite'} aria-pressed={card.isFavorite} onClick={() => favoriteCard(card.id)} className="cursor-pointer">
               <Star
                 className={`w-5 h-5 text-black ${card.isFavorite ? 'fill-current' : 'fill-none'}`}
               />
