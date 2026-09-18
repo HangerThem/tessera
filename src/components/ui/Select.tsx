@@ -49,6 +49,7 @@ export const Select = ({ label, error, size = 'medium', ...props }: SelectProps)
       <select
         className={field()}
         id={id}
+        aria-invalid={!!error}
         aria-describedby={error ? errorId : undefined}
         {...props}
       />
