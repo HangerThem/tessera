@@ -9,19 +9,17 @@ import { contrastColor } from '../utils/color'
 interface Props {
   card: Card
 }
+
 export function CardItem({ card }: Props) {
   const decorativeBars = generateDecorativeBars({ count: 20, seed: card.id })
 
   return (
     <li
-      aria-label={`View details for ${card.name}`}
-      className="w-full max-h-55 shadow-[0_-10px_10px_-5px_rgba(0,0,0,0.25)]"
+      className="relative w-full max-h-55 shadow-[0_-10px_10px_-5px_rgba(0,0,0,0.25)]"
     >
       <button
-        onClick={(e) => {
-          if ((e.target as HTMLElement).closest('button')) return
-          activeCardId.value = card.id
-        }}
+        onClick={() => (activeCardId.value = card.id)}
+        aria-label={`View details for ${card.name}`}
         className="flex flex-col gap-8 w-full text-left rounded-xl py-3 px-4 cursor-pointer overflow-hidden"
         style={{
           backgroundColor: card.color ?? '#fff',
@@ -30,17 +28,7 @@ export function CardItem({ card }: Props) {
       >
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold">{card.name}</h2>
-          <button
-            onClick={() => favoriteCard(card.id)}
-            className="cursor-pointer"
-            aria-label={card.isFavorite ? 'Unmark as favorite' : 'Mark as favorite'}
-            aria-pressed={card.isFavorite}
-          >
-            <Star
-              className={`w-5 h-5 ${card.color ? contrastColor(card.color) : 'text-black'} ${card.isFavorite ? 'fill-current' : 'fill-none'}`}
-              aria-hidden="true"
-            />
-          </button>
+          <span className="w-5 h-5" aria-hidden="true" />
         </div>
         <div className="flex flex-col gap-2">
           <p
@@ -68,6 +56,18 @@ export function CardItem({ card }: Props) {
             <CreditCard className="w-5 h-5" />
           </div>
         </div>
+      </button>
+
+      <button
+        onClick={() => favoriteCard(card.id)}
+        aria-label={card.isFavorite ? 'Unmark as favorite' : 'Mark as favorite'}
+        aria-pressed={card.isFavorite}
+        className="absolute top-3 right-4 cursor-pointer"
+      >
+        <Star
+          className={`w-5 h-5 ${card.color ? contrastColor(card.color) : 'text-black'} ${card.isFavorite ? 'fill-current' : 'fill-none'}`}
+          aria-hidden="true"
+        />
       </button>
     </li>
   )
