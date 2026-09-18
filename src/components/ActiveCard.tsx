@@ -23,6 +23,7 @@ import { contrastColor, isDarkColor } from '../utils/color'
 import { formatToLabel } from '../utils/text'
 import { BarcodeCanvas } from './BarcodeCanvas'
 import { Button } from './ui/Button'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 
 interface ActiveCardProps {
   card: Card
@@ -75,6 +76,8 @@ export function ActiveCard({ card }: ActiveCardProps) {
   const [canShareText, setCanShareText] = useState(false)
   const [canShareFiles, setCanShareFiles] = useState(false)
   const [justCopied, setJustCopied] = useState(false)
+  const dialogRef = useFocusTrap<HTMLDivElement>(true)
+  const confirmRef = useFocusTrap<HTMLDivElement>(isDeleteConfirmVisible)
 
   useEffect(() => {
     if (!navigator.share || !navigator.canShare) return
@@ -143,7 +146,14 @@ export function ActiveCard({ card }: ActiveCardProps) {
   return (
     <>
       {isDeleteConfirmVisible && (
-        <div className="fixed inset-0 bg-black/50 z-100 flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Delete card confirmation">
+        <div
+          className="fixed inset-0 bg-black/50 z-100 flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Delete card confirmation"
+          tabIndex={-1}
+          ref={confirmRef}
+        >
           <div className="bg-background p-3 text-foreground rounded-lg max-w-90">
             <h2 className="text-lg font-bold">Are you sure?</h2>
             <p className="text-sm text-foreground/70 mt-2">
@@ -175,6 +185,8 @@ export function ActiveCard({ card }: ActiveCardProps) {
           backgroundColor: card.color ?? '#fff',
           color: card.color ? contrastColor(card.color) : '#000',
         }}
+        tabIndex={-1}
+        ref={dialogRef}
       >
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Tessera</h1>
