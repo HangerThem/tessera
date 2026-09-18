@@ -93,7 +93,7 @@ function App() {
         <div className="text-center mt-8">
           {query.trim() === '' ? (
             <div className="flex flex-col items-center gap-2 min-h-40 justify-center">
-              <CreditCard className="w-10 h-10" />
+              <CreditCard className="w-10 h-10" aria-hidden="true" />
               <div>
                 <p className="text-sm text-foreground/70">No cards yet</p>
                 <p className="text-sm text-foreground/70">Click the + button to add one.</p>
@@ -101,7 +101,7 @@ function App() {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2 min-h-40 justify-center">
-              <CreditCard className="w-10 h-10" />
+              <CreditCard className="w-10 h-10" aria-hidden="true" />
               <p className="text-sm text-foreground/70 max-w-80 w-full text-center">
                 No cards found for
                 <span className="block truncate">"{query}"</span>
