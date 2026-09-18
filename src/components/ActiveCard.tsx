@@ -143,7 +143,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
   return (
     <>
       {isDeleteConfirmVisible && (
-        <div className="fixed inset-0 bg-black/50 z-100 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/50 z-100 flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Delete card confirmation">
           <div className="bg-background p-3 text-foreground rounded-lg max-w-90">
             <h2 className="text-lg font-bold">Are you sure?</h2>
             <p className="text-sm text-foreground/70 mt-2">
@@ -180,12 +180,14 @@ export function ActiveCard({ card }: ActiveCardProps) {
           <h1 className="text-2xl font-bold">Tessera</h1>
           <div className="flex gap-2">
             <button
+              aria-label="Edit card"
               className="cursor-pointer p-2 rounded-lg hover:bg-black/10 transition-colors"
               onClick={() => (editCardId.value = card.id)}
             >
               <Edit className="w-4 h-4" />
             </button>
             <button
+              aria-label="Delete card"
               className="cursor-pointer p-2 rounded-lg hover:bg-black/10 transition-colors"
               onClick={() => setIsDeleteConfirmVisible(true)}
             >
@@ -196,6 +198,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
         <div className="flex flex-col gap-2 p-2 bg-white rounded-xl shadow">
           <div className="flex items-center gap-2 border-b border-neutral-200 pb-2">
             <div
+              aria-hidden="true"
               className="flex items-center justify-center p-2 rounded-lg"
               style={{
                 backgroundColor: card.color ?? '#fff',
@@ -210,16 +213,21 @@ export function ActiveCard({ card }: ActiveCardProps) {
                 {formatToLabel(BarcodeFormat[card.barcodeFormat])}
               </p>
             </div>
-            <button onClick={() => favoriteCard(card.id)} className="cursor-pointer">
+            <button aria-label={card.isFavorite ? 'Unfavorite card' : 'Favorite card'} onClick={() => favoriteCard(card.id)} className="cursor-pointer">
               <Star
                 className={`w-5 h-5 text-black ${card.isFavorite ? 'fill-current' : 'fill-none'}`}
               />
             </button>
           </div>
-          <div className="flex gap-2 items-center justify-center p-2 rounded-lg bg-neutral-100">
+          <div
+            role="group"
+            aria-label="Display format"
+            className="flex gap-2 items-center justify-center p-2 rounded-lg bg-neutral-100"
+          >
             <button
               className={buttonStyle({ active: displayFormat === 'qr' })}
               onClick={() => setDisplayFormat('qr')}
+              aria-pressed={displayFormat === 'qr'}
             >
               <QrCodeIcon className="w-5 h-5" />
               <span className="text-sm">QR Code</span>
@@ -227,6 +235,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
             <button
               className={buttonStyle({ active: displayFormat === 'barcode' })}
               onClick={() => setDisplayFormat('barcode')}
+              aria-pressed={displayFormat === 'barcode'}
             >
               <BarcodeIcon className="w-5 h-5" />
               <span className="text-sm">Barcode</span>
@@ -247,13 +256,15 @@ export function ActiveCard({ card }: ActiveCardProps) {
               <p className="text-sm text-neutral-500 text-center font-mono select-none">
                 {formatBarcodeValue(card.barcodeFormat, card.barcodeValue)}
               </p>
-              <button onClick={handleCopy} className="cursor-pointer flex">
-                {justCopied ? (
-                  <span className="text-xs text-neutral-500">Copied!</span>
-                ) : (
-                  <Copy className="w-4 h-4 text-neutral-500" />
-                )}
-              </button>
+              <div aria-live="polite" aria-atomic="true">
+                <button onClick={handleCopy} className="cursor-pointer flex" aria-label="Copy card number">
+                  {justCopied ? (
+                    <span className="text-xs text-neutral-500">Copied!</span>
+                  ) : (
+                    <Copy className="w-4 h-4 text-neutral-500" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
