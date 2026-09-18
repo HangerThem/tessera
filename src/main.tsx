@@ -70,7 +70,7 @@ function App() {
           type="text"
           placeholder="Search cards..."
           value={query}
-          onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
+          onInput={(e) => (setQuery((e.target as HTMLInputElement).value))}
         />
       </div>
       {activeCardId.value && (
