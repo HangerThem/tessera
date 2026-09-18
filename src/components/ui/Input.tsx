@@ -1,3 +1,4 @@
+import { useId } from 'preact/hooks'
 import { tv } from 'tailwind-variants'
 
 const input = tv({
@@ -34,16 +35,27 @@ type InputProps = Omit<preact.InputHTMLAttributes<HTMLInputElement>, 'size'> & {
 
 export const Input = ({ label, error, size = 'medium', ...props }: InputProps) => {
   const { root, label: labelClass, field } = input({ size, error: !!error })
+  const id = useId()
+
+  const errorId = `${id}-error`
 
   return (
     <div className={root()}>
       {label && (
-        <label htmlFor={props.id} className={labelClass()}>
+        <label htmlFor={id} className={labelClass()}>
           {label}
         </label>
       )}
-      <input className={field()} {...props} />
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      <input
+        className={field()}
+        id={id}
+        aria-describedby={error ? errorId : undefined}
+        aria-invalid={!!error}
+        {...props}
+      />
+      {error && <p className="text-red-500 text-xs mt-1" id={errorId}>
+        {error}
+      </p>}
     </div>
   )
 }
