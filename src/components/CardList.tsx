@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'preact/hooks'
 import type { Card } from '../types/Card.type'
+
 import { CardItem } from './CardItem'
 
 export function CardList({ cards }: { cards: Card[] }) {
@@ -15,10 +16,10 @@ export function CardList({ cards }: { cards: Card[] }) {
   }, [cards])
 
   return (
-    <div class="relative space-y-3 mt-2">
+    <ul class="relative space-y-3 mt-2">
       {sortedCards.map((card) => (
         <CardItem key={card.id} card={card} />
       ))}
-    </div>
+    </ul>
   )
 }

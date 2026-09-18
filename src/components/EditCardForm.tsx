@@ -10,6 +10,7 @@ import { Button } from './ui/Button'
 import ColorPicker, { PRESET_COLORS } from './ui/ColorPicker'
 import { Input } from './ui/Input'
 import { Select } from './ui/Select'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 
 interface EditCardFormProps {
   initialCard: Card
@@ -26,6 +27,7 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
   )
   const [color, setColor] = useState<string>(initialCard.color ?? PRESET_COLORS[0])
   const [errors, setErrors] = useState<Record<string, boolean>>({})
+  const dialogRef = useFocusTrap<HTMLDivElement>(true)
 
   const { isScanning, scanError, videoRef, toggle, stop } = useBarcodeScanner({
     onDetect: (value, format) => {
@@ -72,10 +74,18 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
   }
 
   return (
-    <div class="inset-0 fixed bg-background backdrop-blur-sm z-50 flex flex-col p-4 animate-in fade-in slide-in-from-bottom-8 duration-200">
+    <div
+      class="inset-0 fixed bg-background backdrop-blur-sm z-50 flex flex-col p-4 animate-in fade-in slide-in-from-bottom-8 duration-200"
+      ref={dialogRef}
+      tabIndex={-1}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-card-form-title"
+    >
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">Edit Card</h2>
+        <h2 className="text-xl font-bold" id="edit-card-form-title">Edit Card</h2>
         <button
+          aria-label="Close add card form"
           type="button"
           className="text-foreground/50 hover:text-foreground cursor-pointer transition-colors"
           onClick={handleClose}
@@ -162,7 +172,7 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
           <ScanBarcode />
           {isScanning ? 'Stop Scanning' : 'Scan Barcode'}
         </Button>
-        {isScanning && <video ref={videoRef} playsInline className="rounded-md mt-2" />}
+        {isScanning && <video ref={videoRef} playsInline className="rounded-md mt-2" aria-label="Camera viewfinder" />}
         {scanError && <p className="text-red-500 text-xs mt-1">{scanError}</p>}
       </div>
 

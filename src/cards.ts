@@ -1,38 +1,45 @@
-import { get, set, update } from 'idb-keyval'
+import { createStore, del, get, getMany, keys, set, update } from 'idb-keyval'
 
 import type { Card } from './types/Card.type'
 
-const CARDS_KEY = 'cards'
+const cardStore = createStore('tessera', 'cards')
 
 export async function getCards(): Promise<Card[]> {
-  return (await get(CARDS_KEY)) ?? []
+  const allKeys = await keys<string>(cardStore)
+  const allCards = await getMany<Card>(allKeys, cardStore)
+  return allCards.filter((c): c is Card => c !== undefined)
 }
 
 export async function saveCard(card: Card): Promise<void> {
-  const cards = await getCards()
-  await set(CARDS_KEY, [...cards, card])
+  await set(card.id, card, cardStore)
 }
 
-export async function updateCard(cardId: string, card: Partial<Omit<Card, 'id'>>): Promise<void> {
-  await update(CARDS_KEY, (cards: Card[] | undefined) => {
-    if (!cards) return [card as Card]
-    return cards.map((c) => (c.id === cardId ? { ...c, ...card } : c))
-  })
+export async function updateCard(cardId: string, data: Partial<Omit<Card, 'id'>>): Promise<void> {
+  await update<Card>(
+    cardId,
+    (existing) => {
+      if (!existing) throw new Error(`Card not found: ${cardId}`)
+      return { ...existing, ...data }
+    },
+    cardStore,
+  )
 }
 
 export async function deleteCard(id: string): Promise<void> {
-  const cards = (await get<Card[]>(CARDS_KEY)) ?? []
-  await set(
-    CARDS_KEY,
-    cards.filter((c) => c.id !== id),
-  )
+  await del(id, cardStore)
 }
 
 export async function deleteCards(ids: string[]): Promise<void> {
-  const idSet = new Set(ids)
-  const cards = (await get<Card[]>(CARDS_KEY)) ?? []
-  await set(
-    CARDS_KEY,
-    cards.filter((c) => !idSet.has(c.id)),
-  )
+  await Promise.all(ids.map((id) => del(id, cardStore)))
+}
+
+export async function migrateIfNeeded(): Promise<void> {
+  try {
+    const raw = await get('cards')
+    if (!Array.isArray(raw) || raw.length === 0 || typeof raw[0] !== 'object') return
+    await Promise.all((raw as Card[]).map((c) => set(c.id, c, cardStore)))
+    await del('cards')
+  } catch (error) {
+    console.warn((error as Error).message)
+  }
 }
