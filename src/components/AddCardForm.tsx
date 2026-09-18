@@ -81,6 +81,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold" id="add-card-form-title">New Card</h2>
         <button
+          aria-label="Close add card form"
           type="button"
           className="text-foreground/50 hover:text-foreground cursor-pointer transition-colors"
           onClick={handleClose}
