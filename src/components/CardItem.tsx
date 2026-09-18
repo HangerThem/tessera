@@ -54,9 +54,7 @@ export function CardItem({ card }: Props) {
               />
             ))}
           </div>
-          <button>
-            <CreditCard className="w-5 h-5" />
-          </button>
+          <CreditCard className="w-5 h-5" />
         </div>
       </div>
     </div>
