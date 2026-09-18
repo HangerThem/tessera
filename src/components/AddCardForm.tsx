@@ -168,7 +168,7 @@ export function AddCardForm({ onSave, onClose }: Props) {
           <ScanBarcode />
           {isScanning ? 'Stop Scanning' : 'Scan Barcode'}
         </Button>
-        {isScanning && <video ref={videoRef} playsInline className="rounded-md mt-2" />}
+        {isScanning && <video ref={videoRef} playsInline className="rounded-md mt-2" aria-label="Camera viewfinder" />}
         {scanError && <p className="text-red-500 text-xs mt-1">{scanError}</p>}
       </div>
 
