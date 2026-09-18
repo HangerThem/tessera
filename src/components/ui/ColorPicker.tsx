@@ -27,7 +27,8 @@ export default function ColorPicker({ colors, allowCustom, value, onChange }: Co
             type="button"
             className={`w-8 h-8 rounded-full cursor-pointer ${c === value ? 'border-2 border-foreground' : ''}`}
             style={{ backgroundColor: c }}
-            aria-label={c}
+            aria-label={`Select colour ${c}`}
+            aria-pressed={c === value}
             onClick={() => onChange(c)}
           />
         ))}
@@ -36,6 +37,7 @@ export default function ColorPicker({ colors, allowCustom, value, onChange }: Co
           disabled={!allowCustom}
           className={`relative w-8 h-8 rounded-full border-foreground bg-conic/decreasing from-violet-700 via-lime-300 to-violet-700 ${value && !(colors || PRESET_COLORS)?.includes(value) ? 'border-2' : ''}`}
           aria-label="Custom colour"
+          aria-pressed={!!(value && !PRESET_COLORS.includes(value))}
         >
           <input
             type="color"
