@@ -51,7 +51,12 @@ export function BarcodeCanvas({ value, format }: RenderBarcodeProps) {
 
   return (
     <div className={wrapper({ format: isQRCode ? 'qrcode' : 'barcode' })}>
-      <canvas ref={canvasRef} className={canvas()} />
+      <canvas
+        role="img"
+        ref={canvasRef}
+        className={canvas()}
+        aria-label={`${isQRCode ? 'QR code' : 'Barcode'} for ${value}`}
+      />
     </div>
   )
 }
