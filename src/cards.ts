@@ -42,3 +42,13 @@ export async function deleteCards(ids: string[]): Promise<void> {
     ...ids.map((id) => del(cardKey(id))),
   ])
 }
+
+export async function migrateIfNeeded(): Promise<void> {
+  const raw = await get(CARDS_KEY)
+  if (!Array.isArray(raw) || raw.length === 0 || typeof raw[0] !== 'object') return
+  const oldCards = raw as Card[]
+  await Promise.all([
+    set(CARDS_KEY, oldCards.map((c) => c.id)),
+    ...oldCards.map((c) => set(cardKey(c.id), c)),
+  ])
+}
