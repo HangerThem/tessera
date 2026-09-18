@@ -40,6 +40,5 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 })
 
 if (typeof window !== 'undefined') {
-  console.log('Applying theme:', getTheme())
   applyTheme(getTheme())
 }
