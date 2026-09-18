@@ -269,15 +269,12 @@ export function ActiveCard({ card }: ActiveCardProps) {
               <p className="text-sm text-neutral-500 text-center font-mono select-none">
                 {formatBarcodeValue(card.barcodeFormat, card.barcodeValue)}
               </p>
-              <div aria-live="polite" aria-atomic="true">
-                <button onClick={handleCopy} className="cursor-pointer flex" aria-label="Copy card number">
-                  {justCopied ? (
-                    <span className="text-xs text-neutral-500">Copied!</span>
-                  ) : (
-                    <Copy className="w-4 h-4 text-neutral-500" />
-                  )}
-                </button>
-              </div>
+              <button onClick={handleCopy} className="cursor-pointer flex" aria-label="Copy card number">
+                <Copy className="w-4 h-4 text-neutral-500" />
+              </button>
+              <span aria-live="polite" aria-atomic="true" className="sr-only">
+                {justCopied ? 'Copied!' : ''}
+              </span>
             </div>
           </div>
         </div>
