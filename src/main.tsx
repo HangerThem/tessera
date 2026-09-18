@@ -65,10 +65,12 @@ function App() {
   return (
     <>
       <h1 className="text-2xl font-bold mb-1">Tessera</h1>
-      <div className="sticky top-0 bg-background/90 backdrop-blur-sm z-10 py-2">
+      <div className="sticky top-0 bg-background/90 backdrop-blur-sm z-10 py-2" role="search">
         <Input
           type="text"
           placeholder="Search cards..."
+          aria-label="Search cards"
+          autocomplete="off"
           value={query}
           onInput={(e) => (setQuery((e.target as HTMLInputElement).value))}
         />
