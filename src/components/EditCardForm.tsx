@@ -80,10 +80,10 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
       tabIndex={-1}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="add-card-form-title"
+      aria-labelledby="edit-card-form-title"
     >
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold" id="add-card-form-title">New Card</h2>
+        <h2 className="text-xl font-bold" id="edit-card-form-title">Edit Card</h2>
         <button
           aria-label="Close add card form"
           type="button"
