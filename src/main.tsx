@@ -25,7 +25,6 @@ import type { Card } from './types/Card.type'
 
 function App() {
   const [query, setQuery] = useState('')
-  const [filteredCards, setFilteredCards] = useState(cards.value)
 
   useEffect(() => {
     history.pushState(null, '', location.href)
@@ -54,14 +53,9 @@ function App() {
     }
   }, [])
 
-  useEffect(() => {
-    if (query.trim() === '') {
-      setFilteredCards(cards.value)
-    } else {
-      const results = fuzzySearch<Card>(cards.value, query, { keys: (c) => [c.name, c.barcodeValue], maxErrors: 1 })
-      setFilteredCards(results.map((r) => r.item))
-    }
-  }, [query])
+  const filteredCards = query.trim() === ''
+    ? cards.value
+    : fuzzySearch<Card>(cards.value, query, { keys: (c) => [c.name, c.barcodeValue], maxErrors: 1 }).map((r) => r.item)
 
   return (
     <>
