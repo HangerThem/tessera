@@ -228,6 +228,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
             <button aria-label={card.isFavorite ? 'Unmark as favorite' : 'Mark as favorite'} aria-pressed={card.isFavorite} onClick={() => favoriteCard(card.id)} className="cursor-pointer">
               <Star
                 className={`w-5 h-5 text-black ${card.isFavorite ? 'fill-current' : 'fill-none'}`}
+                aria-hidden="true"
               />
             </button>
           </div>
