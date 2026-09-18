@@ -28,7 +28,6 @@ export function CardItem({ card }: Props) {
       >
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold">{card.name}</h2>
-          <span className="w-5 h-5" aria-hidden="true" />
         </div>
         <div className="flex flex-col gap-2">
           <p
