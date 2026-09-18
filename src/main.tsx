@@ -58,9 +58,9 @@ function App() {
     query.trim() === ''
       ? cards.value
       : fuzzySearch<Card>(cards.value, query, {
-          keys: (c) => [c.name, c.barcodeValue],
-          maxErrors: 1,
-        }).map((r) => r.item)
+        keys: (c) => [c.name, c.barcodeValue],
+        maxErrors: 1,
+      }).map((r) => r.item)
 
   return (
     <>
@@ -111,6 +111,8 @@ function App() {
       <button
         className="fixed bottom-4 right-4 p-3 rounded-full bg-background text-foreground shadow-lg hover:bg-foreground hover:text-background transition-colors cursor-pointer"
         onClick={() => (isAddCardFormVisible.value = !isAddCardFormVisible.value)}
+        aria-label={isAddCardFormVisible.value ? 'Close add card form' : 'Add card'}
+        aria-expanded={isAddCardFormVisible.value}
       >
         <Plus />
       </button>
