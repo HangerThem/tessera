@@ -63,7 +63,7 @@ function App() {
       }).map((r) => r.item)
 
   return (
-    <>
+    <main>
       <h1 className="text-2xl font-bold mb-1">Tessera</h1>
       <div className="sticky top-0 bg-background/90 backdrop-blur-sm z-10 py-2" role="search">
         <Input
@@ -124,7 +124,7 @@ function App() {
           onClose={() => (isAddCardFormVisible.value = false)}
         />
       )}
-    </>
+    </main>
   )
 }
 
