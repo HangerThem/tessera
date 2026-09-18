@@ -20,8 +20,8 @@ export default function ColorPicker({ colors, allowCustom, value, onChange }: Co
   const colorOptions = colors || PRESET_COLORS
 
   return (
-    <div className="flex flex-col">
-      <span className="text-sm font-medium text-foreground/70">Card colour</span>
+    <fieldset className="flex flex-col border-0 p-0 m-0">
+      <legend className="text-sm font-medium text-foreground/70">Card colour</legend>
       <div className="flex flex-wrap gap-2 mt-1 justify-between">
         {Object.keys(colorOptions).map((c) => (
           <button
@@ -49,6 +49,6 @@ export default function ColorPicker({ colors, allowCustom, value, onChange }: Co
           />
         </button>
       </div>
-    </div>
+    </fieldset>
   )
 }
