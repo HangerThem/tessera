@@ -21,7 +21,7 @@ export function CardItem({ card }: Props) {
   }
 
   return (
-    <div
+    <li
       role="button"
       aria-label={`View details for ${card.name}`}
       tabIndex={0}
@@ -76,6 +76,6 @@ export function CardItem({ card }: Props) {
           <CreditCard className="w-5 h-5" />
         </div>
       </div>
-    </div>
+    </li>
   )
 }
