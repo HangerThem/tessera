@@ -4,6 +4,8 @@ A simple, privacy-first loyalty and membership card manager. Scan your physical 
 
 **[Try it →](https://tessera.hhu.cz)**
 
+![Lighthouse Report](https://lighthouse-report-svg.vercel.app/?perf=99&acc=100&best=100&seo=100&pwa=4)
+
 ---
 
 ## Features
