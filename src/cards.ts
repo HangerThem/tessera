@@ -1,54 +1,41 @@
-import { del, get, set, update } from 'idb-keyval'
+import { createStore, del, get, getMany, keys, set, update } from 'idb-keyval'
 
 import type { Card } from './types/Card.type'
 
-const CARDS_KEY = 'cards'
-const cardKey = (id: string) => `card:${id}` as const
+const cardStore = createStore('tessera', 'cards')
 
 export async function getCards(): Promise<Card[]> {
-  const ids = (await get<string[]>(CARDS_KEY)) ?? []
-  const cards = await Promise.all(ids.map((id) => get<Card>(cardKey(id))))
-  return cards.filter((c): c is Card => c !== undefined)
+  const allKeys = await keys<string>(cardStore)
+  const allCards = await getMany<Card>(allKeys, cardStore)
+  return allCards.filter((c): c is Card => c !== undefined)
 }
 
 export async function saveCard(card: Card): Promise<void> {
-  const ids = (await get<string[]>(CARDS_KEY)) ?? []
-  await Promise.all([
-    set(CARDS_KEY, [...ids, card.id]),
-    set(cardKey(card.id), card),
-  ])
+  await set(card.id, card, cardStore)
 }
 
 export async function updateCard(cardId: string, data: Partial<Omit<Card, 'id'>>): Promise<void> {
-  await update<Card>(cardKey(cardId), (existing) => {
+  await update<Card>(cardId, (existing) => {
     if (!existing) throw new Error(`Card not found: ${cardId}`)
     return { ...existing, ...data }
-  })
+  }, cardStore)
 }
 
 export async function deleteCard(id: string): Promise<void> {
-  const ids = (await get<string[]>(CARDS_KEY)) ?? []
-  await Promise.all([
-    set(CARDS_KEY, ids.filter((i) => i !== id)),
-    del(cardKey(id)),
-  ])
+  await del(id, cardStore)
 }
 
 export async function deleteCards(ids: string[]): Promise<void> {
-  const idSet = new Set(ids)
-  const allIds = (await get<string[]>(CARDS_KEY)) ?? []
-  await Promise.all([
-    set(CARDS_KEY, allIds.filter((i) => !idSet.has(i))),
-    ...ids.map((id) => del(cardKey(id))),
-  ])
+  await Promise.all(ids.map((id) => del(id, cardStore)))
 }
 
 export async function migrateIfNeeded(): Promise<void> {
-  const raw = await get(CARDS_KEY)
-  if (!Array.isArray(raw) || raw.length === 0 || typeof raw[0] !== 'object') return
-  const oldCards = raw as Card[]
-  await Promise.all([
-    set(CARDS_KEY, oldCards.map((c) => c.id)),
-    ...oldCards.map((c) => set(cardKey(c.id), c)),
-  ])
+  try {
+    const raw = await get('cards')
+    if (!Array.isArray(raw) || raw.length === 0 || typeof raw[0] !== 'object') return
+    await Promise.all((raw as Card[]).map((c) => set(c.id, c, cardStore)))
+    await del('cards')
+  } catch (error) {
+    console.warn((error as Error).message)
+  }
 }
