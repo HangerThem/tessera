@@ -1,5 +1,12 @@
 # Changelog
 
+## [v0.2.0] - 2026-09-23
+
+### Added
+
+- BarcodeDetector API support (#9)
+
+
 ## [v0.1.0] - 2026-09-22
 
 ### Added
@@ -35,6 +42,9 @@
 
 
 - Add license
+
+
+- Release v0.1.0
 
 
 
