@@ -34,9 +34,7 @@ export class BarcodeScanner {
 
     if (("BarcodeDetector" in globalThis)) {
       const formats = mapZXingFormatsToBarcodeDetectorFormats(this.options.formats ?? [])
-      const barcodeDetector = new BarcodeDetector({
-        formats,
-      });
+      const barcodeDetector = new BarcodeDetector(formats ? { formats } : {})
 
       try {
         this.controls = {
@@ -56,8 +54,8 @@ export class BarcodeScanner {
             const barcodes = await barcodeDetector.detect(this.video)
             if (barcodes.length > 0) {
               this.options.onDetect(
-                  barcodes[0].rawValue,
-                  barcodes[0].format as unknown as BarcodeFormat | QRCodeFormat,
+                barcodes[0].rawValue,
+                barcodes[0].format as unknown as BarcodeFormat | QRCodeFormat,
               )
               this.stop()
               return
