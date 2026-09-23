@@ -35,6 +35,38 @@ export const mapZXingFormatToBWIPJS = (format: BarcodeFormat | QRCodeFormat): st
   }
 }
 
+/**
+ * Maps an array of ZXing barcode formats to the corresponding BarcodeDetector formats.
+ *
+ * @param {Array<BarcodeFormat | QRCodeFormat>} formats - An array of ZXing barcode formats.
+ * @returns {Array<string> | undefined} An array of corresponding BarcodeDetector formats, or undefined if no formats are provided.
+ */
+export const mapZXingFormatsToBarcodeDetectorFormats = (
+  formats: (BarcodeFormat | QRCodeFormat)[]
+): BarcodeDetectorOptions['formats'] => {
+  if (formats.length === 0) return undefined
+
+  const mapped: BarcodeDetectorOptions['formats'] = []
+  for (const format of formats) {
+    switch (format) {
+      case BarcodeFormat.CODE_39: mapped.push('code_39'); break
+      case BarcodeFormat.CODE_93: mapped.push('code_93'); break
+      case BarcodeFormat.CODE_128: mapped.push('code_128'); break
+      case BarcodeFormat.EAN_8: mapped.push('ean_8'); break
+      case BarcodeFormat.EAN_13: mapped.push('ean_13'); break
+      case BarcodeFormat.ITF: mapped.push('itf'); break
+      case BarcodeFormat.PDF_417: mapped.push('pdf417'); break
+      case QRCodeFormat.AZTEC: mapped.push('aztec'); break
+      case QRCodeFormat.DATA_MATRIX: mapped.push('data_matrix'); break
+      case QRCodeFormat.QR_CODE: mapped.push('qr_code'); break
+      case QRCodeFormat.MICRO_QR_CODE: mapped.push('micro_qr_code'); break
+      case QRCodeFormat.MAXICODE: mapped.push('maxi_code'); break
+    }
+  }
+
+  return mapped.length > 0 ? mapped : undefined
+}
+
 /** * Determines if the given format is a QR code format.
  *
  * @param {BarcodeFormat | QRCodeFormat} format - The barcode format to check.
