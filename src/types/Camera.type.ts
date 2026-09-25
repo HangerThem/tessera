@@ -1,0 +1,1 @@
+export type CameraState = "idle" | "requesting" | "active" | "denied"
