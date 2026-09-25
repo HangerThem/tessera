@@ -121,13 +121,13 @@ export function AddCardForm({ onSave, onClose }: Props) {
 
           <ColorPicker allowCustom value={color} onChange={setColor} />
 
-          <button type="button" className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground transition-colors mt-4 cursor-pointer" onClick={() => setShowAdvanced((prev) => !prev)}>
+          <button type="button" className="flex items-center gap-2 text-md text-foreground/70 hover:text-foreground transition-colors mt-4 mb-3 cursor-pointer" onClick={() => setShowAdvanced((prev) => !prev)}>
             Advanced Options
             <ChevronDown
               className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
             />
           </button>
-          <div className={`${showAdvanced ? 'block mb-4' : 'hidden'}`}>
+          <div className={`${showAdvanced ? 'flex flex-col gap-2 mb-4' : 'hidden'}`}>
             <Select
               label="Barcode format"
               value={barcodeFormat}
