@@ -4,7 +4,7 @@ import type { Card } from '../types/Card.type'
 
 import { activeCardId, favoriteCard } from '../store'
 import { encodeBarcodeValue, generateDecorativeBars } from '../utils/barcode'
-import { contrastColor } from '../utils/color'
+import { isDarkColor } from '../utils/color'
 
 interface Props {
   card: Card
@@ -12,6 +12,7 @@ interface Props {
 
 export function CardItem({ card }: Props) {
   const decorativeBars = generateDecorativeBars({ count: 20, seed: card.id })
+  const isDark = isDarkColor(card.color ?? '#fff')
 
   return (
     <li
@@ -20,10 +21,9 @@ export function CardItem({ card }: Props) {
       <button
         onClick={() => (activeCardId.value = card.id)}
         aria-label={`View details for ${card.name}`}
-        className="flex flex-col gap-8 w-full text-left rounded-xl py-3 px-4 cursor-pointer overflow-hidden"
+        className={`flex flex-col gap-8 w-full text-left rounded-xl py-3 px-4 cursor-pointer overflow-hidden ${isDark ? 'text-white' : 'text-black'}`}
         style={{
           backgroundColor: card.color ?? '#fff',
-          color: card.color ? contrastColor(card.color) : '#000',
         }}
       >
         <div className="flex items-center justify-between">
@@ -31,8 +31,7 @@ export function CardItem({ card }: Props) {
         </div>
         <div className="flex flex-col gap-2">
           <p
-            className="text-sm font-mono opacity-70"
-            style={{ color: card.color ? contrastColor(card.color) : '#000' }}
+            className={`${isDark ? 'text-white' : 'text-black'} text-sm font-mono opacity-70`}
             aria-label={`Card ending in ${card.barcodeValue.slice(-4)}`}
           >
             {encodeBarcodeValue(card.barcodeFormat, card.barcodeValue)}
@@ -42,12 +41,10 @@ export function CardItem({ card }: Props) {
               {decorativeBars.map((bar) => (
                 <div
                   key={`${card.id}-${bar.width}-${bar.height}`}
-                  className="rounded-md"
+                  className={`rounded-md ${isDark ? 'bg-white/50' : 'bg-black/50'}`}
                   style={{
                     width: `${bar.width * 2}px`,
                     height: `${bar.height * 40}px`,
-                    backgroundColor: card.color ? contrastColor(card.color) : '#000',
-                    opacity: 0.5,
                   }}
                 />
               ))}
@@ -64,7 +61,7 @@ export function CardItem({ card }: Props) {
         className="absolute top-3 right-4 cursor-pointer"
       >
         <Star
-          className={`w-5 h-5 ${card.color ? contrastColor(card.color) : 'text-black'} ${card.isFavorite ? 'fill-current' : 'fill-none'}`}
+          className={`w-5 h-5 ${isDark ? 'text-white' : 'text-black'} ${card.isFavorite ? 'fill-current' : 'fill-none'}`}
           aria-hidden="true"
         />
       </button>
