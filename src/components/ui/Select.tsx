@@ -6,7 +6,7 @@ const select = tv({
     root: 'flex flex-col gap-1',
     label: 'text-sm font-medium text-foreground/70',
     field: [
-      'w-full border border-transparent rounded-md',
+      'w-full border border-transparent rounded-md cursor-pointer',
       'bg-foreground/5 text-foreground text-sm focus:border-foreground/50',
       'outline-none transition-colors duration-150',
       'appearance-none',
@@ -28,7 +28,7 @@ const select = tv({
 })
 
 type SelectProps = Omit<preact.InputHTMLAttributes<HTMLSelectElement>, 'size'> & {
-  label?: string
+  label?: string | preact.JSX.Element
   error?: string
   size?: 'small' | 'medium' | 'large'
 }
