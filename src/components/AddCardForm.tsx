@@ -150,7 +150,12 @@ export function AddCardForm({ onSave, onClose }: Props) {
             </Select>
 
             <Select
-              label="QR code format (optional)"
+              label={
+                <>
+                  QR code format
+                  <span className="text-foreground/50 text-xs ml-1">(optional)</span>
+                </>
+              }
               value={qrCodeFormat}
               onChange={(e) =>
                 setQRCodeFormat(Number((e.target as HTMLSelectElement).value) as QRCodeFormat)
