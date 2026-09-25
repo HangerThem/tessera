@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 
 import { BarcodeScanner } from '../barcodeScanner'
+import type { CameraState } from '../types/Camera.type'
 
 interface UseBarcodeScanner {
   onDetect: (value: string, format: number) => void
@@ -15,6 +16,7 @@ interface UseBarcodeScanner {
 export function useBarcodeScanner({ onDetect }: UseBarcodeScanner) {
   const [isScanning, setIsScanning] = useState(false)
   const [scanError, setScanError] = useState('')
+  const [cameraState, setCameraState] = useState<CameraState | undefined>(undefined)
   const videoRef = useRef<HTMLVideoElement>(null)
   const scannerRef = useRef<BarcodeScanner | null>(null)
 
@@ -39,6 +41,7 @@ export function useBarcodeScanner({ onDetect }: UseBarcodeScanner) {
       })
     }
 
+    setCameraState(scannerRef.current.cameraState)
     scannerRef.current.start()
     return () => {
       scannerRef.current?.stop()
@@ -60,5 +63,5 @@ export function useBarcodeScanner({ onDetect }: UseBarcodeScanner) {
     setIsScanning(false)
   }
 
-  return { isScanning, scanError, videoRef, toggle, stop }
+  return { isScanning, scanError, cameraState, videoRef, toggle, stop }
 }
