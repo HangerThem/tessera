@@ -2,6 +2,7 @@ import type { IScannerControls } from '@zxing/browser'
 
 import type { BarcodeFormat, QRCodeFormat } from './enums/codeFormats'
 import { mapZXingFormatsToBarcodeDetectorFormats } from './utils/barcode'
+import type { CameraState } from './types/Camera.type'
 
 export interface BarcodeScannerOptions {
   formats?: (BarcodeFormat | QRCodeFormat)[]
@@ -13,6 +14,7 @@ export class BarcodeScanner {
   private video: HTMLVideoElement
   private controls: IScannerControls | null = null
   private options: BarcodeScannerOptions
+  public cameraState: CameraState = "idle"
 
   constructor(video: HTMLVideoElement, options: BarcodeScannerOptions) {
     this.video = video
@@ -36,6 +38,7 @@ export class BarcodeScanner {
       const formats = mapZXingFormatsToBarcodeDetectorFormats(this.options.formats ?? [])
       const barcodeDetector = new BarcodeDetector(formats ? { formats } : {})
 
+      this.cameraState = "requesting"
       try {
         this.controls = {
           stop: () => {
@@ -45,6 +48,7 @@ export class BarcodeScanner {
         }
 
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        this.cameraState = "active"
         this.video.srcObject = stream
         await this.video.play()
 
@@ -72,6 +76,7 @@ export class BarcodeScanner {
           e instanceof DOMException && e.name === 'NotAllowedError'
             ? 'Camera permission denied.'
             : 'Could not access camera.'
+        this.cameraState = "denied"
         this.options.onError?.(message)
       }
     } else {
@@ -87,6 +92,8 @@ export class BarcodeScanner {
 
       const reader = new BrowserMultiFormatReader(hints)
 
+      this.cameraState = "requesting"
+
       try {
         this.controls = await reader.decodeFromConstraints(
           { video: { facingMode: 'environment' } },
@@ -101,11 +108,13 @@ export class BarcodeScanner {
             }
           },
         )
+        this.cameraState = "active"
       } catch (e) {
         const message =
           e instanceof DOMException && e.name === 'NotAllowedError'
             ? 'Camera permission denied.'
             : 'Could not access camera.'
+        this.cameraState = "denied"
         this.options.onError?.(message)
       }
     }
@@ -114,5 +123,8 @@ export class BarcodeScanner {
   stop(): void {
     (this.video.srcObject as MediaStream | null)?.getTracks().forEach((track) => track.stop())
     this.video.srcObject = null
+    this.controls?.stop()
+    this.controls = null
+    this.cameraState = "idle"
   }
 }
