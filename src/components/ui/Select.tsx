@@ -28,7 +28,7 @@ const select = tv({
 })
 
 type SelectProps = Omit<preact.InputHTMLAttributes<HTMLSelectElement>, 'size'> & {
-  label?: string
+  label?: string | preact.JSX.Element
   error?: string
   size?: 'small' | 'medium' | 'large'
 }
