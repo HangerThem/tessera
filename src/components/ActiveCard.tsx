@@ -1,6 +1,7 @@
 import { BarcodeFormat } from '@zxing/library'
 import {
   BarcodeIcon,
+  ChevronLeft,
   Copy,
   CreditCard,
   Edit,
@@ -17,7 +18,7 @@ import { tv } from 'tailwind-variants'
 
 import type { Card } from '../types/Card.type'
 
-import { deleteCard, editCardId, favoriteCard } from '../store'
+import { activeCardId, deleteCard, editCardId, favoriteCard } from '../store'
 import { formatBarcodeValue, renderBarcode } from '../utils/barcode'
 import { contrastColor, isDarkColor } from '../utils/color'
 import { formatToLabel } from '../utils/text'
@@ -189,7 +190,10 @@ export function ActiveCard({ card }: ActiveCardProps) {
         ref={dialogRef}
       >
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Tessera</h1>
+          <button className="flex items-center gap-1 cursor-pointer" onClick={() => (activeCardId.value = null)}>
+            <ChevronLeft className="w-5 h-5" />
+            <h1 className="text-2xl font-bold">Tessera</h1>
+          </button>
           <div className="flex gap-2">
             <button
               aria-label="Edit card"
