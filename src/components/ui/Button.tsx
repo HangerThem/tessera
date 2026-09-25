@@ -25,9 +25,9 @@ type ButtonProps = preact.ButtonHTMLAttributes<HTMLButtonElement> & {
   size?: 'small' | 'medium' | 'large'
 }
 
-export const Button = ({ variant, size, children, ...props }: ButtonProps) => {
+export const Button = ({ variant, size, children, className, ...props }: ButtonProps) => {
   return (
-    <button className={button({ variant, size })} {...props}>
+    <button className={button({ variant, size, className: className?.toString() })} {...props}>
       {children}
     </button>
   )
