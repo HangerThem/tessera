@@ -70,6 +70,21 @@ describe('AddCardForm camera flow', () => {
     expect(document.activeElement).toBe(barcodeInput())
   })
 
+  it('focuses an input during the manual entry tap so iOS opens the keyboard', () => {
+    renderForm()
+    const scanner = startScanning()
+    act(() => scanner.options.onStateChange?.('error', deniedError))
+
+    // Runs after the button's click handler but before the rerender, i.e. still inside the user gesture.
+    let focusedDuringTap: Element | null = null
+    const captureFocus = () => (focusedDuringTap = document.activeElement)
+    document.addEventListener('click', captureFocus)
+    fireEvent.click(screen.getByRole('button', { name: 'Enter code manually' }))
+    document.removeEventListener('click', captureFocus)
+
+    expect(focusedDuringTap).toBeInstanceOf(HTMLInputElement)
+  })
+
   it('retries the camera from the error state', () => {
     renderForm()
     const scanner = startScanning()
