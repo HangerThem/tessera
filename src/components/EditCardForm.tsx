@@ -101,7 +101,7 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
           Edit Card
         </h2>
         <button
-          aria-label="Close add card form"
+          aria-label="Close edit card form"
           type="button"
           className="text-foreground/50 hover:text-foreground cursor-pointer transition-colors"
           onClick={handleClose}
