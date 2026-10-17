@@ -1,23 +1,36 @@
 import type { IScannerControls } from '@zxing/browser'
 
 import type { BarcodeFormat, QRCodeFormat } from './enums/codeFormats'
+import type { CameraError, CameraState } from './types/Camera.type'
 import { mapZXingFormatsToBarcodeDetectorFormats } from './utils/barcode'
-import type { CameraState } from './types/Camera.type'
 
 export interface BarcodeScannerOptions {
   formats?: (BarcodeFormat | QRCodeFormat)[]
-  onDetect: (value: string, format: (BarcodeFormat | QRCodeFormat)) => void
-  onError?: (message: string) => void
+  onDetect: (value: string, format: BarcodeFormat | QRCodeFormat) => void
+  onStateChange?: (state: CameraState, error?: CameraError) => void
 }
 
-export class BarcodeScanner {
-  private video: HTMLVideoElement
-  private controls: IScannerControls | null = null
-  private options: BarcodeScannerOptions
-  public cameraState: CameraState = "idle"
+/** iOS occasionally hands back a stream whose video never starts playing; give up after this long. */
+const PLAYBACK_TIMEOUT_MS = 8000
+const DETECT_INTERVAL_MS = 200
 
-  constructor(video: HTMLVideoElement, options: BarcodeScannerOptions) {
-    this.video = video
+/** The stream was granted but the video never started playing (timeout or autoplay rejection). */
+class CameraStartError extends Error {}
+class CameraUnsupportedError extends Error {}
+
+const loadZXing = () => Promise.all([import('@zxing/browser'), import('@zxing/library')])
+
+export class BarcodeScanner {
+  private options: BarcodeScannerOptions
+  private video: HTMLVideoElement | null = null
+  private stream: MediaStream | null = null
+  private controls: IScannerControls | null = null
+  private detectTimer: ReturnType<typeof setTimeout> | undefined
+  /** Incremented on every start/stop so async work from a superseded start can bail out. */
+  private session = 0
+  private state: CameraState = 'idle'
+
+  constructor(options: BarcodeScannerOptions) {
     this.options = options
 
     // oxlint-disable-next-line typescript/no-explicit-any
@@ -27,104 +40,230 @@ export class BarcodeScanner {
     }
   }
 
-  get isScanning(): boolean {
-    return this.controls !== null
+  get cameraState(): CameraState {
+    return this.state
   }
 
-  async start(): Promise<void> {
-    if (this.controls) return
+  get isScanning(): boolean {
+    return this.state === 'requesting' || this.state === 'active'
+  }
 
-    if (("BarcodeDetector" in globalThis)) {
-      const formats = mapZXingFormatsToBarcodeDetectorFormats(this.options.formats ?? [])
-      const barcodeDetector = new BarcodeDetector(formats ? { formats } : {})
+  /**
+   * Starts the camera and begins scanning. Call this directly from a user gesture (e.g. a click handler):
+   * iOS Safari is stricter about camera access that is not triggered by the user.
+   */
+  async start(video: HTMLVideoElement): Promise<void> {
+    if (this.isScanning) return
 
-      this.cameraState = "requesting"
-      try {
-        this.controls = {
-          stop: () => {
-            (this.video.srcObject as MediaStream | null)?.getTracks().forEach((track) => track.stop())
-            this.video.srcObject = null
-          },
-        }
+    const session = ++this.session
+    this.video = video
+    this.setState('requesting')
 
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-        this.cameraState = "active"
-        this.video.srcObject = stream
-        await this.video.play()
+    if (!navigator.mediaDevices?.getUserMedia) {
+      this.fail(session, new CameraUnsupportedError())
+      return
+    }
 
-        const detectLoop = async () => {
-          if (!this.controls) return
-          try {
-            const barcodes = await barcodeDetector.detect(this.video)
-            if (barcodes.length > 0) {
-              this.options.onDetect(
-                barcodes[0].rawValue,
-                barcodes[0].format as unknown as BarcodeFormat | QRCodeFormat,
-              )
-              this.stop()
-              return
-            }
-          } catch (err) {
-            console.error(err)
-          }
-          setTimeout(detectLoop, 200)
-        }
+    const useNativeDetector = 'BarcodeDetector' in globalThis
+    // Start downloading ZXing alongside the permission prompt, but don't await anything before getUserMedia.
+    const zxing = useNativeDetector ? null : loadZXing()
+    zxing?.catch(() => {})
 
-        detectLoop()
-      } catch (e) {
-        const message =
-          e instanceof DOMException && e.name === 'NotAllowedError'
-            ? 'Camera permission denied.'
-            : 'Could not access camera.'
-        this.cameraState = "denied"
-        this.options.onError?.(message)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false,
+      })
+      if (session !== this.session) {
+        stream.getTracks().forEach((track) => track.stop())
+        return
       }
-    } else {
-      const [{ BrowserMultiFormatReader }, { DecodeHintType, NotFoundException }] = await Promise.all(
-        [import('@zxing/browser'), import('@zxing/library')],
+      this.stream = stream
+
+      video.muted = true
+      video.playsInline = true
+      video.setAttribute('playsinline', '')
+      video.srcObject = stream
+      await withTimeout(
+        video.play().catch(() => {
+          throw new CameraStartError()
+        }),
+        PLAYBACK_TIMEOUT_MS,
       )
+      if (session !== this.session) return
 
-      const hints = new Map()
-      hints.set(DecodeHintType.TRY_HARDER, true)
-      if (this.options.formats?.length) {
-        hints.set(DecodeHintType.POSSIBLE_FORMATS, this.options.formats)
+      if (zxing) {
+        await this.detectWithZXing(session, stream, video, zxing)
+      } else {
+        this.detectWithBarcodeDetector(session, video)
       }
+      if (session !== this.session) return
 
-      const reader = new BrowserMultiFormatReader(hints)
-
-      this.cameraState = "requesting"
-
-      try {
-        this.controls = await reader.decodeFromConstraints(
-          { video: { facingMode: 'environment' } },
-          this.video,
-          (result, err) => {
-            if (result) {
-              this.options.onDetect(result.getText(), result.getBarcodeFormat() as BarcodeFormat)
-              this.stop()
-            }
-            if (err && !(err instanceof NotFoundException)) {
-              console.error(err)
-            }
-          },
-        )
-        this.cameraState = "active"
-      } catch (e) {
-        const message =
-          e instanceof DOMException && e.name === 'NotAllowedError'
-            ? 'Camera permission denied.'
-            : 'Could not access camera.'
-        this.cameraState = "denied"
-        this.options.onError?.(message)
-      }
+      this.setState('active')
+    } catch (e) {
+      this.fail(session, e)
     }
   }
 
   stop(): void {
-    (this.video.srcObject as MediaStream | null)?.getTracks().forEach((track) => track.stop())
-    this.video.srcObject = null
+    this.session++
+    this.release()
+    this.setState('idle')
+  }
+
+  private detectWithBarcodeDetector(session: number, video: HTMLVideoElement): void {
+    const formats = mapZXingFormatsToBarcodeDetectorFormats(this.options.formats ?? [])
+    const barcodeDetector = new BarcodeDetector(formats ? { formats } : {})
+
+    const detectLoop = async () => {
+      if (session !== this.session) return
+      try {
+        const barcodes = await barcodeDetector.detect(video)
+        if (session !== this.session) return
+        if (barcodes.length > 0) {
+          this.handleDetect(
+            barcodes[0].rawValue,
+            barcodes[0].format as unknown as BarcodeFormat | QRCodeFormat,
+          )
+          return
+        }
+      } catch (err) {
+        console.error(err)
+      }
+      this.detectTimer = setTimeout(detectLoop, DETECT_INTERVAL_MS)
+    }
+
+    detectLoop()
+  }
+
+  private async detectWithZXing(
+    session: number,
+    stream: MediaStream,
+    video: HTMLVideoElement,
+    zxing: ReturnType<typeof loadZXing>,
+  ): Promise<void> {
+    const [{ BrowserMultiFormatReader }, { DecodeHintType, NotFoundException }] = await zxing
+    if (session !== this.session) return
+
+    const hints = new Map()
+    hints.set(DecodeHintType.TRY_HARDER, true)
+    if (this.options.formats?.length) {
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, this.options.formats)
+    }
+
+    const reader = new BrowserMultiFormatReader(hints)
+    const controls = await reader.decodeFromStream(stream, video, (result, err) => {
+      if (session !== this.session) return
+      if (result) {
+        this.handleDetect(result.getText(), result.getBarcodeFormat() as BarcodeFormat)
+      }
+      if (err && !(err instanceof NotFoundException)) {
+        console.error(err)
+      }
+    })
+
+    if (session !== this.session) {
+      controls.stop()
+      return
+    }
+    this.controls = controls
+  }
+
+  private handleDetect(value: string, format: BarcodeFormat | QRCodeFormat): void {
+    this.stop()
+    this.options.onDetect(value, format)
+  }
+
+  private fail(session: number, error: unknown): void {
+    if (session !== this.session) return
+    console.error(error)
+    this.release()
+    this.setState('error', toCameraError(error))
+  }
+
+  private release(): void {
+    clearTimeout(this.detectTimer)
     this.controls?.stop()
     this.controls = null
-    this.cameraState = "idle"
+    this.stream?.getTracks().forEach((track) => track.stop())
+    this.stream = null
+    if (this.video) this.video.srcObject = null
+  }
+
+  private setState(state: CameraState, error?: CameraError): void {
+    if (state === this.state && !error) return
+    this.state = state
+    this.options.onStateChange?.(state, error)
+  }
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new CameraStartError()), ms)
+  })
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer))
+}
+
+const isIOS = () =>
+  /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+
+function toCameraError(error: unknown): CameraError {
+  if (error instanceof CameraStartError) {
+    return {
+      reason: 'timeout',
+      title: "Camera didn't start",
+      message: "The camera didn't start properly. Try again, or enter the code manually.",
+      retryable: true,
+    }
+  }
+
+  if (error instanceof CameraUnsupportedError) {
+    return {
+      reason: 'unsupported',
+      title: 'Camera not available',
+      message: isIOS()
+        ? "This browser can't use the camera here. Try opening Tessera in Safari, or enter the code manually."
+        : "This browser can't use the camera here. You can enter the code manually instead.",
+      retryable: false,
+    }
+  }
+
+  const name = error instanceof DOMException ? error.name : ''
+  switch (name) {
+    case 'NotAllowedError':
+    case 'SecurityError':
+      return {
+        reason: 'denied',
+        title: 'Camera access blocked',
+        message: isIOS()
+          ? 'Allow camera access in Settings › Safari › Camera (or via "aA" › Website Settings in the address bar), then try again.'
+          : "Allow camera access for this site in your browser's settings, then try again.",
+        retryable: true,
+      }
+    case 'NotFoundError':
+    case 'OverconstrainedError':
+      return {
+        reason: 'not-found',
+        title: 'No camera found',
+        message: "We couldn't find a camera on this device. You can enter the code manually instead.",
+        retryable: false,
+      }
+    case 'NotReadableError':
+    case 'AbortError':
+      return {
+        reason: 'in-use',
+        title: 'Camera is busy',
+        message: 'Another app may be using the camera. Close it and try again.',
+        retryable: true,
+      }
+    default:
+      return {
+        reason: 'unknown',
+        title: "Couldn't start the camera",
+        message: 'Something went wrong while starting the camera. Try again, or enter the code manually.',
+        retryable: true,
+      }
   }
 }
