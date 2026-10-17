@@ -1,10 +1,11 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/preact'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/preact'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Card } from './types/Card.type'
 
 import { App } from './App'
 import { activeCardId, editCardId, isAddCardFormVisible } from './store'
+import { applyUpdate, isUpdateAvailable } from './sw'
 
 // Hoisted so the idb-keyval mock below can return it.
 const card = vi.hoisted((): Card => ({
@@ -15,6 +16,11 @@ const card = vi.hoisted((): Card => ({
   isFavorite: false,
   color: '#3b82f6',
 }))
+
+vi.mock('./sw', async () => {
+  const { signal } = await import('@preact/signals')
+  return { isUpdateAvailable: signal(false), applyUpdate: vi.fn() }
+})
 
 vi.mock('idb-keyval', () => ({
   createStore: () => ({}),
@@ -48,6 +54,7 @@ describe('App screen navigation', () => {
     activeCardId.value = null
     editCardId.value = null
     isAddCardFormVisible.value = false
+    isUpdateAvailable.value = false
   })
 
   it('closes only the delete confirmation on Escape', () => {
@@ -92,5 +99,26 @@ describe('App screen navigation', () => {
     pressBack()
 
     expect(pushState).not.toHaveBeenCalled()
+  })
+
+  it('shows the update prompt once a new version is available', () => {
+    render(<App />)
+    expect(screen.queryByRole('status')).toBeNull()
+
+    act(() => {
+      isUpdateAvailable.value = true
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Reload' }))
+
+    expect(applyUpdate).toHaveBeenCalledOnce()
+  })
+
+  it('hides the update prompt when dismissed', () => {
+    isUpdateAvailable.value = true
+    render(<App />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss update notice' }))
+
+    expect(screen.queryByRole('status')).toBeNull()
   })
 })
