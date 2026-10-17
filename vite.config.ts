@@ -28,7 +28,8 @@ export default defineConfig({
     tailwindcss(),
     preact(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // Ask before switching to a new version instead of reloading the page mid-use (e.g. at checkout).
+      registerType: 'prompt',
       includeAssets: [
         'favicon.ico',
         'favicon.svg',
@@ -71,8 +72,6 @@ export default defineConfig({
           },
         ],
         cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
       },
     }),
   ],
