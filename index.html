@@ -5,6 +5,19 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tessera</title>
+    <script>
+      // Apply the theme before the first paint so dark mode doesn't flash light on startup.
+      // Keep in sync with src/utils/theme.ts, which takes over once the app has loaded.
+      try {
+        const theme = localStorage.getItem('theme')
+        const isDark =
+          theme === 'dark' ||
+          (theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.dataset.theme = isDark ? 'dark' : 'light'
+      } catch {
+        // Storage can be unavailable (e.g. blocked); the app script will still apply the theme.
+      }
+    </script>
     <meta
       name="description"
       content="Dead simple app for managing your membership and loyalty cards."
