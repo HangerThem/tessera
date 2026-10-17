@@ -14,10 +14,37 @@ export const cards = signal<Card[]>([])
 export const activeCardId = signal<string | null>(null)
 export const isAddCardFormVisible = signal(false)
 export const editCardId = signal<string | null>(null)
+export const isDeleteConfirmVisible = signal(false)
 
 export const activeCard = computed(
   () => cards.value.find((c) => c.id === activeCardId.value) ?? null,
 )
+
+/** Whether any screen is open on top of the card list. */
+export const isAnyScreenOpen = computed(
+  () => activeCardId.value !== null || editCardId.value !== null || isAddCardFormVisible.value,
+)
+
+/**
+ * Closes the topmost open screen: the delete confirmation, then the edit form, then the card
+ * detail or add form.
+ *
+ * @returns Whether a screen was closed.
+ */
+export function closeTopScreen(): boolean {
+  if (isDeleteConfirmVisible.value) {
+    isDeleteConfirmVisible.value = false
+  } else if (editCardId.value !== null) {
+    editCardId.value = null
+  } else if (activeCardId.value !== null) {
+    activeCardId.value = null
+  } else if (isAddCardFormVisible.value) {
+    isAddCardFormVisible.value = false
+  } else {
+    return false
+  }
+  return true
+}
 
 let wakeLock: WakeLockSentinel | null = null
 
@@ -77,6 +104,7 @@ export async function deleteCard(id: string): Promise<void> {
   if (activeCardId.value === id) {
     activeCardId.value = null
   }
+  isDeleteConfirmVisible.value = false
   await deleteCardsFromDB([id])
   await refreshCards()
 }
