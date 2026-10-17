@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { BarcodeScanner } from './barcodeScanner'
-import { BarcodeFormat } from './enums/codeFormats'
+import { BarcodeFormat, QRCodeFormat } from './enums/codeFormats'
 import type { CameraError, CameraState } from './types/Camera.type'
 
 const zxing = vi.hoisted(() => ({
@@ -231,6 +231,22 @@ describe('BarcodeScanner', () => {
       expect(onDetect.mock.calls[0][0]).toBe('4006381333931')
       expect(track.stop).toHaveBeenCalled()
       expect(scanner.cameraState).toBe('idle')
+    })
+
+    it('reports the format as a ZXing format', async () => {
+      mockGetUserMedia(async () => createStream().stream)
+      vi.stubGlobal(
+        'BarcodeDetector',
+        class {
+          detect = async () => [{ rawValue: 'https://example.com', format: 'qr_code' }]
+        },
+      )
+      const { scanner, onDetect } = createScanner()
+
+      await scanner.start(createVideo())
+
+      await vi.waitFor(() => expect(onDetect).toHaveBeenCalled())
+      expect(onDetect).toHaveBeenCalledWith('https://example.com', QRCodeFormat.QR_CODE)
     })
   })
 })
