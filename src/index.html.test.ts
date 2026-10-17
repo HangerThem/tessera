@@ -50,3 +50,23 @@ describe('index.html theme script', () => {
     expect(() => runThemeScript({ stored: null, systemDark: false })).not.toThrow()
   })
 })
+
+describe('index.html install metadata', () => {
+  const head = new DOMParser().parseFromString(indexHtml, 'text/html').head
+  const meta = (selector: string) => head.querySelector(selector)?.getAttribute('content')
+
+  it('sets the browser theme colour for light and dark mode', () => {
+    expect(meta('meta[name="theme-color"][media="(prefers-color-scheme: light)"]')).toBe('#f5f5f5')
+    expect(meta('meta[name="theme-color"][media="(prefers-color-scheme: dark)"]')).toBe('#1e1e1e')
+  })
+
+  it('links the iOS home screen icon', () => {
+    expect(head.querySelector('link[rel="apple-touch-icon"]')?.getAttribute('href')).toBe(
+      '/apple-touch-icon.png',
+    )
+  })
+
+  it('names the app for the iOS home screen', () => {
+    expect(meta('meta[name="apple-mobile-web-app-title"]')).toBe('Tessera')
+  })
+})
