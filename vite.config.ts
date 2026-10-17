@@ -1,9 +1,14 @@
+/// <reference types="vitest/config" />
 import { preact } from '@preact/preset-vite'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  test: {
+    environment: 'happy-dom',
+    restoreMocks: true,
+  },
   build: {
     rollupOptions: {
       output: {
