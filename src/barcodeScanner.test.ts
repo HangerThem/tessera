@@ -54,6 +54,8 @@ const lastError = (onStateChange: ReturnType<typeof createScanner>['onStateChang
   onStateChange.mock.calls.at(-1)?.[1]
 
 describe('BarcodeScanner', () => {
+  const originalWarn = console.warn
+
   beforeEach(() => {
     zxing.callback = null
     zxing.stop = vi.fn()
@@ -63,6 +65,13 @@ describe('BarcodeScanner', () => {
     vi.useRealTimers()
     vi.unstubAllGlobals()
     Reflect.deleteProperty(navigator, 'mediaDevices')
+    console.warn = originalWarn
+  })
+
+  it('does not replace console.warn when created', () => {
+    createScanner()
+
+    expect(console.warn).toBe(originalWarn)
   })
 
   it('requests the camera synchronously so iOS treats it as part of the user gesture', () => {
@@ -205,6 +214,23 @@ describe('BarcodeScanner', () => {
   })
 
   describe('with ZXing', () => {
+    it('drops ZXing reader warnings only while scanning', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      mockGetUserMedia(async () => createStream().stream)
+      const { scanner } = createScanner()
+
+      await scanner.start(createVideo())
+      console.warn('MultiFormatReader: non-ReaderException from reader:', new Error())
+      console.warn('Something else')
+      scanner.stop()
+      console.warn('MultiFormatReader: after stop')
+
+      expect(warn.mock.calls.map(([message]) => message)).toEqual([
+        'Something else',
+        'MultiFormatReader: after stop',
+      ])
+    })
+
     it('reports the detected value and stops scanning', async () => {
       const { stream, track } = createStream()
       mockGetUserMedia(async () => stream)
