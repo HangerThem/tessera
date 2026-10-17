@@ -2,11 +2,12 @@ import type { IScannerControls } from '@zxing/browser'
 
 import type { BarcodeFormat, QRCodeFormat } from './enums/codeFormats'
 import type { CameraError, CameraState } from './types/Camera.type'
-import { mapZXingFormatsToBarcodeDetectorFormats } from './utils/barcode'
+import { mapBarcodeDetectorFormatToZXing, mapZXingFormatsToBarcodeDetectorFormats } from './utils/barcode'
 
 export interface BarcodeScannerOptions {
   formats?: (BarcodeFormat | QRCodeFormat)[]
-  onDetect: (value: string, format: BarcodeFormat | QRCodeFormat) => void
+  /** `format` is undefined when the detected format is not one the app supports. */
+  onDetect: (value: string, format: BarcodeFormat | QRCodeFormat | undefined) => void
   onStateChange?: (state: CameraState, error?: CameraError) => void
 }
 
@@ -121,10 +122,7 @@ export class BarcodeScanner {
         const barcodes = await barcodeDetector.detect(video)
         if (session !== this.session) return
         if (barcodes.length > 0) {
-          this.handleDetect(
-            barcodes[0].rawValue,
-            barcodes[0].format as unknown as BarcodeFormat | QRCodeFormat,
-          )
+          this.handleDetect(barcodes[0].rawValue, mapBarcodeDetectorFormatToZXing(barcodes[0].format))
           return
         }
       } catch (err) {
@@ -169,7 +167,7 @@ export class BarcodeScanner {
     this.controls = controls
   }
 
-  private handleDetect(value: string, format: BarcodeFormat | QRCodeFormat): void {
+  private handleDetect(value: string, format: BarcodeFormat | QRCodeFormat | undefined): void {
     this.stop()
     this.options.onDetect(value, format)
   }
