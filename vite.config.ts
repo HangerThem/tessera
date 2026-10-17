@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
     restoreMocks: true,
+    css: { include: [/style\.css/] },
   },
   build: {
     rollupOptions: {
