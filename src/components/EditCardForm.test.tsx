@@ -2,12 +2,15 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/preact
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { BarcodeScannerOptions } from '../barcodeScanner'
-import { BarcodeFormat } from '../enums/codeFormats'
 import type { CameraError } from '../types/Camera.type'
 import type { Card } from '../types/Card.type'
+
+import { BarcodeFormat } from '../enums/codeFormats'
 import { EditCardForm } from './EditCardForm'
 
-const scanners = vi.hoisted(() => [] as { options: BarcodeScannerOptions; start: () => void; stop: () => void }[])
+const scanners = vi.hoisted(
+  () => [] as { options: BarcodeScannerOptions; start: () => void; stop: () => void }[],
+)
 
 vi.mock('../barcodeScanner', () => ({
   BarcodeScanner: class {
@@ -105,7 +108,11 @@ describe('EditCardForm camera flow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
 
     expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({ id: card.id, barcodeValue: '4006381333931', barcodeFormat: BarcodeFormat.EAN_13 }),
+      expect.objectContaining({
+        id: card.id,
+        barcodeValue: '4006381333931',
+        barcodeFormat: BarcodeFormat.EAN_13,
+      }),
     )
   })
 

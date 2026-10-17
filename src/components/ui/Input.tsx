@@ -53,9 +53,11 @@ export const Input = ({ label, error, size = 'medium', ...props }: InputProps) =
         aria-invalid={!!error}
         {...props}
       />
-      {error && <p className="text-red-500 text-xs mt-1" id={errorId}>
-        {error}
-      </p>}
+      {error && (
+        <p className="text-red-500 text-xs mt-1" id={errorId}>
+          {error}
+        </p>
+      )}
     </div>
   )
 }

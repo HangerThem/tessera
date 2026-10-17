@@ -1,6 +1,12 @@
 export type CameraState = 'idle' | 'requesting' | 'active' | 'error'
 
-export type CameraErrorReason = 'denied' | 'not-found' | 'in-use' | 'unsupported' | 'timeout' | 'unknown'
+export type CameraErrorReason =
+  | 'denied'
+  | 'not-found'
+  | 'in-use'
+  | 'unsupported'
+  | 'timeout'
+  | 'unknown'
 
 export interface CameraError {
   reason: CameraErrorReason

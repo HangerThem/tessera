@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { CameraError, CameraState } from './types/Camera.type'
+
 import { BarcodeScanner } from './barcodeScanner'
 import { BarcodeFormat, QRCodeFormat } from './enums/codeFormats'
-import type { CameraError, CameraState } from './types/Camera.type'
 
 const zxing = vi.hoisted(() => ({
   callback: null as ((result: unknown, err?: unknown) => void) | null,
@@ -11,7 +12,11 @@ const zxing = vi.hoisted(() => ({
 
 vi.mock('@zxing/browser', () => ({
   BrowserMultiFormatReader: class {
-    async decodeFromStream(_stream: MediaStream, _video: HTMLVideoElement, callback: typeof zxing.callback) {
+    async decodeFromStream(
+      _stream: MediaStream,
+      _video: HTMLVideoElement,
+      callback: typeof zxing.callback,
+    ) {
       zxing.callback = callback
       return { stop: zxing.stop }
     }
@@ -153,7 +158,9 @@ describe('BarcodeScanner', () => {
 
   it('can be retried after an error', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
-    const getUserMedia = mockGetUserMedia(() => Promise.reject(new DOMException('', 'NotReadableError')))
+    const getUserMedia = mockGetUserMedia(() =>
+      Promise.reject(new DOMException('', 'NotReadableError')),
+    )
     const { scanner } = createScanner()
     const video = createVideo()
 
@@ -204,7 +211,10 @@ describe('BarcodeScanner', () => {
       const { scanner, onDetect } = createScanner()
 
       await scanner.start(createVideo())
-      zxing.callback?.({ getText: () => '4006381333931', getBarcodeFormat: () => BarcodeFormat.EAN_13 })
+      zxing.callback?.({
+        getText: () => '4006381333931',
+        getBarcodeFormat: () => BarcodeFormat.EAN_13,
+      })
 
       expect(onDetect).toHaveBeenCalledWith('4006381333931', BarcodeFormat.EAN_13)
       expect(zxing.stop).toHaveBeenCalled()

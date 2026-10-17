@@ -2,7 +2,11 @@ import type { IScannerControls } from '@zxing/browser'
 
 import type { BarcodeFormat, QRCodeFormat } from './enums/codeFormats'
 import type { CameraError, CameraState } from './types/Camera.type'
-import { mapBarcodeDetectorFormatToZXing, mapZXingFormatsToBarcodeDetectorFormats } from './utils/barcode'
+
+import {
+  mapBarcodeDetectorFormatToZXing,
+  mapZXingFormatsToBarcodeDetectorFormats,
+} from './utils/barcode'
 
 export interface BarcodeScannerOptions {
   formats?: (BarcodeFormat | QRCodeFormat)[]
@@ -122,7 +126,10 @@ export class BarcodeScanner {
         const barcodes = await barcodeDetector.detect(video)
         if (session !== this.session) return
         if (barcodes.length > 0) {
-          this.handleDetect(barcodes[0].rawValue, mapBarcodeDetectorFormatToZXing(barcodes[0].format))
+          this.handleDetect(
+            barcodes[0].rawValue,
+            mapBarcodeDetectorFormatToZXing(barcodes[0].format),
+          )
           return
         }
       } catch (err) {
@@ -245,7 +252,8 @@ function toCameraError(error: unknown): CameraError {
       return {
         reason: 'not-found',
         title: 'No camera found',
-        message: "We couldn't find a camera on this device. You can enter the code manually instead.",
+        message:
+          "We couldn't find a camera on this device. You can enter the code manually instead.",
         retryable: false,
       }
     case 'NotReadableError':
@@ -260,7 +268,8 @@ function toCameraError(error: unknown): CameraError {
       return {
         reason: 'unknown',
         title: "Couldn't start the camera",
-        message: 'Something went wrong while starting the camera. Try again, or enter the code manually.',
+        message:
+          'Something went wrong while starting the camera. Try again, or enter the code manually.',
         retryable: true,
       }
   }

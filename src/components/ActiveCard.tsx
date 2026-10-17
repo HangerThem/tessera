@@ -18,13 +18,13 @@ import { tv } from 'tailwind-variants'
 
 import type { Card } from '../types/Card.type'
 
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import { activeCardId, deleteCard, editCardId, favoriteCard } from '../store'
 import { formatBarcodeValue, renderBarcode } from '../utils/barcode'
 import { contrastColor, isDarkColor } from '../utils/color'
 import { formatToLabel } from '../utils/text'
 import { BarcodeCanvas } from './BarcodeCanvas'
 import { Button } from './ui/Button'
-import { useFocusTrap } from '../hooks/useFocusTrap'
 
 interface ActiveCardProps {
   card: Card
@@ -190,7 +190,10 @@ export function ActiveCard({ card }: ActiveCardProps) {
         ref={dialogRef}
       >
         <div className="flex items-center justify-between">
-          <button className="flex items-center gap-1 cursor-pointer" onClick={() => (activeCardId.value = null)}>
+          <button
+            className="flex items-center gap-1 cursor-pointer"
+            onClick={() => (activeCardId.value = null)}
+          >
             <ChevronLeft className="w-5 h-5" />
             <h1 className="text-2xl font-bold">Tessera</h1>
           </button>
@@ -229,7 +232,12 @@ export function ActiveCard({ card }: ActiveCardProps) {
                 {formatToLabel(BarcodeFormat[card.barcodeFormat])}
               </p>
             </div>
-            <button aria-label={card.isFavorite ? 'Unmark as favorite' : 'Mark as favorite'} aria-pressed={card.isFavorite} onClick={() => favoriteCard(card.id)} className="cursor-pointer">
+            <button
+              aria-label={card.isFavorite ? 'Unmark as favorite' : 'Mark as favorite'}
+              aria-pressed={card.isFavorite}
+              onClick={() => favoriteCard(card.id)}
+              className="cursor-pointer"
+            >
               <Star
                 className={`w-5 h-5 text-black ${card.isFavorite ? 'fill-current' : 'fill-none'}`}
                 aria-hidden="true"
@@ -273,7 +281,11 @@ export function ActiveCard({ card }: ActiveCardProps) {
               <p className="text-sm text-neutral-500 text-center font-mono select-none">
                 {formatBarcodeValue(card.barcodeFormat, card.barcodeValue)}
               </p>
-              <button onClick={handleCopy} className="cursor-pointer flex" aria-label="Copy card number">
+              <button
+                onClick={handleCopy}
+                className="cursor-pointer flex"
+                aria-label="Copy card number"
+              >
                 <Copy className="w-4 h-4 text-neutral-500" />
               </button>
               <span aria-live="polite" aria-atomic="true" className="sr-only">
