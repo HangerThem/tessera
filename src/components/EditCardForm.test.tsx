@@ -120,7 +120,7 @@ describe('EditCardForm camera flow', () => {
     const { onClose } = renderForm()
     const scanner = startScanning()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Close add card form' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Close edit card form' }))
 
     expect(scanner.stop).toHaveBeenCalled()
     expect(onClose).toHaveBeenCalled()
