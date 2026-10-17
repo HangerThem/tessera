@@ -1,10 +1,12 @@
 import { ChevronDown, ScanBarcode, X } from 'lucide-preact'
-import { useEffect, useState } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
 
 import type { Card } from '../types/Card.type'
 
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner'
+import { BarcodeScannerView } from './BarcodeScannerView'
+import { holdKeyboardFocus } from '../utils/keyboard'
 import { formatToLabel } from '../utils/text'
 import { Button } from './ui/Button'
 import ColorPicker, { PRESET_COLORS } from './ui/ColorPicker'
@@ -30,7 +32,7 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
   const [showAdvanced, setShowAdvanced] = useState(false)
   const dialogRef = useFocusTrap<HTMLDivElement>(true)
 
-  const { isScanning, scanError, videoRef, toggle, stop } = useBarcodeScanner({
+  const { cameraState, cameraError, videoRef, start, stop } = useBarcodeScanner({
     onDetect: (value, format) => {
       setBarcodeValue(value)
       if (format in BarcodeFormat) {
@@ -41,11 +43,20 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
     },
   })
 
+  const showScanner = cameraState !== 'idle'
+  const focusBarcodeInputRef = useRef<ReturnType<typeof holdKeyboardFocus> | null>(null)
+
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = true
-    }
-  }, [videoRef])
+    if (cameraState !== 'idle' || !focusBarcodeInputRef.current) return
+    focusBarcodeInputRef.current(dialogRef.current?.querySelector<HTMLInputElement>('input[name="barcodeValue"]'))
+    focusBarcodeInputRef.current = null
+  }, [cameraState, dialogRef])
+
+  const handleManualEntry = () => {
+    // The barcode input only mounts after the rerender, so open the keyboard now while still in the tap (iOS).
+    if (dialogRef.current) focusBarcodeInputRef.current = holdKeyboardFocus(dialogRef.current)
+    stop()
+  }
 
   const handleSubmit = () => {
     const nextErrors = {
@@ -95,7 +106,7 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
         </button>
       </div>
 
-      {!isScanning && (
+      {!showScanner && (
         <div className="space-y-4">
           <Input
             label="Card name"
@@ -112,6 +123,7 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
 
           <Input
             label="Barcode number"
+            name="barcodeValue"
             type="text"
             placeholder="e.g. 123456789"
             autocomplete="off"
@@ -181,16 +193,24 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
         </div>
       )}
 
-      <div className="mb-4">
-        <Button type="button" onClick={toggle} variant="secondary">
-          <ScanBarcode />
-          {isScanning ? 'Stop Scanning' : 'Scan Barcode'}
-        </Button>
-        {isScanning && <video ref={videoRef} playsInline className="rounded-md mt-2" aria-label="Camera viewfinder" />}
-        {scanError && <p className="text-red-500 text-xs mt-1">{scanError}</p>}
-      </div>
+      {!showScanner && (
+        <div className="mb-4">
+          <Button type="button" onClick={start} variant="secondary">
+            <ScanBarcode />
+            Scan Barcode
+          </Button>
+        </div>
+      )}
 
-      {!isScanning && (
+      <BarcodeScannerView
+        cameraState={cameraState}
+        cameraError={cameraError}
+        videoRef={videoRef}
+        onRetry={start}
+        onManualEntry={handleManualEntry}
+      />
+
+      {!showScanner && (
         <Button type="submit" onClick={handleSubmit}>
           Save Card
         </Button>

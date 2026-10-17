@@ -67,6 +67,17 @@ export const mapZXingFormatsToBarcodeDetectorFormats = (
   return mapped.length > 0 ? mapped : undefined
 }
 
+/**
+ * Maps a BarcodeDetector format back to the corresponding ZXing barcode format.
+ *
+ * @param {string} format - A BarcodeDetector format, e.g. 'qr_code'.
+ * @returns {BarcodeFormat | QRCodeFormat | undefined} The corresponding ZXing format, or undefined if it is not supported.
+ */
+export const mapBarcodeDetectorFormatToZXing = (format: string): BarcodeFormat | QRCodeFormat | undefined =>
+  [...Object.values(BarcodeFormat), ...Object.values(QRCodeFormat)]
+    .filter((zxingFormat): zxingFormat is BarcodeFormat | QRCodeFormat => typeof zxingFormat === 'number')
+    .find((zxingFormat) => mapZXingFormatsToBarcodeDetectorFormats([zxingFormat])?.[0] === format)
+
 /** * Determines if the given format is a QR code format.
  *
  * @param {BarcodeFormat | QRCodeFormat} format - The barcode format to check.
