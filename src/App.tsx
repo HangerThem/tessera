@@ -1,3 +1,4 @@
+import { effect } from '@preact/signals'
 import { CreditCard, Plus } from 'lucide-preact'
 import { useEffect, useState } from 'preact/hooks'
 
@@ -13,8 +14,10 @@ import { fuzzySearch } from './lib/fuzzy'
 import {
   activeCardId,
   cards,
+  closeTopScreen,
   editCardId,
   isAddCardFormVisible,
+  isAnyScreenOpen,
   saveCard,
   updateCardById,
 } from './store'
@@ -23,27 +26,26 @@ export function App() {
   const [query, setQuery] = useState('')
 
   useEffect(() => {
-    history.pushState(null, '', location.href)
+    // Keep one extra history entry while a screen is open, so back closes it instead of leaving the
+    // app. When nothing is open, back behaves normally.
+    const pushScreenEntry = () => history.pushState({ screen: true }, '')
+    const disposeEffect = effect(() => {
+      if (isAnyScreenOpen.value && !history.state?.screen) pushScreenEntry()
+    })
+
     const onPopState = () => {
-      if (activeCardId || isAddCardFormVisible) {
-        activeCardId.value = null
-        isAddCardFormVisible.value = false
-        history.pushState(null, '', location.href)
-      }
+      if (closeTopScreen() && isAnyScreenOpen.value) pushScreenEntry()
     }
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        isAddCardFormVisible.value = false
-        activeCardId.value = null
-        editCardId.value = null
-      }
+      if (e.key === 'Escape') closeTopScreen()
     }
 
     window.addEventListener('popstate', onPopState)
     document.addEventListener('keydown', onKeyDown)
 
     return () => {
+      disposeEffect()
       window.removeEventListener('popstate', onPopState)
       document.removeEventListener('keydown', onKeyDown)
     }
