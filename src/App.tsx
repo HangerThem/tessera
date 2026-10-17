@@ -10,6 +10,7 @@ import { CardList } from './components/CardList'
 import { EditCardForm } from './components/EditCardForm'
 import { ThemeToggle } from './components/ThemeToggle'
 import { Input } from './components/ui/Input'
+import { UpdatePrompt } from './components/UpdatePrompt'
 import { fuzzySearch } from './lib/fuzzy'
 import {
   activeCardId,
@@ -21,6 +22,7 @@ import {
   saveCard,
   updateCardById,
 } from './store'
+import { applyUpdate, isUpdateAvailable } from './sw'
 
 export function App() {
   const [query, setQuery] = useState('')
@@ -123,6 +125,9 @@ export function App() {
           onSave={async (card) => saveCard(card)}
           onClose={() => (isAddCardFormVisible.value = false)}
         />
+      )}
+      {isUpdateAvailable.value && (
+        <UpdatePrompt onReload={applyUpdate} onDismiss={() => (isUpdateAvailable.value = false)} />
       )}
     </main>
   )
