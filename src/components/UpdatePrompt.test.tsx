@@ -16,9 +16,7 @@ describe('UpdatePrompt', () => {
   it('announces the new version politely', () => {
     renderPrompt()
 
-    expect(screen.getByRole('status').textContent).toContain(
-      'A new version of Tessera is available.',
-    )
+    expect(screen.getByRole('status').textContent).toContain('Update available')
   })
 
   it('reloads into the new version', () => {
