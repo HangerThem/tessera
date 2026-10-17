@@ -16,7 +16,6 @@
     "format:write": "oxfmt --write"
   },
   "dependencies": {
-    "@preact/preset-vite": "^2.10.6",
     "@preact/signals": "^2.11.2",
     "@zxing/browser": "^0.2.1",
     "@zxing/library": "^0.23.0",
@@ -27,6 +26,7 @@
     "tailwind-variants": "^3.3.1"
   },
   "devDependencies": {
+    "@preact/preset-vite": "^2.10.6",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/preact": "^3.2.4",
     "barcode-detector": "^3.2.2",
