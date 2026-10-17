@@ -25,6 +25,21 @@ class CameraUnsupportedError extends Error {}
 
 const loadZXing = () => Promise.all([import('@zxing/browser'), import('@zxing/library')])
 
+/**
+ * ZXing logs a "MultiFormatReader" warning for many video frames while scanning. Drops just those
+ * warnings and returns a function that restores the original console.warn.
+ */
+function silenceZXingWarnings(): () => void {
+  const originalWarn = console.warn
+  console.warn = (...args: unknown[]) => {
+    if (typeof args[0] === 'string' && args[0].startsWith('MultiFormatReader')) return
+    originalWarn(...args)
+  }
+  return () => {
+    console.warn = originalWarn
+  }
+}
+
 export class BarcodeScanner {
   private options: BarcodeScannerOptions
   private video: HTMLVideoElement | null = null
@@ -34,15 +49,10 @@ export class BarcodeScanner {
   /** Incremented on every start/stop so async work from a superseded start can bail out. */
   private session = 0
   private state: CameraState = 'idle'
+  private restoreConsoleWarn: (() => void) | null = null
 
   constructor(options: BarcodeScannerOptions) {
     this.options = options
-
-    // oxlint-disable-next-line typescript/no-explicit-any
-    console.warn = (...args: any[]) => {
-      if (typeof args[0] === 'string' && args[0].startsWith('MultiFormatReader')) return
-      console.log(...args)
-    }
   }
 
   get cameraState(): CameraState {
@@ -157,6 +167,7 @@ export class BarcodeScanner {
     }
 
     const reader = new BrowserMultiFormatReader(hints)
+    this.restoreConsoleWarn = silenceZXingWarnings()
     const controls = await reader.decodeFromStream(stream, video, (result, err) => {
       if (session !== this.session) return
       if (result) {
@@ -188,6 +199,8 @@ export class BarcodeScanner {
 
   private release(): void {
     clearTimeout(this.detectTimer)
+    this.restoreConsoleWarn?.()
+    this.restoreConsoleWarn = null
     this.controls?.stop()
     this.controls = null
     this.stream?.getTracks().forEach((track) => track.stop())
