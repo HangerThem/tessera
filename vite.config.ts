@@ -40,7 +40,23 @@ export default defineConfig({
         name: 'Tessera',
         short_name: 'Tessera',
         description: 'Dead simple barcode card manager',
+        id: '/',
+        start_url: '/',
+        scope: '/',
+        // Browsers only install apps with an icon whose purpose includes "any".
         icons: [
+          {
+            src: '/web-app-manifest-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: '/web-app-manifest-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any',
+          },
           {
             src: '/web-app-manifest-192x192.png',
             sizes: '192x192',
