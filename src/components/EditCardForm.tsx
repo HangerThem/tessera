@@ -6,6 +6,7 @@ import type { Card } from '../types/Card.type'
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner'
 import { BarcodeScannerView } from './BarcodeScannerView'
+import { holdKeyboardFocus } from '../utils/keyboard'
 import { formatToLabel } from '../utils/text'
 import { Button } from './ui/Button'
 import ColorPicker, { PRESET_COLORS } from './ui/ColorPicker'
@@ -43,16 +44,17 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
   })
 
   const showScanner = cameraState !== 'idle'
-  const focusBarcodeInputRef = useRef(false)
+  const focusBarcodeInputRef = useRef<ReturnType<typeof holdKeyboardFocus> | null>(null)
 
   useEffect(() => {
     if (cameraState !== 'idle' || !focusBarcodeInputRef.current) return
-    focusBarcodeInputRef.current = false
-    dialogRef.current?.querySelector<HTMLInputElement>('input[name="barcodeValue"]')?.focus()
+    focusBarcodeInputRef.current(dialogRef.current?.querySelector<HTMLInputElement>('input[name="barcodeValue"]'))
+    focusBarcodeInputRef.current = null
   }, [cameraState, dialogRef])
 
   const handleManualEntry = () => {
-    focusBarcodeInputRef.current = true
+    // The barcode input only mounts after the rerender, so open the keyboard now while still in the tap (iOS).
+    if (dialogRef.current) focusBarcodeInputRef.current = holdKeyboardFocus(dialogRef.current)
     stop()
   }
 
