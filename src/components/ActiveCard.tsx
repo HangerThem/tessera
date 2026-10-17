@@ -19,7 +19,13 @@ import { tv } from 'tailwind-variants'
 import type { Card } from '../types/Card.type'
 
 import { useFocusTrap } from '../hooks/useFocusTrap'
-import { activeCardId, deleteCard, editCardId, favoriteCard } from '../store'
+import {
+  activeCardId,
+  deleteCard,
+  editCardId,
+  favoriteCard,
+  isDeleteConfirmVisible,
+} from '../store'
 import { formatBarcodeValue, renderBarcode } from '../utils/barcode'
 import { contrastColor, isDarkColor } from '../utils/color'
 import { formatToLabel } from '../utils/text'
@@ -71,14 +77,13 @@ const shareButtonStyle = tv({
 
 export function ActiveCard({ card }: ActiveCardProps) {
   const [displayFormat, setDisplayFormat] = useState<'barcode' | 'qr'>('barcode')
-  const [isDeleteConfirmVisible, setIsDeleteConfirmVisible] = useState(false)
   const isDark = isDarkColor(card.color ?? '#fff')
   // const { root: noteRootClass, input: noteInputClass } = noteInputStyle({ dark: isDark })
   const [canShareText, setCanShareText] = useState(false)
   const [canShareFiles, setCanShareFiles] = useState(false)
   const [justCopied, setJustCopied] = useState(false)
   const dialogRef = useFocusTrap<HTMLDivElement>(true)
-  const confirmRef = useFocusTrap<HTMLDivElement>(isDeleteConfirmVisible)
+  const confirmRef = useFocusTrap<HTMLDivElement>(isDeleteConfirmVisible.value)
 
   useEffect(() => {
     if (!navigator.share || !navigator.canShare) return
@@ -141,12 +146,13 @@ export function ActiveCard({ card }: ActiveCardProps) {
 
     return () => {
       document.body.style.overflow = ''
+      isDeleteConfirmVisible.value = false
     }
   }, [])
 
   return (
     <>
-      {isDeleteConfirmVisible && (
+      {isDeleteConfirmVisible.value && (
         <div
           className="fixed inset-0 bg-black/50 z-100 flex items-center justify-center"
           role="dialog"
@@ -164,7 +170,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
               <Button
                 variant="primary"
                 size="small"
-                onClick={() => setIsDeleteConfirmVisible(false)}
+                onClick={() => (isDeleteConfirmVisible.value = false)}
               >
                 <XIcon className="w-4 h-4" />
                 Cancel
@@ -208,7 +214,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
             <button
               aria-label="Delete card"
               className="cursor-pointer p-2 rounded-lg hover:bg-black/10 transition-colors"
-              onClick={() => setIsDeleteConfirmVisible(true)}
+              onClick={() => (isDeleteConfirmVisible.value = true)}
             >
               <Trash2 className="w-4 h-4" />
             </button>
