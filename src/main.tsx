@@ -13,6 +13,7 @@ import { ActiveCard } from './components/ActiveCard'
 import { AddCardForm } from './components/AddCardForm'
 import { CardList } from './components/CardList'
 import { EditCardForm } from './components/EditCardForm'
+import { ThemeToggle } from './components/ThemeToggle'
 import { Input } from './components/ui/Input'
 import { fuzzySearch } from './lib/fuzzy'
 import {
@@ -64,7 +65,10 @@ function App() {
 
   return (
     <main>
-      <h1 className="text-2xl font-bold mb-1">Tessera</h1>
+      <div className="flex items-center justify-between mb-1">
+        <h1 className="text-2xl font-bold">Tessera</h1>
+        <ThemeToggle />
+      </div>
       <div className="sticky top-0 bg-background/90 backdrop-blur-sm z-10 py-2" role="search">
         <Input
           type="text"
