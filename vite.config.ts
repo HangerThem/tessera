@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
     restoreMocks: true,
+    css: { include: [/style\.css/] },
   },
   build: {
     rollupOptions: {
@@ -58,7 +59,7 @@ export default defineConfig({
         display: 'standalone',
       },
       workbox: {
-        globPatterns: ['**/*.{css,html,ico,png,svg,webmanifest}', '**/index-*.js'],
+        globPatterns: ['**/*.{css,html,ico,png,svg,webmanifest,woff2}', '**/index-*.js'],
         runtimeCaching: [
           {
             urlPattern: /\/assets\/(zxing|bwip)-.*\.js$/,
