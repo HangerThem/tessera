@@ -5,14 +5,14 @@ import type { Card } from '../types/Card.type'
 
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner'
-import { BarcodeScannerView } from './BarcodeScannerView'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import { holdKeyboardFocus } from '../utils/keyboard'
 import { formatToLabel } from '../utils/text'
+import { BarcodeScannerView } from './BarcodeScannerView'
 import { Button } from './ui/Button'
 import ColorPicker, { PRESET_COLORS } from './ui/ColorPicker'
 import { Input } from './ui/Input'
 import { Select } from './ui/Select'
-import { useFocusTrap } from '../hooks/useFocusTrap'
 
 interface EditCardFormProps {
   initialCard: Card
@@ -48,7 +48,9 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
 
   useEffect(() => {
     if (cameraState !== 'idle' || !focusBarcodeInputRef.current) return
-    focusBarcodeInputRef.current(dialogRef.current?.querySelector<HTMLInputElement>('input[name="barcodeValue"]'))
+    focusBarcodeInputRef.current(
+      dialogRef.current?.querySelector<HTMLInputElement>('input[name="barcodeValue"]'),
+    )
     focusBarcodeInputRef.current = null
   }, [cameraState, dialogRef])
 
@@ -95,7 +97,9 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
       aria-labelledby="edit-card-form-title"
     >
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold" id="edit-card-form-title">Edit Card</h2>
+        <h2 className="text-xl font-bold" id="edit-card-form-title">
+          Edit Card
+        </h2>
         <button
           aria-label="Close add card form"
           type="button"
@@ -137,11 +141,13 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
 
           <ColorPicker allowCustom value={color} onChange={setColor} />
 
-          <button type="button" className="flex items-center gap-2 text-md text-foreground/70 hover:text-foreground transition-colors mt-4 mb-3 cursor-pointer" onClick={() => setShowAdvanced((prev) => !prev)}>
+          <button
+            type="button"
+            className="flex items-center gap-2 text-md text-foreground/70 hover:text-foreground transition-colors mt-4 mb-3 cursor-pointer"
+            onClick={() => setShowAdvanced((prev) => !prev)}
+          >
             Advanced Options
-            <ChevronDown
-              className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
-            />
+            <ChevronDown className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
           </button>
           <div className={`${showAdvanced ? 'flex flex-col gap-2 mb-4' : 'hidden'}`}>
             <Select

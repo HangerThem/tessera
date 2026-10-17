@@ -37,7 +37,7 @@ export default function ColorPicker({ colors, allowCustom, value, onChange }: Co
         <button
           type="button"
           disabled={!allowCustom}
-          className={`relative w-8 h-8 rounded-full border-foreground bg-conic/decreasing from-violet-700 via-lime-300 to-violet-700 ${value && !(Object.keys(colorOptions)).includes(value) ? 'border-2' : ''}`}
+          className={`relative w-8 h-8 rounded-full border-foreground bg-conic/decreasing from-violet-700 via-lime-300 to-violet-700 ${value && !Object.keys(colorOptions).includes(value) ? 'border-2' : ''}`}
           aria-label="Custom colour"
           aria-pressed={!!(value && !Object.keys(colorOptions).includes(value))}
         >

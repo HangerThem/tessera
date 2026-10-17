@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 
-import { BarcodeScanner } from '../barcodeScanner'
 import type { CameraError, CameraState } from '../types/Camera.type'
+
+import { BarcodeScanner } from '../barcodeScanner'
 
 interface UseBarcodeScanner {
   onDetect: (value: string, format: number) => void

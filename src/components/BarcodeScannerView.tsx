@@ -1,7 +1,9 @@
-import { CameraOff, Keyboard, LoaderCircle, RotateCcw } from 'lucide-preact'
 import type { RefObject } from 'preact'
 
+import { CameraOff, Keyboard, LoaderCircle, RotateCcw } from 'lucide-preact'
+
 import type { CameraError, CameraState } from '../types/Camera.type'
+
 import { Button } from './ui/Button'
 
 interface Props {
@@ -18,7 +20,13 @@ interface Props {
  * Always rendered so the video element exists before the user taps "Scan", which lets the camera
  * start synchronously from that tap (required for reliable camera access on iOS).
  */
-export function BarcodeScannerView({ cameraState, cameraError, videoRef, onRetry, onManualEntry }: Props) {
+export function BarcodeScannerView({
+  cameraState,
+  cameraError,
+  videoRef,
+  onRetry,
+  onManualEntry,
+}: Props) {
   const showViewfinder = cameraState === 'requesting' || cameraState === 'active'
   const showError = cameraState === 'error' && cameraError
 
@@ -26,7 +34,9 @@ export function BarcodeScannerView({ cameraState, cameraError, videoRef, onRetry
     <div className={showViewfinder || showError ? 'flex flex-col gap-3 mb-4' : 'hidden'}>
       <div
         className={
-          showViewfinder ? 'relative w-full aspect-3/4 max-h-[60vh] overflow-hidden rounded-md bg-black' : 'hidden'
+          showViewfinder
+            ? 'relative w-full aspect-3/4 max-h-[60vh] overflow-hidden rounded-md bg-black'
+            : 'hidden'
         }
       >
         <video
@@ -52,7 +62,11 @@ export function BarcodeScannerView({ cameraState, cameraError, videoRef, onRetry
       </div>
 
       <p className="sr-only" aria-live="polite">
-        {cameraState === 'requesting' ? 'Starting camera' : cameraState === 'active' ? 'Camera ready, scanning' : ''}
+        {cameraState === 'requesting'
+          ? 'Starting camera'
+          : cameraState === 'active'
+            ? 'Camera ready, scanning'
+            : ''}
       </p>
 
       {cameraState === 'active' && (
@@ -62,7 +76,10 @@ export function BarcodeScannerView({ cameraState, cameraError, videoRef, onRetry
       )}
 
       {showError && (
-        <div role="alert" className="flex flex-col items-center gap-2 rounded-md bg-foreground/5 p-6 text-center">
+        <div
+          role="alert"
+          className="flex flex-col items-center gap-2 rounded-md bg-foreground/5 p-6 text-center"
+        >
           <CameraOff className="text-foreground/50" aria-hidden="true" />
           <h3 className="font-semibold">{cameraError.title}</h3>
           <p className="text-sm text-foreground/70">{cameraError.message}</p>

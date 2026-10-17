@@ -2,15 +2,8 @@
   "compilerOptions": {
     "target": "es2023",
     "module": "esnext",
-    "lib": [
-      "ES2023",
-      "DOM"
-    ],
-    "types": [
-      "vite/client",
-      "vite-plugin-pwa/client",
-      "barcode-detector"
-    ],
+    "lib": ["ES2023", "DOM"],
+    "types": ["vite/client", "vite-plugin-pwa/client", "barcode-detector"],
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
     /* Bundler mode */
@@ -26,7 +19,5 @@
     "jsx": "react-jsx",
     "jsxImportSource": "preact"
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

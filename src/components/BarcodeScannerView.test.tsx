@@ -3,6 +3,7 @@ import { createRef } from 'preact'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { CameraError, CameraState } from '../types/Camera.type'
+
 import { BarcodeScannerView } from './BarcodeScannerView'
 
 const deniedError: CameraError = {

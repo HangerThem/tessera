@@ -2,11 +2,14 @@ import { act, cleanup, renderHook } from '@testing-library/preact'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { BarcodeScannerOptions } from '../barcodeScanner'
-import { BarcodeFormat } from '../enums/codeFormats'
 import type { CameraError } from '../types/Camera.type'
+
+import { BarcodeFormat } from '../enums/codeFormats'
 import { useBarcodeScanner } from './useBarcodeScanner'
 
-const scanners = vi.hoisted(() => [] as { options: BarcodeScannerOptions; start: () => void; stop: () => void }[])
+const scanners = vi.hoisted(
+  () => [] as { options: BarcodeScannerOptions; start: () => void; stop: () => void }[],
+)
 
 vi.mock('../barcodeScanner', () => ({
   BarcodeScanner: class {
@@ -29,7 +32,12 @@ function renderScanner(onDetect: OnDetect = () => {}) {
   return { ...hook, video }
 }
 
-const error: CameraError = { reason: 'denied', title: 'Blocked', message: 'Allow access', retryable: true }
+const error: CameraError = {
+  reason: 'denied',
+  title: 'Blocked',
+  message: 'Allow access',
+  retryable: true,
+}
 
 describe('useBarcodeScanner', () => {
   afterEach(() => {

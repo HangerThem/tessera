@@ -58,9 +58,9 @@ function App() {
     query.trim() === ''
       ? cards.value
       : fuzzySearch<Card>(cards.value, query, {
-        keys: (c) => [c.name, c.barcodeValue],
-        maxErrors: 1,
-      }).map((r) => r.item)
+          keys: (c) => [c.name, c.barcodeValue],
+          maxErrors: 1,
+        }).map((r) => r.item)
 
   return (
     <main>
@@ -72,7 +72,7 @@ function App() {
           aria-label="Search cards"
           autocomplete="off"
           value={query}
-          onInput={(e) => (setQuery((e.target as HTMLInputElement).value))}
+          onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
         />
       </div>
       {activeCardId.value && (
