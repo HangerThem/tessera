@@ -1,4 +1,4 @@
-import { RefreshCw, X } from 'lucide-preact'
+import { X } from 'lucide-preact'
 
 interface Props {
   onReload: () => void
@@ -8,29 +8,29 @@ interface Props {
 /**
  * Tells the user a new version is ready and lets them reload into it.
  *
- * Sits below open dialogs (z-40) so it never covers a card shown at checkout, and leaves room for
- * the add button in the bottom-right corner.
+ * Sits below open dialogs (z-40) so it never covers a card shown at checkout. It lines up with the
+ * page content on the left and with the add button on the right: same bottom offset and height,
+ * with a 12px gap before the button.
  */
 export function UpdatePrompt({ onReload, onDismiss }: Props) {
   return (
     <div
       role="status"
-      className="fixed bottom-4 left-4 right-20 z-40 flex items-center gap-3 rounded-lg bg-foreground text-background p-3 shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-200"
+      className="fixed bottom-4 left-3 right-19 z-40 flex min-h-12 items-center gap-2 rounded-xl border border-foreground/10 bg-surface-raised py-1.5 pl-4 pr-1.5 text-foreground shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-200"
     >
-      <p className="flex-1 text-sm">A new version of Tessera is available.</p>
+      <p className="flex-1 truncate text-sm">Update available</p>
       <button
         type="button"
         onClick={onReload}
-        className="flex items-center gap-1 text-sm font-semibold cursor-pointer hover:opacity-80 transition-opacity"
+        className="rounded-lg bg-foreground px-3 py-1.5 text-sm font-semibold text-background cursor-pointer hover:bg-foreground/80 transition-colors"
       >
-        <RefreshCw className="w-4 h-4" aria-hidden="true" />
         Reload
       </button>
       <button
         type="button"
         onClick={onDismiss}
         aria-label="Dismiss update notice"
-        className="cursor-pointer hover:opacity-80 transition-opacity"
+        className="rounded-lg p-1.5 text-foreground/60 cursor-pointer hover:text-foreground hover:bg-foreground/10 transition-colors"
       >
         <X className="w-4 h-4" aria-hidden="true" />
       </button>
