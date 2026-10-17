@@ -81,12 +81,6 @@ export async function deleteCard(id: string): Promise<void> {
   await refreshCards()
 }
 
-/** Deletes cards by id and refreshes the list. */
-export async function deleteCards(ids: string[]): Promise<void> {
-  await deleteCardsFromDB(ids)
-  await refreshCards()
-}
-
 /**
  * Toggles a card's favorite status in-memory first for instant UI feedback,
  * then persists in the background.
@@ -97,14 +91,6 @@ export async function favoriteCard(id: string): Promise<void> {
 
   cards.value = cards.value.map((c) => (c.id === id ? { ...c, isFavorite: !c.isFavorite } : c))
   await updateCard(id, { isFavorite: !card.isFavorite })
-}
-
-/** Returns cards matching query against name and barcode value. */
-export function searchCards(query: string): Card[] {
-  const q = query.toLowerCase()
-  return cards.value.filter(
-    (c) => c.name.toLowerCase().includes(q) || c.barcodeValue.toLowerCase().includes(q),
-  )
 }
 
 await migrateIfNeeded()
