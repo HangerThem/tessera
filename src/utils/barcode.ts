@@ -290,6 +290,30 @@ export function validateBarcodeValue(
   }
 }
 
+/** The narrowest width a card's barcode is shown at, in CSS pixels. */
+const MIN_DISPLAY_WIDTH = 320
+
+/**
+ * Checks whether a value can be shown in the given format so that a scanner can read it off a phone
+ * screen: it must fit the format, and a barcode's bars must be at least one CSS pixel wide. A long
+ * URL fits Code 128, but its bars would be far too thin.
+ *
+ * @param {BarcodeFormat | QRCodeFormat} format - The format to show the value in.
+ * @param {string} value - The value.
+ * @returns {boolean} Whether the code would be legible.
+ */
+export function canDisplayLegibly(format: BarcodeFormat | QRCodeFormat, value: string): boolean {
+  if (validateBarcodeValue(format, value) !== undefined) return false
+  if (isQRCodeFormat(format)) return true
+
+  const bcid = mapZXingFormatToBWIPJS(format)
+  // At scale 1 every bar is a whole number of pixels, so the width is the narrowest it can be drawn.
+  const svg = toSVG({ bcid, text: toEncodableText(bcid, value), padding: 4 })
+  const width = Number(/viewBox="0 0 ([\d.]+)/.exec(svg)?.[1])
+  // An unreadable width (NaN) counts as legible rather than hiding a code that may work.
+  return !(width > MIN_DISPLAY_WIDTH)
+}
+
 /** bwip-js sizes in millimetres at 72 dpi. */
 const PX_PER_MM = 72 / 25.4
 
