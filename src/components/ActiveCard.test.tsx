@@ -14,6 +14,12 @@ vi.mock('idb-keyval', () => ({
   getMany: async () => [],
 }))
 
+const photos = vi.hoisted(() => ({
+  getPhoto: vi.fn(async (): Promise<Blob | undefined> => undefined),
+}))
+
+vi.mock('../photos', () => photos)
+
 // happy-dom has no 2D canvas context, so bwip-js can't draw.
 vi.mock('bwip-js/browser', () => ({ toCanvas: vi.fn(), toSVG: vi.fn() }))
 
@@ -185,5 +191,29 @@ describe('ActiveCard note', () => {
 
     await waitFor(() => expect(share).toHaveBeenCalled())
     expect(JSON.stringify(share.mock.calls[0][0])).not.toContain('PIN 1234')
+  })
+})
+
+describe('ActiveCard photo', () => {
+  afterEach(() => {
+    cleanup()
+    photos.getPhoto.mockResolvedValue(undefined)
+  })
+
+  it('shows the photo of the card, for staff who want to see the card itself', async () => {
+    Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:photo'), revokeObjectURL: vi.fn() })
+    photos.getPhoto.mockResolvedValue(new Blob(['jpeg'], { type: 'image/jpeg' }))
+    render(<ActiveCard card={card} />)
+
+    const photo = (await screen.findByRole('img', { name: 'Photo of Grocery' })) as HTMLImageElement
+    expect(photo.src).toBe('blob:photo')
+    expect(photos.getPhoto).toHaveBeenCalledWith(card.id)
+  })
+
+  it('shows nothing for a card without a photo', async () => {
+    render(<ActiveCard card={card} />)
+
+    await waitFor(() => expect(photos.getPhoto).toHaveBeenCalled())
+    expect(screen.queryByRole('img', { name: 'Photo of Grocery' })).toBeNull()
   })
 })
