@@ -9,6 +9,7 @@ import { AddCardForm } from './components/AddCardForm'
 import { BackupScreen } from './components/BackupScreen'
 import { CardList } from './components/CardList'
 import { EditCardForm } from './components/EditCardForm'
+import { StorageError } from './components/StorageError'
 import { ThemeToggle } from './components/ThemeToggle'
 import { Input } from './components/ui/Input'
 import { UpdatePrompt } from './components/UpdatePrompt'
@@ -21,6 +22,8 @@ import {
   isAddCardFormVisible,
   isAnyScreenOpen,
   isBackupVisible,
+  loadCards,
+  loadState,
   saveCard,
   updateCardById,
 } from './store'
@@ -102,7 +105,9 @@ export function App() {
           onClose={() => (editCardId.value = null)}
         />
       )}
-      {filteredCards.length > 0 ? (
+      {loadState.value === 'failed' ? (
+        <StorageError onRetry={loadCards} />
+      ) : loadState.value === 'loading' ? null : filteredCards.length > 0 ? (
         <CardList cards={filteredCards} />
       ) : (
         <div className="text-center mt-8">
@@ -125,14 +130,17 @@ export function App() {
           )}
         </div>
       )}
-      <button
-        className="fixed bottom-4 right-4 p-3 rounded-full bg-background text-foreground shadow-lg hover:bg-foreground hover:text-background transition-colors cursor-pointer"
-        onClick={() => (isAddCardFormVisible.value = !isAddCardFormVisible.value)}
-        aria-label={isAddCardFormVisible.value ? 'Close add card form' : 'Add card'}
-        aria-expanded={isAddCardFormVisible.value}
-      >
-        <Plus />
-      </button>
+      {/* Saving would fail too, so there's nothing to add cards to. */}
+      {loadState.value !== 'failed' && (
+        <button
+          className="fixed bottom-4 right-4 p-3 rounded-full bg-background text-foreground shadow-lg hover:bg-foreground hover:text-background transition-colors cursor-pointer"
+          onClick={() => (isAddCardFormVisible.value = !isAddCardFormVisible.value)}
+          aria-label={isAddCardFormVisible.value ? 'Close add card form' : 'Add card'}
+          aria-expanded={isAddCardFormVisible.value}
+        >
+          <Plus />
+        </button>
+      )}
       {isAddCardFormVisible.value && (
         <AddCardForm
           onSave={async (card) => saveCard(card)}
