@@ -73,4 +73,19 @@ describe('ActiveCard share as image', () => {
       expect.objectContaining({ bcid: 'qrcode' }),
     )
   })
+
+  it("doesn't share when the code can't be rendered", async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    render(<ActiveCard card={card} />)
+    vi.mocked(toCanvas).mockImplementation(() => {
+      throw new Error('bwipp.code128badCharacter')
+    })
+
+    fireEvent.click(shareImageButton())
+
+    await waitFor(() =>
+      expect(error).toHaveBeenCalledWith('Error rendering barcode:', expect.any(Error)),
+    )
+    expect(share).not.toHaveBeenCalled()
+  })
 })
