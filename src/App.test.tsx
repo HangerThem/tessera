@@ -198,11 +198,13 @@ describe('App home screen prompt', () => {
   })
 
   it("doesn't ask before there are any cards", async () => {
-    idb.keys.mockResolvedValueOnce([])
+    // loadCards reads the keys twice: for the format migration and for the cards.
+    idb.keys.mockResolvedValue([])
     await loadCards()
     render(<App />)
 
     expect(prompt()).toBeNull()
+    idb.keys.mockImplementation(async () => ['card-1'])
   })
 
   it("doesn't ask in other browsers", async () => {
