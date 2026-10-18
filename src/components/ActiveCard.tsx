@@ -121,7 +121,14 @@ export function ActiveCard({ card }: ActiveCardProps) {
     const format = mapZXingFormatToBWIPJS(displayedFormat)
 
     try {
-      renderBarcode({ element: offscreen, value: card.barcodeValue, format, isQRCode })
+      // Drawn as for a 3x phone screen, so the image stays sharp wherever it's shown.
+      renderBarcode({
+        element: offscreen,
+        value: card.barcodeValue,
+        format,
+        isQRCode,
+        pixelRatio: 3,
+      })
     } catch (err) {
       console.error('Error rendering barcode:', err)
       return
