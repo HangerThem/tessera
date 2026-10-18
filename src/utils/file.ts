@@ -8,12 +8,20 @@ export async function saveFile(file: File): Promise<void> {
   if (navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title: file.name })
+      return
     } catch (err) {
-      if ((err as DOMException).name !== 'AbortError') throw err
+      // The user closed the share sheet.
+      if ((err as DOMException).name === 'AbortError') return
+      // Chrome on Android says it can share any file, then refuses types it doesn't allow, like
+      // JSON. Download it instead.
+      console.warn('Sharing the file failed, downloading it instead:', err)
     }
-    return
   }
 
+  download(file)
+}
+
+function download(file: File): void {
   const url = URL.createObjectURL(file)
   const link = document.createElement('a')
   link.href = url

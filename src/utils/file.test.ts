@@ -22,6 +22,7 @@ describe('saveFile', () => {
       throw new DOMException('Permission denied', 'NotAllowedError')
     })
     Object.assign(navigator, { share, canShare: () => true })
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
 
     await saveFile(file)
 
