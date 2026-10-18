@@ -1,12 +1,14 @@
 import { Download, Send, Smartphone, Upload, X } from 'lucide-preact'
-import { useRef, useState } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
 
 import type { Card } from '../types/Card.type'
 
-import { BackupError, createBackup, parseBackup } from '../backup'
+import { type BackupContents, BackupError, createBackup, parseBackup } from '../backup'
 import { useFocusTrap } from '../hooks/useFocusTrap'
+import { getAllPhotos } from '../photos'
 import { cards, importCards } from '../store'
 import { saveFile } from '../utils/file'
+import { blobToDataUrl, dataUrlToBlob } from '../utils/image'
 import { ReceiveCards, SendCards } from './DeviceTransfer'
 import { Button } from './ui/Button'
 
@@ -31,6 +33,21 @@ const IMPORT_SOURCE_LABEL: Record<ImportSource, string> = {
   transfer: 'the other phone',
 }
 
+/** A backup of the cards and their photos, made ahead of the tap that saves or sends it. */
+type PreparedBackup = { text: string; madeAt: Date }
+
+async function prepareBackup(cardsToBackUp: Card[]): Promise<PreparedBackup> {
+  const madeAt = new Date()
+  const storedPhotos = await getAllPhotos()
+  const photos: Record<string, string> = {}
+  for (const card of cardsToBackUp) {
+    const photo = storedPhotos[card.id]
+    // oxlint-disable-next-line no-await-in-loop -- a handful of photos, read one at a time
+    if (photo) photos[card.id] = await blobToDataUrl(photo)
+  }
+  return { text: createBackup(cardsToBackUp, { now: madeAt, photos }), madeAt }
+}
+
 const backupFileName = (date: Date) => `tessera-backup-${date.toISOString().slice(0, 10)}.json`
 
 /** Backs up cards to a file and restores them from one, or moves them directly to another device. */
@@ -39,22 +56,39 @@ export function BackupScreen({ onClose }: Props) {
   const [exportError, setExportError] = useState<string>()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [importSource, setImportSource] = useState<ImportSource>('file')
-  const [pendingImport, setPendingImport] = useState<Card[] | null>(null)
+  const [pendingImport, setPendingImport] = useState<BackupContents | null>(null)
   const [importError, setImportError] = useState<string>()
   const [importResult, setImportResult] = useState<string>()
   const [transferMode, setTransferMode] = useState<'send' | 'receive' | null>(null)
+  // Prepared ahead, because reading the photos takes a moment, and the share sheet only opens
+  // straight from a tap on iOS.
+  const [preparedBackup, setPreparedBackup] = useState<PreparedBackup>()
+
+  useEffect(() => {
+    let cancelled = false
+    setPreparedBackup(undefined)
+    prepareBackup(cards.value)
+      .then((backup) => !cancelled && setPreparedBackup(backup))
+      .catch((err) => {
+        console.error('Preparing the backup failed:', err)
+        if (!cancelled) setExportError("The backup couldn't be prepared. Try again.")
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [cards.value])
 
   const readBackup = (backup: string, source: ImportSource) => {
     setImportSource(source)
     setImportError(undefined)
     setImportResult(undefined)
     try {
-      const { cards: imported } = parseBackup(backup)
-      if (imported.length === 0) {
+      const contents = parseBackup(backup)
+      if (contents.cards.length === 0) {
         setImportError('This backup has no cards.')
         return
       }
-      setPendingImport(imported)
+      setPendingImport(contents)
     } catch (err) {
       if (!(err instanceof BackupError)) console.error('Reading the backup failed:', err)
       setImportError(err instanceof BackupError ? err.message : "This file couldn't be read.")
@@ -77,7 +111,10 @@ export function BackupScreen({ onClose }: Props) {
   const handleImport = async () => {
     if (!pendingImport) return
     try {
-      setImportResult(describeImport(await importCards(pendingImport)))
+      const photos = Object.fromEntries(
+        Object.entries(pendingImport.photos).map(([id, dataUrl]) => [id, dataUrlToBlob(dataUrl)]),
+      )
+      setImportResult(describeImport(await importCards(pendingImport.cards, photos)))
     } catch (err) {
       console.error('Import failed:', err)
       setImportError("The cards couldn't be saved. Try again.")
@@ -86,9 +123,9 @@ export function BackupScreen({ onClose }: Props) {
   }
 
   const handleExport = async () => {
+    if (!preparedBackup) return
     setExportError(undefined)
-    const now = new Date()
-    const file = new File([createBackup(cards.value, { now })], backupFileName(now), {
+    const file = new File([preparedBackup.text], backupFileName(preparedBackup.madeAt), {
       type: 'application/json',
     })
     try {
@@ -104,7 +141,8 @@ export function BackupScreen({ onClose }: Props) {
       {pendingImport && (
         <div className="flex flex-col gap-3 rounded-md bg-foreground/5 p-3">
           <p className="text-sm font-semibold">
-            Import {plural(pendingImport.length, 'card')} from {IMPORT_SOURCE_LABEL[importSource]}?
+            Import {plural(pendingImport.cards.length, 'card')} from{' '}
+            {IMPORT_SOURCE_LABEL[importSource]}?
           </p>
           <div className="flex gap-2">
             <Button type="button" size="small" onClick={handleImport}>
@@ -139,7 +177,7 @@ export function BackupScreen({ onClose }: Props) {
       </h3>
       {transferMode === 'send' ? (
         <SendCards
-          payload={createBackup(cards.value)}
+          payload={preparedBackup!.text}
           cardCount={cards.value.length}
           onDone={() => setTransferMode(null)}
           onCancel={() => setTransferMode(null)}
@@ -186,7 +224,11 @@ export function BackupScreen({ onClose }: Props) {
                   : 'No cards to back up yet.'}
               </p>
             </div>
-            <Button type="button" onClick={handleExport} disabled={cards.value.length === 0}>
+            <Button
+              type="button"
+              onClick={handleExport}
+              disabled={cards.value.length === 0 || !preparedBackup}
+            >
               <Download aria-hidden="true" />
               Export cards
             </Button>
@@ -244,7 +286,7 @@ export function BackupScreen({ onClose }: Props) {
                   type="button"
                   variant="secondary"
                   onClick={() => setTransferMode('send')}
-                  disabled={cards.value.length === 0}
+                  disabled={cards.value.length === 0 || !preparedBackup}
                 >
                   <Send aria-hidden="true" />
                   Send cards

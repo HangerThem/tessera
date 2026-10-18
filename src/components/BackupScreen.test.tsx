@@ -57,6 +57,12 @@ const card: Card = {
   isFavorite: false,
 }
 
+/** Export and Send wait for the backup to be prepared, which reads the photos. */
+async function whenEnabled(button: () => HTMLElement) {
+  await waitFor(() => expect((button() as HTMLButtonElement).disabled).toBe(false))
+  return button()
+}
+
 const exportButton = () => screen.getByRole('button', { name: 'Export cards' }) as HTMLButtonElement
 
 function chooseFile(contents: string) {
@@ -84,7 +90,7 @@ describe('BackupScreen export', () => {
     Object.assign(navigator, { share, canShare: () => true })
     render(<BackupScreen onClose={() => {}} />)
 
-    fireEvent.click(exportButton())
+    fireEvent.click(await whenEnabled(exportButton))
 
     await waitFor(() => expect(share).toHaveBeenCalledOnce())
     const [file] = share.mock.calls[0][0].files!
@@ -98,7 +104,7 @@ describe('BackupScreen export', () => {
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
     render(<BackupScreen onClose={() => {}} />)
 
-    fireEvent.click(exportButton())
+    fireEvent.click(await whenEnabled(exportButton))
 
     await waitFor(() => expect(click).toHaveBeenCalledOnce())
     const link = click.mock.contexts[0] as HTMLAnchorElement
@@ -176,10 +182,10 @@ describe('BackupScreen transfer to another device', () => {
 
   afterEach(cleanup)
 
-  it('sends all cards to the other phone', () => {
+  it('sends all cards to the other phone', async () => {
     render(<BackupScreen onClose={() => {}} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Send cards' }))
+    fireEvent.click(await whenEnabled(() => screen.getByRole('button', { name: 'Send cards' })))
 
     const sending = screen.getByTestId('sending')
     expect(sending.textContent).toBe('Sending 1')
@@ -228,7 +234,7 @@ describe('BackupScreen photos', () => {
     Object.assign(navigator, { share, canShare: () => true })
     render(<BackupScreen onClose={() => {}} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Export cards' }))
+    fireEvent.click(await whenEnabled(exportButton))
 
     await waitFor(() => expect(share).toHaveBeenCalled())
     const backup = parseBackup(await share.mock.calls[0][0].files![0].text())
@@ -238,7 +244,7 @@ describe('BackupScreen photos', () => {
   it('includes the photos when sending cards to another phone', async () => {
     render(<BackupScreen onClose={() => {}} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Send cards' }))
+    fireEvent.click(await whenEnabled(() => screen.getByRole('button', { name: 'Send cards' })))
 
     const sending = await screen.findByTestId('sending')
     expect(parseBackup(sending.dataset.payload!).photos).toHaveProperty('card-1')
