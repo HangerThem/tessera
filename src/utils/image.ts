@@ -1,3 +1,6 @@
+import { detectCardCorners } from './cardDetection'
+import { type Point, warpPerspective } from './perspective'
+
 /** Photos are stored at most this many pixels on their long side. */
 export const PHOTO_MAX_SIZE = 1000
 const PHOTO_QUALITY = 0.8
@@ -53,4 +56,102 @@ export function dataUrlToBlob(dataUrl: string): Blob {
   const type = /^data:([^;]+)/.exec(header)?.[1] ?? 'application/octet-stream'
   const bytes = Uint8Array.from(atob(data), (char) => char.charCodeAt(0))
   return new Blob([bytes], { type })
+}
+
+/** A cropped card is 1000 px on its long side, in the card's proportions (85.6 × 54 mm). */
+const CARD_LONG_SIDE = 1000
+const CARD_SHORT_SIDE = Math.floor((CARD_LONG_SIDE * 54) / 85.6)
+/** Detection runs on a copy this size, which is plenty for finding edges and fast. */
+const DETECTION_SIZE = 400
+/** The source for cropping is capped, so a 12-megapixel photo doesn't need 50 MB of pixels. */
+const CROP_SOURCE_MAX_SIZE = 2000
+const DEFAULT_INSET = 0.08
+
+/** Card-shaped output: landscape when the card's top and bottom are longer than its sides. */
+export function cardOutputSize(corners: Point[]) {
+  const side = (i: number) => {
+    const [a, b] = [corners[i], corners[(i + 1) % 4]]
+    return Math.hypot(b.x - a.x, b.y - a.y)
+  }
+  const isLandscape = side(0) + side(2) >= side(1) + side(3)
+  return isLandscape
+    ? { width: CARD_LONG_SIDE, height: CARD_SHORT_SIDE }
+    : { width: CARD_SHORT_SIDE, height: CARD_LONG_SIDE }
+}
+
+/** Corners just inside the photo's edges, for when no card was found. */
+export function defaultCorners(width: number, height: number): Point[] {
+  const [dx, dy] = [width * DEFAULT_INSET, height * DEFAULT_INSET]
+  return [
+    { x: dx, y: dy },
+    { x: width - dx, y: dy },
+    { x: width - dx, y: height - dy },
+    { x: dx, y: height - dy },
+  ]
+}
+
+/** Draws a bitmap onto a new canvas, scaled to fit within `maxSize`. */
+function drawScaled(bitmap: ImageBitmap, maxSize: number) {
+  const { width, height } = fitWithin(bitmap.width, bitmap.height, maxSize)
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const context = canvas.getContext('2d', { willReadFrequently: true })
+  if (!context) throw new Error("Can't draw the photo")
+  context.drawImage(bitmap, 0, 0, width, height)
+  return { canvas, context, scale: bitmap.width / width }
+}
+
+/**
+ * Looks for the card in a photo.
+ *
+ * @param {ImageBitmap} bitmap - The photo.
+ * @returns {Point[] | null} The card's corners in the photo's pixels, or null if none was found.
+ */
+export function findCardInPhoto(bitmap: ImageBitmap): Point[] | null {
+  const { canvas, context, scale } = drawScaled(bitmap, DETECTION_SIZE)
+  const { data } = context.getImageData(0, 0, canvas.width, canvas.height)
+  const gray = new Uint8ClampedArray(canvas.width * canvas.height)
+  for (let i = 0; i < gray.length; i++) {
+    gray[i] = data[i * 4] * 0.299 + data[i * 4 + 1] * 0.587 + data[i * 4 + 2] * 0.114
+  }
+  const corners = detectCardCorners({ data: gray, width: canvas.width, height: canvas.height })
+  return corners?.map(({ x, y }) => ({ x: x * scale, y: y * scale })) ?? null
+}
+
+/**
+ * Crops a photo to the card inside the given corners and straightens it into a card-shaped JPEG.
+ *
+ * @param {ImageBitmap} bitmap - The photo.
+ * @param {Point[]} corners - The card's corners in the photo's pixels: top-left, top-right,
+ *   bottom-right, bottom-left.
+ * @returns {Promise<Blob>} The photo to store.
+ */
+export async function cropCard(bitmap: ImageBitmap, corners: Point[]): Promise<Blob> {
+  const { canvas, context, scale } = drawScaled(bitmap, CROP_SOURCE_MAX_SIZE)
+  const source = context.getImageData(0, 0, canvas.width, canvas.height)
+  const { width, height } = cardOutputSize(corners)
+  const pixels = warpPerspective(
+    source,
+    corners.map(({ x, y }) => ({ x: x / scale, y: y / scale })),
+    width,
+    height,
+  )
+
+  const output = document.createElement('canvas')
+  output.width = width
+  output.height = height
+  const outputContext = output.getContext('2d')
+  if (!outputContext) throw new Error("Can't draw the photo")
+  outputContext.putImageData(
+    new ImageData(pixels as Uint8ClampedArray<ArrayBuffer>, width, height),
+    0,
+    0,
+  )
+
+  const blob = await new Promise<Blob | null>((resolve) =>
+    output.toBlob(resolve, 'image/jpeg', PHOTO_QUALITY),
+  )
+  if (!blob) throw new Error("Can't encode the photo")
+  return blob
 }
