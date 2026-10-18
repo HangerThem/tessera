@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/preact'
-import { toCanvas } from 'bwip-js/browser'
+import { toCanvas, toSVG } from 'bwip-js/browser'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Card } from '../types/Card.type'
@@ -15,7 +15,7 @@ vi.mock('idb-keyval', () => ({
 }))
 
 // happy-dom has no 2D canvas context, so bwip-js can't draw.
-vi.mock('bwip-js/browser', () => ({ toCanvas: vi.fn() }))
+vi.mock('bwip-js/browser', () => ({ toCanvas: vi.fn(), toSVG: vi.fn() }))
 
 const card: Card = {
   id: 'card-1',
@@ -43,6 +43,7 @@ describe('ActiveCard share as image', () => {
   afterEach(() => {
     cleanup()
     vi.mocked(toCanvas).mockReset()
+    vi.mocked(toSVG).mockReset()
   })
 
   it('shares a PNG of the barcode', async () => {
@@ -87,5 +88,20 @@ describe('ActiveCard share as image', () => {
       expect(error).toHaveBeenCalledWith('Error rendering barcode:', expect.any(Error)),
     )
     expect(share).not.toHaveBeenCalled()
+  })
+
+  it("hides Share as Image when the displayed code can't be rendered", () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.mocked(toSVG).mockImplementation(({ bcid }) => {
+      if (bcid === 'code128') throw new Error('bwipp.code128badCharacter')
+      return '<svg/>'
+    })
+    render(<ActiveCard card={card} />)
+
+    expect(screen.queryByRole('button', { name: 'Share as Image' })).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'QR Code' }))
+
+    expect(screen.queryByRole('button', { name: 'Share as Image' })).not.toBeNull()
   })
 })

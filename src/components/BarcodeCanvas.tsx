@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'preact/hooks'
+import { TriangleAlert } from 'lucide-preact'
+import { useEffect, useRef, useState } from 'preact/hooks'
 import { tv } from 'tailwind-variants'
 
 import { BarcodeFormat, type QRCodeFormat } from '../enums/codeFormats'
@@ -28,6 +29,7 @@ const { wrapper, canvas } = tv({
 
 export function BarcodeCanvas({ value, format }: RenderBarcodeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [hasError, setHasError] = useState(false)
   const isQRCode = isQRCodeFormat(format)
 
   useEffect(() => {
@@ -43,17 +45,32 @@ export function BarcodeCanvas({ value, format }: RenderBarcodeProps) {
 
     try {
       renderBarcode({ element: el, value, format: bwipjsFormat, isQRCode })
+      setHasError(false)
     } catch (err) {
       console.error('Error rendering barcode:', err)
+      setHasError(true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, format])
 
   return (
     <div className={wrapper({ format: isQRCode ? 'qrcode' : 'barcode' })}>
+      {hasError && (
+        <div role="alert" className="flex flex-col items-center gap-1 text-center text-neutral-600">
+          <p className="flex items-center gap-1 text-sm font-bold">
+            <TriangleAlert className="w-4 h-4" aria-hidden="true" />
+            Can't show this {isQRCode ? 'QR code' : 'barcode'}
+          </p>
+          <p className="text-xs">
+            The number doesn't fit the selected format. Edit the card to fix it.
+          </p>
+        </div>
+      )}
+      {/* Stays mounted while hidden so switching format can render into it again. */}
       <canvas
         role="img"
         ref={canvasRef}
+        hidden={hasError}
         className={canvas()}
         aria-label={`${isQRCode ? 'QR code' : 'Barcode'} for ${value}`}
       />
