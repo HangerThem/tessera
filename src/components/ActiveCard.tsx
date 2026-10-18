@@ -28,6 +28,7 @@ import {
   editCardId,
   favoriteCard,
   isDeleteConfirmVisible,
+  photoRevision,
 } from '../store'
 import {
   canDisplayLegibly,
@@ -97,6 +98,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
   // Hidden by default: this screen is shown to staff at checkout, and notes can hold a PIN.
   const [isNoteVisible, setIsNoteVisible] = useState(false)
   const [photoUrl, setPhotoUrl] = useState<string>()
+  const currentPhotoRevision = photoRevision.value
 
   useEffect(() => {
     let url: string | undefined
@@ -113,7 +115,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
       if (url) URL.revokeObjectURL(url)
       setPhotoUrl(undefined)
     }
-  }, [card.id])
+  }, [card.id, currentPhotoRevision])
   const [canShareText, setCanShareText] = useState(false)
   const [canShareFiles, setCanShareFiles] = useState(false)
   const [justCopied, setJustCopied] = useState(false)

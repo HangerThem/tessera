@@ -17,9 +17,14 @@ import { requestPersistentStorage } from './utils/install'
 /** A new photo for a card, null to remove it, or undefined to leave it as it is. */
 export type PhotoChange = Blob | null | undefined
 
+/** Changes whenever a photo is saved, removed or imported, so views showing photos reload them. */
+export const photoRevision = signal(0)
+
 async function applyPhotoChange(cardId: string, photo: PhotoChange): Promise<void> {
-  if (photo instanceof Blob) await savePhoto(cardId, photo)
-  else if (photo === null) await deletePhoto(cardId)
+  if (photo === undefined) return
+  if (photo === null) await deletePhoto(cardId)
+  else await savePhoto(cardId, photo)
+  photoRevision.value++
 }
 
 export const cards = signal<Card[]>([])
@@ -202,6 +207,7 @@ export async function importCards(
       if (photos[card.id]) await savePhoto(card.id, photos[card.id])
     }),
   )
+  if (Object.keys(photos).length > 0) photoRevision.value++
   await refreshCards()
   return { added: toAdd.size, skipped: imported.length - toAdd.size }
 }
