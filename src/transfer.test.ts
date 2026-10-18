@@ -38,7 +38,8 @@ describe('encodeSignal', () => {
   it('fits comfortably in a QR code', async () => {
     const code = await encodeSignal({ type: 'offer', sdp: chromeOffer })
 
-    expect(chromeOffer.length).toBeGreaterThan(900)
+    expect(code.length).toBeLessThan(chromeOffer.length)
+    // About QR version 20, which phone cameras scan reliably at the size it's shown.
     expect(code.length).toBeLessThan(700)
   })
 })
