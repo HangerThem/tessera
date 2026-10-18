@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Card } from './types/Card.type'
 
 import { App } from './App'
-import { activeCardId, editCardId, isAddCardFormVisible, isBackupVisible } from './store'
+import { activeCardId, editCardId, isAddCardFormVisible, isBackupVisible, loadCards } from './store'
 import { applyUpdate, isUpdateAvailable } from './sw'
 
 // Hoisted so the idb-keyval mock below can return it.
@@ -22,10 +22,12 @@ vi.mock('./sw', async () => {
   return { isUpdateAvailable: signal(false), applyUpdate: vi.fn() }
 })
 
+const idb = vi.hoisted(() => ({ keys: vi.fn(async () => ['card-1']) }))
+
 vi.mock('idb-keyval', () => ({
   createStore: () => ({}),
   get: async () => undefined,
-  keys: async () => ['card-1'],
+  keys: () => idb.keys(),
   getMany: async () => [card],
   set: async () => {},
   del: async () => {},
@@ -45,9 +47,10 @@ function openCard() {
 }
 
 describe('App screen navigation', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     // Rendering cards and requesting a wake lock log errors in happy-dom.
     vi.spyOn(console, 'error').mockImplementation(() => {})
+    await loadCards()
   })
 
   afterEach(() => {
@@ -132,5 +135,35 @@ describe('App screen navigation', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss update notice' }))
 
     expect(screen.queryByRole('status')).toBeNull()
+  })
+})
+
+describe('App loading', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+  })
+
+  afterEach(cleanup)
+
+  it("explains when storage can't be opened, and can try again", async () => {
+    idb.keys.mockRejectedValueOnce(new DOMException('Storage is blocked', 'InvalidStateError'))
+    await loadCards()
+    render(<App />)
+
+    expect(screen.getByRole('alert').textContent).toContain("Tessera can't open its storage")
+    expect(screen.queryByRole('button', { name: 'Add card' })).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
+
+    expect(await screen.findByRole('button', { name: 'View details for Grocery' })).toBeTruthy()
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it("doesn't say there are no cards while they're loading", () => {
+    idb.keys.mockReturnValueOnce(new Promise(() => {}))
+    void loadCards()
+    render(<App />)
+
+    expect(screen.queryByText('No cards yet')).toBeNull()
   })
 })
