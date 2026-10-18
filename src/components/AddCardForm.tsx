@@ -1,9 +1,10 @@
+import type { PhotoChange } from '../store'
 import type { Card } from '../types/Card.type'
 
 import { CardForm } from './CardForm'
 
 interface Props {
-  onSave: (card: Card) => void
+  onSave: (card: Card, photo: PhotoChange) => void
   onClose: () => void
 }
 

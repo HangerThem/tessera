@@ -119,6 +119,7 @@ describe('EditCardForm camera flow', () => {
         barcodeValue: '4006381333931',
         format: BarcodeFormat.EAN_13,
       }),
+      undefined,
     )
   })
 
@@ -156,6 +157,7 @@ describe('EditCardForm barcode validation', () => {
         barcodeValue: '4006381333931',
         format: BarcodeFormat.EAN_13,
       }),
+      undefined,
     )
   })
 })
@@ -170,7 +172,7 @@ describe('EditCardForm colour', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
 
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ id: card.id }))
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ id: card.id }), undefined)
   })
 })
 
@@ -190,7 +192,10 @@ describe('EditCardForm note', () => {
     expect(note.value).toBe('Gold member')
 
     fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
-    expect(onSave).toHaveBeenLastCalledWith(expect.objectContaining({ note: 'Gold member' }))
+    expect(onSave).toHaveBeenLastCalledWith(
+      expect.objectContaining({ note: 'Gold member' }),
+      undefined,
+    )
 
     fireEvent.input(note, { target: { value: '' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))

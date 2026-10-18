@@ -124,6 +124,7 @@ describe('AddCardForm camera flow', () => {
         barcodeValue: '4006381333931',
         format: BarcodeFormat.EAN_13,
       }),
+      undefined,
     )
   })
 
@@ -141,6 +142,7 @@ describe('AddCardForm camera flow', () => {
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({ barcodeValue: '036000291452', format: BarcodeFormat.UPC_A }),
+      undefined,
     )
   })
 
@@ -175,7 +177,10 @@ describe('AddCardForm camera flow', () => {
     fireEvent.input(screen.getByLabelText('Card name'), { target: { value: 'Gym' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
 
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ format: QRCodeFormat.QR_CODE }))
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ format: QRCodeFormat.QR_CODE }),
+      undefined,
+    )
   })
 
   it('stops the camera when the form is closed', () => {
@@ -214,6 +219,7 @@ describe('AddCardForm barcode validation', () => {
         barcodeValue: '4006381333931',
         format: BarcodeFormat.EAN_13,
       }),
+      undefined,
     )
   })
 })
@@ -231,7 +237,7 @@ describe('AddCardForm colour', () => {
     fireEvent.input(barcodeInput()!, { target: { value: '12345678' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
 
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ color: '#ffffff' }))
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ color: '#ffffff' }), undefined)
   })
 })
 
@@ -250,7 +256,7 @@ describe('AddCardForm note', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
 
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ note: 'PIN 1234' }))
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ note: 'PIN 1234' }), undefined)
   })
 
   it('saves no note when it is left empty', () => {

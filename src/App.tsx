@@ -110,8 +110,8 @@ export function App() {
       {editCardId.value && (
         <EditCardForm
           initialCard={cards.value.find((c) => c.id === editCardId.value)!}
-          onSave={async (card) => {
-            await updateCardById(editCardId.value!, card)
+          onSave={async (card, photo) => {
+            await updateCardById(editCardId.value!, card, photo)
           }}
           onClose={() => (editCardId.value = null)}
         />
@@ -180,7 +180,7 @@ export function App() {
       )}
       {isAddCardFormVisible.value && (
         <AddCardForm
-          onSave={async (card) => saveCard(card)}
+          onSave={async (card, photo) => saveCard(card, photo)}
           onClose={() => (isAddCardFormVisible.value = false)}
         />
       )}
