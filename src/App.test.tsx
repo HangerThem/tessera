@@ -28,7 +28,7 @@ vi.mock('idb-keyval', () => ({
   createStore: () => ({}),
   get: async () => undefined,
   keys: () => idb.keys(),
-  getMany: async () => [card],
+  getMany: async (keys: string[]) => keys.map(() => card),
   set: async () => {},
   del: async () => {},
   update: async () => {},
@@ -165,5 +165,51 @@ describe('App loading', () => {
     render(<App />)
 
     expect(screen.queryByText('No cards yet')).toBeNull()
+  })
+})
+
+describe('App home screen prompt', () => {
+  const prompt = () => screen.queryByRole('region', { name: 'Add Tessera to your Home Screen' })
+
+  beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    // Safari on iOS, not on the home screen.
+    Object.defineProperty(navigator, 'standalone', { value: false, configurable: true })
+  })
+
+  afterEach(() => {
+    cleanup()
+    localStorage.clear()
+    Object.defineProperty(navigator, 'standalone', { value: undefined, configurable: true })
+  })
+
+  it('asks Safari users with cards to add the app to the home screen, until dismissed', async () => {
+    await loadCards()
+    render(<App />)
+
+    expect(prompt()?.textContent).toContain("Safari may delete your cards if you don't open")
+
+    fireEvent.click(screen.getByRole('button', { name: 'Not now' }))
+    expect(prompt()).toBeNull()
+
+    cleanup()
+    render(<App />)
+    expect(prompt()).toBeNull()
+  })
+
+  it("doesn't ask before there are any cards", async () => {
+    idb.keys.mockResolvedValueOnce([])
+    await loadCards()
+    render(<App />)
+
+    expect(prompt()).toBeNull()
+  })
+
+  it("doesn't ask in other browsers", async () => {
+    Object.defineProperty(navigator, 'standalone', { value: undefined, configurable: true })
+    await loadCards()
+    render(<App />)
+
+    expect(prompt()).toBeNull()
   })
 })
