@@ -153,3 +153,17 @@ describe('EditCardForm barcode validation', () => {
     )
   })
 })
+
+describe('EditCardForm colour', () => {
+  afterEach(cleanup)
+
+  it('saves a card that was stored without a colour', () => {
+    const onSave = vi.fn()
+    const { color: _, ...cardWithoutColour } = card
+    render(<EditCardForm initialCard={cardWithoutColour} onSave={onSave} onClose={() => {}} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ id: card.id }))
+  })
+})
