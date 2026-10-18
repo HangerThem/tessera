@@ -21,7 +21,7 @@ const { wrapper, canvas } = tv({
         wrapper: 'w-40 h-40',
       },
       barcode: {
-        wrapper: 'h-20',
+        wrapper: 'h-24',
       },
     },
   },
