@@ -11,7 +11,9 @@ interface Props {
   cameraError: CameraError | null
   videoRef: RefObject<HTMLVideoElement>
   onRetry: () => void
-  onManualEntry: () => void
+  /** Leave out where there's nothing to type in instead, e.g. for transfer codes. */
+  onManualEntry?: () => void
+  hint?: string
 }
 
 /**
@@ -26,6 +28,7 @@ export function BarcodeScannerView({
   videoRef,
   onRetry,
   onManualEntry,
+  hint = 'Point the camera at the barcode. It will be scanned automatically.',
 }: Props) {
   const showViewfinder = cameraState === 'requesting' || cameraState === 'active'
   const showError = cameraState === 'error' && cameraError
@@ -69,11 +72,7 @@ export function BarcodeScannerView({
             : ''}
       </p>
 
-      {cameraState === 'active' && (
-        <p className="text-sm text-foreground/70 text-center">
-          Point the camera at the barcode. It will be scanned automatically.
-        </p>
-      )}
+      {cameraState === 'active' && <p className="text-sm text-foreground/70 text-center">{hint}</p>}
 
       {showError && (
         <div
@@ -92,10 +91,12 @@ export function BarcodeScannerView({
           Try again
         </Button>
       )}
-      <Button type="button" variant="secondary" onClick={onManualEntry}>
-        <Keyboard />
-        Enter code manually
-      </Button>
+      {onManualEntry && (
+        <Button type="button" variant="secondary" onClick={onManualEntry}>
+          <Keyboard />
+          Enter code manually
+        </Button>
+      )}
     </div>
   )
 }
