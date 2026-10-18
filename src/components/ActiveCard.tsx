@@ -21,12 +21,14 @@ import type { Card } from '../types/Card.type'
 
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { useFocusTrap } from '../hooks/useFocusTrap'
+import { getPhoto } from '../photos'
 import {
   activeCardId,
   deleteCard,
   editCardId,
   favoriteCard,
   isDeleteConfirmVisible,
+  photoRevision,
 } from '../store'
 import {
   canDisplayLegibly,
@@ -95,6 +97,25 @@ export function ActiveCard({ card }: ActiveCardProps) {
   const isDark = isDarkColor(card.color ?? '#fff')
   // Hidden by default: this screen is shown to staff at checkout, and notes can hold a PIN.
   const [isNoteVisible, setIsNoteVisible] = useState(false)
+  const [photoUrl, setPhotoUrl] = useState<string>()
+  const currentPhotoRevision = photoRevision.value
+
+  useEffect(() => {
+    let url: string | undefined
+    let cancelled = false
+    getPhoto(card.id)
+      .then((photo) => {
+        if (cancelled || !photo) return
+        url = URL.createObjectURL(photo)
+        setPhotoUrl(url)
+      })
+      .catch((err) => console.error('Loading the photo failed:', err))
+    return () => {
+      cancelled = true
+      if (url) URL.revokeObjectURL(url)
+      setPhotoUrl(undefined)
+    }
+  }, [card.id, currentPhotoRevision])
   const [canShareText, setCanShareText] = useState(false)
   const [canShareFiles, setCanShareFiles] = useState(false)
   const [justCopied, setJustCopied] = useState(false)
@@ -320,6 +341,13 @@ export function ActiveCard({ card }: ActiveCardProps) {
           </div>
         </div>
 
+        {photoUrl && (
+          <img
+            src={photoUrl}
+            alt={`Photo of ${card.name}`}
+            className="w-full max-h-[40vh] object-contain rounded-xl"
+          />
+        )}
         {(canShareText || (canShareFiles && canRenderDisplayed)) && (
           <div className="flex gap-2 w-full">
             {canShareText && (

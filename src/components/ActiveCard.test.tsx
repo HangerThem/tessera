@@ -5,14 +5,25 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Card } from '../types/Card.type'
 
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
+import { updateCardById } from '../store'
 import { ActiveCard } from './ActiveCard'
 
 vi.mock('idb-keyval', () => ({
   createStore: () => ({}),
   get: async () => undefined,
+  set: async () => {},
+  update: async () => {},
   keys: async () => [],
   getMany: async () => [],
 }))
+
+const photos = vi.hoisted(() => ({
+  getPhoto: vi.fn(async (): Promise<Blob | undefined> => undefined),
+  savePhoto: vi.fn(async () => {}),
+  deletePhoto: vi.fn(async () => {}),
+}))
+
+vi.mock('../photos', () => photos)
 
 // happy-dom has no 2D canvas context, so bwip-js can't draw.
 vi.mock('bwip-js/browser', () => ({ toCanvas: vi.fn(), toSVG: vi.fn() }))
@@ -185,5 +196,48 @@ describe('ActiveCard note', () => {
 
     await waitFor(() => expect(share).toHaveBeenCalled())
     expect(JSON.stringify(share.mock.calls[0][0])).not.toContain('PIN 1234')
+  })
+})
+
+describe('ActiveCard photo', () => {
+  afterEach(() => {
+    cleanup()
+    photos.getPhoto.mockResolvedValue(undefined)
+  })
+
+  it('shows the photo of the card, for staff who want to see the card itself', async () => {
+    Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:photo'), revokeObjectURL: vi.fn() })
+    photos.getPhoto.mockResolvedValue(new Blob(['jpeg'], { type: 'image/jpeg' }))
+    render(<ActiveCard card={card} />)
+
+    const photo = (await screen.findByRole('img', { name: 'Photo of Grocery' })) as HTMLImageElement
+    expect(photo.src).toBe('blob:photo')
+    expect(photos.getPhoto).toHaveBeenCalledWith(card.id)
+  })
+
+  it('shows nothing for a card without a photo', async () => {
+    render(<ActiveCard card={card} />)
+
+    await waitFor(() => expect(photos.getPhoto).toHaveBeenCalled())
+    expect(screen.queryByRole('img', { name: 'Photo of Grocery' })).toBeNull()
+  })
+})
+
+describe('ActiveCard photo after an edit', () => {
+  afterEach(() => {
+    cleanup()
+    photos.getPhoto.mockResolvedValue(undefined)
+  })
+
+  it('shows a photo added by editing the card, without reopening it', async () => {
+    Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:photo'), revokeObjectURL: vi.fn() })
+    render(<ActiveCard card={card} />)
+    await waitFor(() => expect(photos.getPhoto).toHaveBeenCalled())
+
+    const photo = new Blob(['jpeg'], { type: 'image/jpeg' })
+    photos.getPhoto.mockResolvedValue(photo)
+    await updateCardById(card.id, card, photo)
+
+    expect(await screen.findByRole('img', { name: 'Photo of Grocery' })).toBeTruthy()
   })
 })

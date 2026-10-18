@@ -5,11 +5,26 @@ import type { BarcodeScannerOptions } from '../barcodeScanner'
 import type { CameraError } from '../types/Camera.type'
 
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
+import { cropCard, findCardInPhoto, resizePhoto } from '../utils/image'
 import { AddCardForm } from './AddCardForm'
 
 const scanners = vi.hoisted(
   () => [] as { options: BarcodeScannerOptions; start: () => void; stop: () => void }[],
 )
+
+vi.mock('../utils/image', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../utils/image')>()),
+  // happy-dom has no canvas, so drawing photos is faked.
+  loadPhoto: vi.fn(async () => ({ width: 400, height: 200, close: () => {} })),
+  findCardInPhoto: vi.fn(() => [
+    { x: 40, y: 20 },
+    { x: 360, y: 20 },
+    { x: 360, y: 180 },
+    { x: 40, y: 180 },
+  ]),
+  cropCard: vi.fn(async () => new Blob(['cropped'], { type: 'image/jpeg' })),
+  resizePhoto: vi.fn(async () => new Blob(['resized'], { type: 'image/jpeg' })),
+}))
 
 vi.mock('../barcodeScanner', () => ({
   BarcodeScanner: class {
@@ -118,6 +133,7 @@ describe('AddCardForm camera flow', () => {
         barcodeValue: '4006381333931',
         format: BarcodeFormat.EAN_13,
       }),
+      undefined,
     )
   })
 
@@ -135,6 +151,7 @@ describe('AddCardForm camera flow', () => {
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({ barcodeValue: '036000291452', format: BarcodeFormat.UPC_A }),
+      undefined,
     )
   })
 
@@ -169,7 +186,10 @@ describe('AddCardForm camera flow', () => {
     fireEvent.input(screen.getByLabelText('Card name'), { target: { value: 'Gym' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
 
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ format: QRCodeFormat.QR_CODE }))
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ format: QRCodeFormat.QR_CODE }),
+      undefined,
+    )
   })
 
   it('stops the camera when the form is closed', () => {
@@ -208,6 +228,7 @@ describe('AddCardForm barcode validation', () => {
         barcodeValue: '4006381333931',
         format: BarcodeFormat.EAN_13,
       }),
+      undefined,
     )
   })
 })
@@ -225,7 +246,7 @@ describe('AddCardForm colour', () => {
     fireEvent.input(barcodeInput()!, { target: { value: '12345678' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
 
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ color: '#ffffff' }))
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ color: '#ffffff' }), undefined)
   })
 })
 
@@ -244,7 +265,7 @@ describe('AddCardForm note', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
 
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ note: 'PIN 1234' }))
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ note: 'PIN 1234' }), undefined)
   })
 
   it('saves no note when it is left empty', () => {
@@ -260,5 +281,81 @@ describe('AddCardForm note', () => {
     renderForm()
 
     expect((screen.getByLabelText(/^Note/) as HTMLInputElement).maxLength).toBe(200)
+  })
+})
+
+function choosePhoto() {
+  Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:photo'), revokeObjectURL: vi.fn() })
+  const chosen = new File(['big photo'], 'card.jpg', { type: 'image/jpeg' })
+  const input = document.querySelector<HTMLInputElement>('input[type="file"]')!
+  Object.defineProperty(input, 'files', { value: [chosen], configurable: true })
+  fireEvent.change(input)
+  return chosen
+}
+
+describe('AddCardForm photo', () => {
+  afterEach(cleanup)
+
+  it('can take a photo with the camera, or choose one from the library', () => {
+    renderForm()
+    const inputs = [...document.querySelectorAll<HTMLInputElement>('input[type="file"]')]
+    const camera = inputs.find((input) => input.getAttribute('capture') === 'environment')!
+    const library = inputs.find((input) => !input.hasAttribute('capture'))!
+    const cameraClick = vi.spyOn(camera, 'click').mockImplementation(() => {})
+    const libraryClick = vi.spyOn(library, 'click').mockImplementation(() => {})
+
+    fireEvent.click(screen.getByRole('button', { name: 'Take photo' }))
+    expect(cameraClick).toHaveBeenCalledOnce()
+    expect(libraryClick).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Choose photo' }))
+    expect(libraryClick).toHaveBeenCalledOnce()
+    expect(camera.accept).toBe('image/*')
+    expect(library.accept).toBe('image/*')
+  })
+
+  it('crops the chosen photo to the card it found, and saves it with the card', async () => {
+    const { onSave } = renderForm()
+    fillIn()
+
+    choosePhoto()
+    expect(await screen.findByRole('button', { name: 'Top-left corner' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Use photo' }))
+    expect(await screen.findByRole('img', { name: 'Card photo' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+
+    expect(findCardInPhoto).toHaveBeenCalled()
+    expect(vi.mocked(cropCard).mock.calls[0][1]).toEqual([
+      { x: 40, y: 20 },
+      { x: 360, y: 20 },
+      { x: 360, y: 180 },
+      { x: 40, y: 180 },
+    ])
+    expect(await (onSave.mock.calls[0][1] as Blob).text()).toBe('cropped')
+  })
+
+  it('can use the whole photo instead, resized', async () => {
+    const { onSave } = renderForm()
+    fillIn()
+
+    const chosen = choosePhoto()
+    fireEvent.click(await screen.findByRole('button', { name: 'Use whole photo' }))
+    expect(await screen.findByRole('img', { name: 'Card photo' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+
+    expect(resizePhoto).toHaveBeenCalledWith(chosen)
+    expect(await (onSave.mock.calls[0][1] as Blob).text()).toBe('resized')
+  })
+
+  it('keeps the form as it was when cropping is cancelled', async () => {
+    const { onSave } = renderForm()
+    fillIn()
+
+    choosePhoto()
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+
+    expect(screen.queryByRole('img', { name: 'Card photo' })).toBeNull()
+    expect(onSave.mock.calls[0][1]).toBeUndefined()
   })
 })

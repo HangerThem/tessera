@@ -11,7 +11,21 @@ import {
   saveCard as saveCardToDB,
   updateCard,
 } from './cards'
+import { deletePhoto, savePhoto } from './photos'
 import { requestPersistentStorage } from './utils/install'
+
+/** A new photo for a card, null to remove it, or undefined to leave it as it is. */
+export type PhotoChange = Blob | null | undefined
+
+/** Changes whenever a photo is saved, removed or imported, so views showing photos reload them. */
+export const photoRevision = signal(0)
+
+async function applyPhotoChange(cardId: string, photo: PhotoChange): Promise<void> {
+  if (photo === undefined) return
+  if (photo === null) await deletePhoto(cardId)
+  else await savePhoto(cardId, photo)
+  photoRevision.value++
+}
 
 export const cards = signal<Card[]>([])
 export const activeCardId = signal<string | null>(null)
@@ -137,11 +151,12 @@ export async function refreshCards(): Promise<void> {
 }
 
 /** Persists a new card and refreshes the list. */
-export async function saveCard(card: Card): Promise<void> {
+export async function saveCard(card: Card, photo?: PhotoChange): Promise<void> {
   isAddCardFormVisible.value = false
   editCardId.value = null
   activeCardId.value = null
   await saveCardToDB(card)
+  await applyPhotoChange(card.id, photo)
   await refreshCards()
 }
 
@@ -149,38 +164,50 @@ export async function saveCard(card: Card): Promise<void> {
  * Saves an edited card in place of the stored one and refreshes the list. The whole card is
  * replaced, so a field removed in the form, like a cleared note, stays removed.
  */
-export async function updateCardById(id: string, card: Card): Promise<void> {
+export async function updateCardById(id: string, card: Card, photo?: PhotoChange): Promise<void> {
   editCardId.value = null
   await saveCardToDB({ ...card, id })
+  await applyPhotoChange(id, photo)
   await refreshCards()
   // After saving, so recording the use can't write the old card back over the edit.
   activeCardId.value = id
 }
 
-/** Deletes a card and refreshes the list. */
+/** Deletes a card and its photo, and refreshes the list. */
 export async function deleteCard(id: string): Promise<void> {
   if (activeCardId.value === id) {
     activeCardId.value = null
   }
   isDeleteConfirmVisible.value = false
   await deleteCardsFromDB([id])
+  await deletePhoto(id)
   await refreshCards()
 }
 
 /**
- * Adds imported cards that aren't on the device yet. Cards that are already here, matched by id, are
- * kept as they are, so an import never overwrites anything.
+ * Adds imported cards that aren't on the device yet, with their photos. Cards that are already here,
+ * matched by id, are kept as they are along with their photos, so an import never overwrites
+ * anything.
  *
  * @returns How many cards were added, and how many were skipped because they were already here.
  */
-export async function importCards(imported: Card[]): Promise<{ added: number; skipped: number }> {
+export async function importCards(
+  imported: Card[],
+  photos: Record<string, Blob> = {},
+): Promise<{ added: number; skipped: number }> {
   const existingIds = new Set(cards.value.map((c) => c.id))
   const toAdd = new Map<string, Card>()
   for (const card of imported) {
     if (!existingIds.has(card.id)) toAdd.set(card.id, card)
   }
 
-  await Promise.all([...toAdd.values()].map((card) => saveCardToDB(card)))
+  await Promise.all(
+    [...toAdd.values()].map(async (card) => {
+      await saveCardToDB(card)
+      if (photos[card.id]) await savePhoto(card.id, photos[card.id])
+    }),
+  )
+  if (Object.keys(photos).length > 0) photoRevision.value++
   await refreshCards()
   return { added: toAdd.size, skipped: imported.length - toAdd.size }
 }

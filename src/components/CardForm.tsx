@@ -1,11 +1,13 @@
 import { ChevronDown, ScanBarcode, X } from 'lucide-preact'
 import { useEffect, useId, useRef, useState } from 'preact/hooks'
 
+import type { PhotoChange } from '../store'
 import type { Card } from '../types/Card.type'
 
 import { BarcodeFormat, type CodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner'
 import { useFocusTrap } from '../hooks/useFocusTrap'
+import { getPhoto } from '../photos'
 import {
   BARCODE_FORMATS,
   formatLabel,
@@ -14,6 +16,7 @@ import {
 } from '../utils/barcode'
 import { holdKeyboardFocus } from '../utils/keyboard'
 import { BarcodeScannerView } from './BarcodeScannerView'
+import { PhotoField } from './PhotoField'
 import { Button } from './ui/Button'
 import ColorPicker, { DEFAULT_CARD_COLOR } from './ui/ColorPicker'
 import { Input } from './ui/Input'
@@ -26,7 +29,8 @@ interface Props {
   closeLabel: string
   /** The card being edited. Leave out to create a new card. */
   initialCard?: Card
-  onSave: (card: Card) => void
+  /** Called with the card, and its photo change: a new photo, null to remove it, or undefined. */
+  onSave: (card: Card, photo: PhotoChange) => void
   onClose: () => void
 }
 
@@ -38,6 +42,17 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
   const [format, setFormat] = useState<CodeFormat>(initialCard?.format ?? BarcodeFormat.CODE_128)
   const [color, setColor] = useState<string>(initialCard?.color ?? DEFAULT_CARD_COLOR)
   const [note, setNote] = useState(initialCard?.note ?? '')
+  const [storedPhoto, setStoredPhoto] = useState<Blob>()
+  const [photoChange, setPhotoChange] = useState<PhotoChange>(undefined)
+  const shownPhoto = photoChange === undefined ? storedPhoto : (photoChange ?? undefined)
+
+  useEffect(() => {
+    if (!initialCard) return
+    getPhoto(initialCard.id)
+      .then(setStoredPhoto)
+      .catch((err) => console.error('Loading the photo failed:', err))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCard?.id])
   const [errors, setErrors] = useState<Record<string, boolean>>({})
   const [invalidValueError, setInvalidValueError] = useState<string>()
   const [isUnsupportedScan, setIsUnsupportedScan] = useState(false)
@@ -93,16 +108,19 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
     // Keeps fields the form doesn't edit, and leaves out an empty note rather than storing "".
     const { note: _previousNote, ...unedited } = initialCard ?? {}
     const trimmedNote = note.trim()
-    onSave({
-      ...unedited,
-      id: initialCard?.id ?? crypto.randomUUID(),
-      name,
-      barcodeValue,
-      format: Number(format) as CodeFormat,
-      isFavorite: initialCard?.isFavorite ?? false,
-      color,
-      ...(trimmedNote && { note: trimmedNote }),
-    })
+    onSave(
+      {
+        ...unedited,
+        id: initialCard?.id ?? crypto.randomUUID(),
+        name,
+        barcodeValue,
+        format: Number(format) as CodeFormat,
+        isFavorite: initialCard?.isFavorite ?? false,
+        color,
+        ...(trimmedNote && { note: trimmedNote }),
+      },
+      photoChange,
+    )
   }
 
   const handleClose = () => {
@@ -112,7 +130,7 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
 
   return (
     <div
-      class="inset-0 fixed bg-background backdrop-blur-sm z-50 flex flex-col p-4 animate-in fade-in slide-in-from-bottom-8 duration-200"
+      class="inset-0 fixed bg-background backdrop-blur-sm z-50 flex flex-col p-4 overflow-y-auto animate-in fade-in slide-in-from-bottom-8 duration-200"
       ref={dialogRef}
       tabIndex={-1}
       role="dialog"
@@ -180,6 +198,8 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
             value={note}
             onInput={(e) => setNote((e.target as HTMLInputElement).value)}
           />
+
+          <PhotoField photo={shownPhoto} onChange={setPhotoChange} />
 
           <button
             type="button"

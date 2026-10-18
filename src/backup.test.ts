@@ -30,20 +30,21 @@ const backupWith = (card: object) =>
 
 describe('createBackup', () => {
   it('writes the cards with the app name and schema version', () => {
-    const backup = JSON.parse(createBackup(cards, new Date('2026-10-18T12:00:00Z')))
+    const backup = JSON.parse(createBackup(cards, { now: new Date('2026-10-18T12:00:00Z') }))
 
     expect(backup).toEqual({
       app: 'tessera',
       version: BACKUP_VERSION,
       exportedAt: '2026-10-18T12:00:00.000Z',
       cards,
+      photos: {},
     })
   })
 })
 
 describe('parseBackup', () => {
   it('reads back the cards from a backup', () => {
-    expect(parseBackup(createBackup(cards))).toEqual(cards)
+    expect(parseBackup(createBackup(cards))).toEqual({ cards, photos: {} })
   })
 
   it('rejects files that are not a Tessera backup', () => {
@@ -71,7 +72,10 @@ describe('parseBackup', () => {
     })
 
     // Version 1 didn't record which format a card used, so the barcode format is kept.
-    expect(parseBackup(backup)).toEqual([cards[0], { ...cards[1], format: BarcodeFormat.CODE_128 }])
+    expect(parseBackup(backup).cards).toEqual([
+      cards[0],
+      { ...cards[1], format: BarcodeFormat.CODE_128 },
+    ])
   })
 
   it('rejects version 1 backups with invalid formats', () => {
@@ -98,6 +102,30 @@ describe('parseBackup', () => {
       expect(() => parseBackup(backupWith(card))).toThrow(
         "This backup is damaged and can't be imported.",
       )
+    }
+  })
+})
+
+describe('backup photos', () => {
+  const photo = 'data:image/jpeg;base64,/9j/4AAQ'
+
+  it("round-trips the cards' photos, by card id", () => {
+    const backup = createBackup(cards, { photos: { 'card-1': photo } })
+
+    expect(parseBackup(backup).photos).toEqual({ 'card-1': photo })
+  })
+
+  it('reads backups made before photos as having none', () => {
+    const backup = JSON.stringify({ app: 'tessera', version: BACKUP_VERSION, cards })
+
+    expect(parseBackup(backup).photos).toEqual({})
+  })
+
+  it("rejects photos that aren't images", () => {
+    for (const photos of [{ 'card-1': 'https://example.com/photo.jpg' }, { 'card-1': 42 }, []]) {
+      const backup = JSON.stringify({ app: 'tessera', version: BACKUP_VERSION, cards, photos })
+
+      expect(() => parseBackup(backup)).toThrow("This backup is damaged and can't be imported.")
     }
   })
 })

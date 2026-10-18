@@ -12,6 +12,12 @@ const scanners = vi.hoisted(
   () => [] as { options: BarcodeScannerOptions; start: () => void; stop: () => void }[],
 )
 
+const photos = vi.hoisted(() => ({
+  getPhoto: vi.fn(async (): Promise<Blob | undefined> => undefined),
+}))
+
+vi.mock('../photos', () => photos)
+
 vi.mock('../barcodeScanner', () => ({
   BarcodeScanner: class {
     start = vi.fn(() => this.options.onStateChange?.('requesting'))
@@ -113,6 +119,7 @@ describe('EditCardForm camera flow', () => {
         barcodeValue: '4006381333931',
         format: BarcodeFormat.EAN_13,
       }),
+      undefined,
     )
   })
 
@@ -150,6 +157,7 @@ describe('EditCardForm barcode validation', () => {
         barcodeValue: '4006381333931',
         format: BarcodeFormat.EAN_13,
       }),
+      undefined,
     )
   })
 })
@@ -164,7 +172,7 @@ describe('EditCardForm colour', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
 
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ id: card.id }))
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ id: card.id }), undefined)
   })
 })
 
@@ -184,10 +192,37 @@ describe('EditCardForm note', () => {
     expect(note.value).toBe('Gold member')
 
     fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
-    expect(onSave).toHaveBeenLastCalledWith(expect.objectContaining({ note: 'Gold member' }))
+    expect(onSave).toHaveBeenLastCalledWith(
+      expect.objectContaining({ note: 'Gold member' }),
+      undefined,
+    )
 
     fireEvent.input(note, { target: { value: '' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
     expect(onSave.mock.lastCall![0]).not.toHaveProperty('note')
+  })
+})
+
+describe('EditCardForm photo', () => {
+  afterEach(() => {
+    cleanup()
+    photos.getPhoto.mockResolvedValue(undefined)
+  })
+
+  it('shows the stored photo, leaves it alone, or removes it', async () => {
+    Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:photo'), revokeObjectURL: vi.fn() })
+    photos.getPhoto.mockResolvedValue(new Blob(['stored'], { type: 'image/jpeg' }))
+    const onSave = vi.fn()
+    render(<EditCardForm initialCard={card} onSave={onSave} onClose={() => {}} />)
+
+    expect(await screen.findByRole('img', { name: 'Card photo' })).toBeTruthy()
+    expect(photos.getPhoto).toHaveBeenCalledWith(card.id)
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+    expect(onSave.mock.lastCall![1]).toBeUndefined()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove photo' }))
+    expect(screen.queryByRole('img', { name: 'Card photo' })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+    expect(onSave.mock.lastCall![1]).toBeNull()
   })
 })
