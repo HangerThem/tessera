@@ -13,6 +13,7 @@ const cards: Card[] = [
     format: BarcodeFormat.EAN_13,
     isFavorite: true,
     color: '#3b82f6',
+    note: 'PIN 1234',
   },
   {
     id: 'card-2',
@@ -90,6 +91,7 @@ describe('parseBackup', () => {
       { ...cards[0], format: undefined },
       { ...cards[0], isFavorite: 'yes' },
       { ...cards[0], color: 42 },
+      { ...cards[0], note: 42 },
     ]) {
       expect(() => parseBackup(backupWith(card))).toThrow(
         "This backup is damaged and can't be imported.",

@@ -167,3 +167,27 @@ describe('EditCardForm colour', () => {
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ id: card.id }))
   })
 })
+
+describe('EditCardForm note', () => {
+  afterEach(cleanup)
+
+  it('keeps the note, and removes it when cleared', () => {
+    const onSave = vi.fn()
+    render(
+      <EditCardForm
+        initialCard={{ ...card, note: 'Gold member' }}
+        onSave={onSave}
+        onClose={() => {}}
+      />,
+    )
+    const note = screen.getByLabelText(/^Note/) as HTMLInputElement
+    expect(note.value).toBe('Gold member')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+    expect(onSave).toHaveBeenLastCalledWith(expect.objectContaining({ note: 'Gold member' }))
+
+    fireEvent.input(note, { target: { value: '' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+    expect(onSave.mock.lastCall![0]).not.toHaveProperty('note')
+  })
+})

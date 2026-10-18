@@ -19,6 +19,8 @@ import ColorPicker, { DEFAULT_CARD_COLOR } from './ui/ColorPicker'
 import { Input } from './ui/Input'
 import { Select } from './ui/Select'
 
+const NOTE_MAX_LENGTH = 200
+
 interface Props {
   title: string
   closeLabel: string
@@ -35,6 +37,7 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
   const [barcodeValue, setBarcodeValue] = useState(initialCard?.barcodeValue ?? '')
   const [format, setFormat] = useState<CodeFormat>(initialCard?.format ?? BarcodeFormat.CODE_128)
   const [color, setColor] = useState<string>(initialCard?.color ?? DEFAULT_CARD_COLOR)
+  const [note, setNote] = useState(initialCard?.note ?? '')
   const [errors, setErrors] = useState<Record<string, boolean>>({})
   const [invalidValueError, setInvalidValueError] = useState<string>()
   const [isUnsupportedScan, setIsUnsupportedScan] = useState(false)
@@ -87,13 +90,18 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
     )
     if (invalidReason) return
 
+    // Keeps fields the form doesn't edit, and leaves out an empty note rather than storing "".
+    const { note: _previousNote, ...unedited } = initialCard ?? {}
+    const trimmedNote = note.trim()
     onSave({
+      ...unedited,
       id: initialCard?.id ?? crypto.randomUUID(),
       name,
       barcodeValue,
       format: Number(format) as CodeFormat,
       isFavorite: initialCard?.isFavorite ?? false,
       color,
+      ...(trimmedNote && { note: trimmedNote }),
     })
   }
 
@@ -162,6 +170,16 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
           )}
 
           <ColorPicker allowCustom value={color} onChange={setColor} />
+
+          <Input
+            label="Note (optional)"
+            type="text"
+            placeholder="e.g. PIN 1234, Gold member"
+            autocomplete="off"
+            maxLength={NOTE_MAX_LENGTH}
+            value={note}
+            onInput={(e) => setNote((e.target as HTMLInputElement).value)}
+          />
 
           <button
             type="button"

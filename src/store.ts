@@ -105,11 +105,14 @@ export async function saveCard(card: Card): Promise<void> {
   await refreshCards()
 }
 
-/** Updates a card and refreshes the list. */
-export async function updateCardById(id: string, data: Partial<Card>): Promise<void> {
+/**
+ * Saves an edited card in place of the stored one and refreshes the list. The whole card is
+ * replaced, so a field removed in the form, like a cleared note, stays removed.
+ */
+export async function updateCardById(id: string, card: Card): Promise<void> {
   editCardId.value = null
   activeCardId.value = id
-  await updateCard(id, data)
+  await saveCardToDB({ ...card, id })
   await refreshCards()
 }
 

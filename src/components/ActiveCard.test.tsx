@@ -155,3 +155,35 @@ describe('ActiveCard format', () => {
     expect(screen.getByRole('group', { name: 'Display format' })).toBeTruthy()
   })
 })
+
+describe('ActiveCard note', () => {
+  afterEach(cleanup)
+
+  it('keeps the note hidden until asked, since staff see this screen at checkout', () => {
+    render(<ActiveCard card={{ ...card, note: 'PIN 1234' }} />)
+    expect(screen.queryByText('PIN 1234')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show note' }))
+    expect(screen.getByText('PIN 1234')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hide note' }))
+    expect(screen.queryByText('PIN 1234')).toBeNull()
+  })
+
+  it('shows nothing for a card without a note', () => {
+    render(<ActiveCard card={card} />)
+
+    expect(screen.queryByRole('button', { name: 'Show note' })).toBeNull()
+  })
+
+  it('leaves the note out of shared text', async () => {
+    const share = vi.fn(async (_data: ShareData) => {})
+    Object.assign(navigator, { share, canShare: () => true })
+    render(<ActiveCard card={{ ...card, note: 'PIN 1234' }} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Share' }))
+
+    await waitFor(() => expect(share).toHaveBeenCalled())
+    expect(JSON.stringify(share.mock.calls[0][0])).not.toContain('PIN 1234')
+  })
+})

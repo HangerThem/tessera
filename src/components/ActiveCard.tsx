@@ -5,7 +5,9 @@ import {
   CreditCard,
   Edit,
   ImageUpIcon,
-  // NotepadText,
+  Eye,
+  EyeOff,
+  NotepadText,
   QrCodeIcon,
   ShareIcon,
   Star,
@@ -53,24 +55,15 @@ const buttonStyle = tv({
   },
 })
 
-// const noteInputStyle = tv({
-//   slots: {
-//     root: 'flex items-center justify-center gap-2 px-2 py-3 rounded-lg',
-//     input: 'outline-none w-full text-sm',
-//   },
-//   variants: {
-//     dark: {
-//       false: {
-//         root: 'bg-neutral-900/20 border border-neutral-900/30',
-//         input: 'text-black placeholder:text-black/50',
-//       },
-//       true: {
-//         root: 'bg-neutral-50/20 border border-neutral-50/30',
-//         input: 'text-white placeholder:text-white/50',
-//       },
-//     },
-//   },
-// })
+const noteStyle = tv({
+  base: 'flex items-center gap-2 px-3 py-2 rounded-lg text-sm',
+  variants: {
+    dark: {
+      false: 'bg-neutral-900/20 border border-neutral-900/30',
+      true: 'bg-neutral-50/20 border border-neutral-50/30',
+    },
+  },
+})
 
 const shareButtonStyle = tv({
   base: 'gap-2 cursor-pointer flex items-center justify-center bg-neutral-50/20 hover:bg-neutral-50/40 border border-neutral-50/50 py-4 rounded-lg transition-colors flex-1',
@@ -100,7 +93,8 @@ export function ActiveCard({ card }: ActiveCardProps) {
     [displayedFormat, card.barcodeValue],
   )
   const isDark = isDarkColor(card.color ?? '#fff')
-  // const { root: noteRootClass, input: noteInputClass } = noteInputStyle({ dark: isDark })
+  // Hidden by default: this screen is shown to staff at checkout, and notes can hold a PIN.
+  const [isNoteVisible, setIsNoteVisible] = useState(false)
   const [canShareText, setCanShareText] = useState(false)
   const [canShareFiles, setCanShareFiles] = useState(false)
   const [justCopied, setJustCopied] = useState(false)
@@ -342,11 +336,26 @@ export function ActiveCard({ card }: ActiveCardProps) {
             )}
           </div>
         )}
-        {/* TODO: Add note functionality */}
-        {/* <div className={noteRootClass()}>
-          <NotepadText className="w-5 h-5" />
-          <input type="text" className={noteInputClass()} placeholder="Add a note..." />
-        </div> */}
+        {card.note && (
+          <div className={noteStyle({ dark: isDark })}>
+            <NotepadText className="w-5 h-5 shrink-0" aria-hidden="true" />
+            <p className="flex-1 min-w-0 break-words">
+              {isNoteVisible ? card.note : <span className="opacity-70">Note hidden</span>}
+            </p>
+            <button
+              type="button"
+              className="cursor-pointer p-1 rounded hover:bg-black/10 transition-colors"
+              onClick={() => setIsNoteVisible((visible) => !visible)}
+              aria-label={isNoteVisible ? 'Hide note' : 'Show note'}
+            >
+              {isNoteVisible ? (
+                <EyeOff className="w-4 h-4" aria-hidden="true" />
+              ) : (
+                <Eye className="w-4 h-4" aria-hidden="true" />
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </>
   )

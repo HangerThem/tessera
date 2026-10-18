@@ -8,6 +8,8 @@ export type Card = {
   format: CodeFormat
   isFavorite: boolean
   color?: string
+  /** A short note, e.g. a PIN or membership tier. Hidden at checkout until tapped. */
+  note?: string
 }
 
 /**
