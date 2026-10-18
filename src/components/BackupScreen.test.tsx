@@ -99,8 +99,10 @@ describe('BackupScreen import', () => {
     await screen.findByText('Import 2 cards from this backup?')
     fireEvent.click(screen.getByRole('button', { name: 'Import' }))
 
-    expect((await screen.findByRole('status')).textContent).toBe(
-      'Added 1 card. 1 was already on this device.',
+    await waitFor(() =>
+      expect(screen.getByRole('status').textContent).toBe(
+        'Added 1 card. 1 was already on this device.',
+      ),
     )
     expect(db.set).toHaveBeenCalledWith('card-2', otherCard, expect.anything())
     expect(db.set).not.toHaveBeenCalledWith('card-1', expect.anything(), expect.anything())

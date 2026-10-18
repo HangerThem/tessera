@@ -1,14 +1,26 @@
-import { Download, X } from 'lucide-preact'
-import { useState } from 'preact/hooks'
+import { Download, Upload, X } from 'lucide-preact'
+import { useRef, useState } from 'preact/hooks'
 
-import { createBackup } from '../backup'
+import type { Card } from '../types/Card.type'
+
+import { BackupError, createBackup, parseBackup } from '../backup'
 import { useFocusTrap } from '../hooks/useFocusTrap'
-import { cards } from '../store'
+import { cards, importCards } from '../store'
 import { saveFile } from '../utils/file'
 import { Button } from './ui/Button'
 
 interface Props {
   onClose: () => void
+}
+
+const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`
+
+function describeImport({ added, skipped }: { added: number; skipped: number }) {
+  const parts = [added > 0 ? `Added ${plural(added, 'card')}.` : 'No new cards to add.']
+  if (skipped > 0) {
+    parts.push(`${skipped} ${skipped === 1 ? 'was' : 'were'} already on this device.`)
+  }
+  return parts.join(' ')
 }
 
 const backupFileName = (date: Date) => `tessera-backup-${date.toISOString().slice(0, 10)}.json`
@@ -17,6 +29,42 @@ const backupFileName = (date: Date) => `tessera-backup-${date.toISOString().slic
 export function BackupScreen({ onClose }: Props) {
   const dialogRef = useFocusTrap<HTMLDivElement>(true)
   const [exportError, setExportError] = useState<string>()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [pendingImport, setPendingImport] = useState<Card[] | null>(null)
+  const [importError, setImportError] = useState<string>()
+  const [importResult, setImportResult] = useState<string>()
+
+  const handleFileChosen = async (input: HTMLInputElement) => {
+    const file = input.files?.[0]
+    // Cleared so choosing the same file again still fires a change.
+    input.value = ''
+    if (!file) return
+
+    setImportError(undefined)
+    setImportResult(undefined)
+    try {
+      const imported = parseBackup(await file.text())
+      if (imported.length === 0) {
+        setImportError('This backup has no cards.')
+        return
+      }
+      setPendingImport(imported)
+    } catch (err) {
+      if (!(err instanceof BackupError)) console.error('Reading the backup failed:', err)
+      setImportError(err instanceof BackupError ? err.message : "This file couldn't be read.")
+    }
+  }
+
+  const handleImport = async () => {
+    if (!pendingImport) return
+    try {
+      setImportResult(describeImport(await importCards(pendingImport)))
+    } catch (err) {
+      console.error('Import failed:', err)
+      setImportError("The cards couldn't be saved. Try again.")
+    }
+    setPendingImport(null)
+  }
 
   const handleExport = async () => {
     setExportError(undefined)
@@ -75,6 +123,59 @@ export function BackupScreen({ onClose }: Props) {
             {exportError}
           </p>
         )}
+      </section>
+
+      <section className="flex flex-col gap-3" aria-labelledby="backup-import-title">
+        <div>
+          <h3 className="font-semibold" id="backup-import-title">
+            Restore from a file
+          </h3>
+          <p className="text-sm text-foreground/70">
+            Add the cards from a Tessera backup. Cards already on this device are kept as they are.
+          </p>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          tabIndex={-1}
+          aria-hidden="true"
+          onChange={(e) => handleFileChosen(e.currentTarget)}
+        />
+        {pendingImport ? (
+          <div className="flex flex-col gap-3 rounded-md bg-foreground/5 p-3">
+            <p className="text-sm font-semibold">
+              Import {plural(pendingImport.length, 'card')} from this backup?
+            </p>
+            <div className="flex gap-2">
+              <Button type="button" size="small" onClick={handleImport}>
+                Import
+              </Button>
+              <Button
+                type="button"
+                size="small"
+                variant="secondary"
+                onClick={() => setPendingImport(null)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button type="button" variant="secondary" onClick={() => fileInputRef.current?.click()}>
+            <Upload aria-hidden="true" />
+            Import from file
+          </Button>
+        )}
+        {importError && (
+          <p role="alert" className="text-red-500 text-sm">
+            {importError}
+          </p>
+        )}
+        <p role="status" className="text-sm empty:hidden">
+          {importResult}
+        </p>
       </section>
     </div>
   )
