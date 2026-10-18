@@ -66,6 +66,8 @@ const DETECTION_SIZE = 400
 /** The source for cropping is capped, so a 12-megapixel photo doesn't need 50 MB of pixels. */
 const CROP_SOURCE_MAX_SIZE = 2000
 const DEFAULT_INSET = 0.08
+/** How far detected corners are pulled towards the card's centre, as a share of its size. */
+const DETECTED_INSET = 0.015
 
 /** Card-shaped output: landscape when the card's top and bottom are longer than its sides. */
 export function cardOutputSize(corners: Point[]) {
@@ -77,6 +79,18 @@ export function cardOutputSize(corners: Point[]) {
   return isLandscape
     ? { width: CARD_LONG_SIDE, height: CARD_SHORT_SIDE }
     : { width: CARD_SHORT_SIDE, height: CARD_LONG_SIDE }
+}
+
+/** Moves each corner towards the centre by `amount` of the distance, keeping the card's shape. */
+export function insetCorners(corners: Point[], amount: number): Point[] {
+  const centre = {
+    x: corners.reduce((sum, c) => sum + c.x, 0) / corners.length,
+    y: corners.reduce((sum, c) => sum + c.y, 0) / corners.length,
+  }
+  return corners.map(({ x, y }) => ({
+    x: x + (centre.x - x) * amount,
+    y: y + (centre.y - y) * amount,
+  }))
 }
 
 /** Corners just inside the photo's edges, for when no card was found. */
@@ -117,7 +131,12 @@ export function findCardInPhoto(bitmap: ImageBitmap): Point[] | null {
   const { canvas, context, scale } = drawScaled(bitmap, DETECTION_SIZE)
   const { data } = context.getImageData(0, 0, canvas.width, canvas.height)
   const corners = detectCardCorners({ data, width: canvas.width, height: canvas.height })
-  return corners?.map(({ x, y }) => ({ x: x * scale, y: y * scale })) ?? null
+  if (!corners) return null
+  // Slightly inside the found edges, which can be a few pixels off and meet at rounded corners.
+  return insetCorners(
+    corners.map(({ x, y }) => ({ x: x * scale, y: y * scale })),
+    DETECTED_INSET,
+  )
 }
 
 /**
