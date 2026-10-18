@@ -45,4 +45,28 @@ describe('CardList', () => {
     expect(qrCodeCard.querySelector('.lucide-qr-code')).not.toBeNull()
     expect(container.querySelector('.lucide-credit-card')).toBeNull()
   })
+
+  it('can sort by recently used: favourites still first, never used cards last by name', () => {
+    const used = (name: string, lastUsedAt: number, isFavorite = false) => ({
+      ...card(name, isFavorite),
+      lastUsedAt,
+    })
+    render(
+      <CardList
+        sortOrder="recent"
+        cards={[
+          card('Zara'),
+          used('Lidl', 100),
+          card('Albert'),
+          used('Tesco', 300),
+          used('Gym', 50, true),
+          used('Bakery', 200),
+        ]}
+      />,
+      container,
+    )
+
+    const names = Array.from(container.querySelectorAll('li h2')).map((el) => el.textContent)
+    expect(names).toEqual(['Gym', 'Tesco', 'Bakery', 'Lidl', 'Albert', 'Zara'])
+  })
 })
