@@ -15,7 +15,8 @@ vi.mock('idb-keyval', () => ({
     void db.set(key, updater(db.get(key))),
 }))
 
-const { cards, importCards, loadCards, refreshCards, saveCard } = await import('./store')
+const { cards, importCards, loadCards, refreshCards, saveCard, updateCardById } =
+  await import('./store')
 
 const card = (id: string, name: string): Card => ({
   id,
@@ -90,5 +91,20 @@ describe('persistent storage', () => {
     await loadCards()
 
     await vi.waitFor(() => expect(persist).toHaveBeenCalled())
+  })
+})
+
+describe('updateCardById', () => {
+  beforeEach(async () => {
+    db.clear()
+    db.set('card-1', { ...card('card-1', 'Grocery'), note: 'PIN 1234' })
+    await refreshCards()
+  })
+
+  it('saves the edited card as it is, so a removed note stays removed', async () => {
+    await updateCardById('card-1', card('card-1', 'Grocery'))
+
+    expect(db.get('card-1')).not.toHaveProperty('note')
+    expect(cards.value[0]).not.toHaveProperty('note')
   })
 })
