@@ -7,6 +7,7 @@ import {
   getCards,
   migrateCardFormats,
   migrateIfNeeded,
+  resetCardStore,
   saveCard as saveCardToDB,
   updateCard,
 } from './cards'
@@ -163,6 +164,7 @@ export async function loadCards(): Promise<void> {
     loadState.value = 'ready'
   } catch (err) {
     console.error('Loading cards failed:', err)
+    resetCardStore()
     loadState.value = 'failed'
   }
 }
