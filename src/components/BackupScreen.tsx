@@ -63,11 +63,12 @@ export function BackupScreen({ onClose }: Props) {
   // Prepared ahead, because reading the photos takes a moment, and the share sheet only opens
   // straight from a tap on iOS.
   const [preparedBackup, setPreparedBackup] = useState<PreparedBackup>()
+  const currentCards = cards.value
 
   useEffect(() => {
     let cancelled = false
     setPreparedBackup(undefined)
-    prepareBackup(cards.value)
+    prepareBackup(currentCards)
       .then((backup) => !cancelled && setPreparedBackup(backup))
       .catch((err) => {
         console.error('Preparing the backup failed:', err)
@@ -76,7 +77,7 @@ export function BackupScreen({ onClose }: Props) {
     return () => {
       cancelled = true
     }
-  }, [cards.value])
+  }, [currentCards])
 
   const readBackup = (backup: string, source: ImportSource) => {
     setImportSource(source)
