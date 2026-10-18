@@ -110,6 +110,24 @@ export async function deleteCard(id: string): Promise<void> {
 }
 
 /**
+ * Adds imported cards that aren't on the device yet. Cards that are already here, matched by id, are
+ * kept as they are, so an import never overwrites anything.
+ *
+ * @returns How many cards were added, and how many were skipped because they were already here.
+ */
+export async function importCards(imported: Card[]): Promise<{ added: number; skipped: number }> {
+  const existingIds = new Set(cards.value.map((c) => c.id))
+  const toAdd = new Map<string, Card>()
+  for (const card of imported) {
+    if (!existingIds.has(card.id)) toAdd.set(card.id, card)
+  }
+
+  await Promise.all([...toAdd.values()].map((card) => saveCardToDB(card)))
+  await refreshCards()
+  return { added: toAdd.size, skipped: imported.length - toAdd.size }
+}
+
+/**
  * Toggles a card's favorite status in-memory first for instant UI feedback,
  * then persists in the background.
  */
