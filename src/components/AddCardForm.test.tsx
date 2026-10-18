@@ -160,3 +160,20 @@ describe('AddCardForm barcode validation', () => {
     )
   })
 })
+
+describe('AddCardForm colour', () => {
+  afterEach(cleanup)
+
+  it('saves a new card in white unless another colour is picked', () => {
+    const { onSave } = renderForm()
+    expect(
+      screen.getByRole('button', { name: 'Select colour White' }).getAttribute('aria-pressed'),
+    ).toBe('true')
+
+    fireEvent.input(screen.getByLabelText('Card name'), { target: { value: 'Grocery' } })
+    fireEvent.input(barcodeInput()!, { target: { value: '12345678' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ color: '#ffffff' }))
+  })
+})
