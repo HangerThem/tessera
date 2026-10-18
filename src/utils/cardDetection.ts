@@ -1,6 +1,6 @@
 import type { Point } from './perspective'
 
-type GrayImage = { data: Uint8ClampedArray; width: number; height: number }
+type RGBAImage = { data: Uint8ClampedArray; width: number; height: number }
 
 type Line = { theta: number; rho: number; votes: number }
 
@@ -22,11 +22,15 @@ const CANDIDATES_PER_FAMILY = 8
  * two roughly perpendicular directions that encloses a card-shaped area. Works best when the card
  * stands out from a plain background; on a busy one it may miss, so callers let the user adjust.
  *
- * @param {GrayImage} image - The photo in grayscale, best around 400 px wide.
+ * @param {RGBAImage} image - The photo's RGBA pixels, best around 400 px wide.
  * @returns {Point[] | null} The corners (top-left, top-right, bottom-right, bottom-left), or null.
  */
-export function detectCardCorners(image: GrayImage): Point[] | null {
-  const edges = findEdges(blur(image), image.width, image.height)
+export function detectCardCorners(image: RGBAImage): Point[] | null {
+  // Each colour channel separately: a card can differ from its background in colour alone.
+  const channels = [0, 1, 2].map((channel) =>
+    blur(channelOf(image, channel), image.width, image.height),
+  )
+  const edges = findEdges(channels, image.width, image.height)
   const lines = findLines(edges, image.width, image.height)
   if (lines.length < 4) return null
 
@@ -55,8 +59,14 @@ export function detectCardCorners(image: GrayImage): Point[] | null {
   return best?.corners ?? null
 }
 
+function channelOf({ data, width, height }: RGBAImage, channel: number): Float32Array {
+  const values = new Float32Array(width * height)
+  for (let i = 0; i < values.length; i++) values[i] = data[i * 4 + channel]
+  return values
+}
+
 /** A 5×5 box blur, which keeps paper texture and sensor noise from becoming edges. */
-function blur({ data, width, height }: GrayImage): Float32Array {
+function blur(data: Float32Array, width: number, height: number): Float32Array {
   const pass = (input: ArrayLike<number>, dx: number, dy: number) => {
     const output = new Float32Array(width * height)
     for (let y = 0; y < height; y++) {
@@ -78,16 +88,22 @@ function blur({ data, width, height }: GrayImage): Float32Array {
   return pass(pass(data, 1, 0), 0, 1)
 }
 
-/** Sobel edge detection, keeping only the strongest edges. */
-function findEdges(pixels: Float32Array, width: number, height: number): Point[] {
+/**
+ * Sobel edge detection on each colour channel, keeping the strongest channel's edge at each pixel,
+ * and then only the strongest edges.
+ */
+function findEdges(channels: Float32Array[], width: number, height: number): Point[] {
   const magnitudes = new Float32Array(width * height)
   let max = 0
   for (let y = 1; y < height - 1; y++) {
     for (let x = 1; x < width - 1; x++) {
-      const at = (dx: number, dy: number) => pixels[(y + dy) * width + x + dx]
-      const gx = at(1, -1) + 2 * at(1, 0) + at(1, 1) - at(-1, -1) - 2 * at(-1, 0) - at(-1, 1)
-      const gy = at(-1, 1) + 2 * at(0, 1) + at(1, 1) - at(-1, -1) - 2 * at(0, -1) - at(1, -1)
-      const magnitude = Math.hypot(gx, gy)
+      let magnitude = 0
+      for (const pixels of channels) {
+        const at = (dx: number, dy: number) => pixels[(y + dy) * width + x + dx]
+        const gx = at(1, -1) + 2 * at(1, 0) + at(1, 1) - at(-1, -1) - 2 * at(-1, 0) - at(-1, 1)
+        const gy = at(-1, 1) + 2 * at(0, 1) + at(1, 1) - at(-1, -1) - 2 * at(0, -1) - at(1, -1)
+        magnitude = Math.max(magnitude, Math.hypot(gx, gy))
+      }
       magnitudes[y * width + x] = magnitude
       if (magnitude > max) max = magnitude
     }

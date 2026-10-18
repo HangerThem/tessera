@@ -108,7 +108,7 @@ function drawScaled(bitmap: ImageBitmap, maxSize: number) {
 }
 
 /**
- * Looks for the card in a photo.
+ * Looks for the card in a photo, on a 400 px copy.
  *
  * @param {ImageBitmap} bitmap - The photo.
  * @returns {Point[] | null} The card's corners in the photo's pixels, or null if none was found.
@@ -116,11 +116,7 @@ function drawScaled(bitmap: ImageBitmap, maxSize: number) {
 export function findCardInPhoto(bitmap: ImageBitmap): Point[] | null {
   const { canvas, context, scale } = drawScaled(bitmap, DETECTION_SIZE)
   const { data } = context.getImageData(0, 0, canvas.width, canvas.height)
-  const gray = new Uint8ClampedArray(canvas.width * canvas.height)
-  for (let i = 0; i < gray.length; i++) {
-    gray[i] = data[i * 4] * 0.299 + data[i * 4 + 1] * 0.587 + data[i * 4 + 2] * 0.114
-  }
-  const corners = detectCardCorners({ data: gray, width: canvas.width, height: canvas.height })
+  const corners = detectCardCorners({ data, width: canvas.width, height: canvas.height })
   return corners?.map(({ x, y }) => ({ x: x * scale, y: y * scale })) ?? null
 }
 
