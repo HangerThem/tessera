@@ -1,5 +1,62 @@
 # Changelog
 
+## [v0.4.0] - 2026-10-18
+
+### Added
+
+- Card export / backup for device migration (#53)
+
+
+- Transfer cards directly to another device (#54)
+
+
+- Add notes to cards (#63)
+
+
+- Sort cards by recently used (#64)
+
+
+- Add an optional photo of the card (#65)
+
+
+
+### Chores
+
+- Merge AddCardForm and EditCardForm into a shared CardForm (#55)
+
+
+
+### Fixed
+
+- "Share as Image" does nothing (#49)
+
+
+- Invalid barcode values render an empty card (#50)
+
+
+- Barcodes render blurry on high-DPI screens (#51)
+
+
+- Card list shadows have square corners (#60)
+
+
+- Cards without a picked colour can't be saved after editing (#56)
+
+
+- Scanning UPC or Codabar cards saves them with the wrong format (#57)
+
+
+- Scanned QR code cards are displayed as Code 128 (#58)
+
+
+- Card list icon isn't at the right edge on iPad (#67)
+
+
+- App shows a blank screen if storage fails to load (#61)
+
+
+- iOS purges IndexedDB every 7 days (#62)
+
 ## [v0.3.0] - 2026-10-17
 
 ### Added
