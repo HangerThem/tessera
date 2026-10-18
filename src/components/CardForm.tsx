@@ -38,16 +38,21 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
   const [color, setColor] = useState<string>(initialCard?.color ?? DEFAULT_CARD_COLOR)
   const [errors, setErrors] = useState<Record<string, boolean>>({})
   const [invalidValueError, setInvalidValueError] = useState<string>()
+  const [isUnsupportedScan, setIsUnsupportedScan] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const dialogRef = useFocusTrap<HTMLDivElement>(true)
 
   const { cameraState, cameraError, videoRef, start, stop } = useBarcodeScanner({
     onDetect: (value, format) => {
       setBarcodeValue(value)
+      setInvalidValueError(undefined)
+      setIsUnsupportedScan(false)
       if (format in BarcodeFormat) {
         setBarcodeFormat(format as BarcodeFormat)
       } else if (format in QRCodeFormat) {
         setQRCodeFormat(format as QRCodeFormat)
+      } else {
+        setIsUnsupportedScan(true)
       }
     },
   })
@@ -152,9 +157,15 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
               setBarcodeValue((e.target as HTMLInputElement).value)
               setErrors((prev) => ({ ...prev, barcodeValue: false }))
               setInvalidValueError(undefined)
+              setIsUnsupportedScan(false)
             }}
             error={errors.barcodeValue ? 'Please enter a barcode number' : invalidValueError}
           />
+          {isUnsupportedScan && (
+            <p role="status" className="-mt-3 text-xs text-amber-600 dark:text-amber-400">
+              Tessera can't show this barcode's format yet, so the card may not scan at checkout.
+            </p>
+          )}
 
           <ColorPicker allowCustom value={color} onChange={setColor} />
 
