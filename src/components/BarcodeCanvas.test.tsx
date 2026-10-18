@@ -59,4 +59,30 @@ describe('BarcodeCanvas', () => {
 
     expect(screen.getByRole('alert').textContent).toContain("Can't show this QR code")
   })
+
+  it('can be shown large with its own label', () => {
+    vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(1)
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(
+      function (this: HTMLElement) {
+        return this.className.includes('max-w-80') ? 320 : 160
+      },
+    )
+    vi.mocked(toCanvas).mockImplementation((canvas, options) => {
+      const element = canvas as HTMLCanvasElement
+      element.width = 100 * options.scale!
+      return element
+    })
+
+    render(
+      <BarcodeCanvas
+        value="TESSERA-OFFER:abc"
+        format={QRCodeFormat.QR_CODE}
+        size="large"
+        label="Transfer code"
+      />,
+    )
+
+    expect(screen.getByRole('img', { name: 'Transfer code' })).toBeTruthy()
+    expect(vi.mocked(toCanvas).mock.lastCall![1].scale).toBe(3)
+  })
 })
