@@ -1,0 +1,46 @@
+import { cleanup, render, screen } from '@testing-library/preact'
+import { toCanvas } from 'bwip-js/browser'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
+import { BarcodeCanvas } from './BarcodeCanvas'
+
+// happy-dom has no 2D canvas context, so bwip-js can't draw.
+vi.mock('bwip-js/browser', () => ({ toCanvas: vi.fn() }))
+
+describe('BarcodeCanvas', () => {
+  afterEach(() => {
+    cleanup()
+    vi.mocked(toCanvas).mockReset()
+  })
+
+  it('shows the rendered barcode', () => {
+    render(<BarcodeCanvas value="12345678" format={BarcodeFormat.CODE_128} />)
+
+    expect(screen.getByRole('img', { name: 'Barcode for 12345678' })).toBeTruthy()
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it("explains when the code can't be rendered", () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.mocked(toCanvas).mockImplementation(() => {
+      throw new Error('bwipp.ean13badLength')
+    })
+
+    render(<BarcodeCanvas value="12345" format={BarcodeFormat.EAN_13} />)
+
+    expect(screen.getByRole('alert').textContent).toContain("Can't show this barcode")
+    expect(screen.queryByRole('img')).toBeNull()
+  })
+
+  it('names the QR code in the error', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.mocked(toCanvas).mockImplementation(() => {
+      throw new Error('bwipp.qrcodeInputTooLong')
+    })
+
+    render(<BarcodeCanvas value="12345" format={QRCodeFormat.QR_CODE} />)
+
+    expect(screen.getByRole('alert').textContent).toContain("Can't show this QR code")
+  })
+})
