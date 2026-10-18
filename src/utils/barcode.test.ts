@@ -2,7 +2,14 @@ import { toCanvas } from 'bwip-js/browser'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
-import { getBarcodeScale, renderBarcode, validateBarcodeValue } from './barcode'
+import {
+  formatBarcodeValue,
+  getBarcodeScale,
+  mapBarcodeDetectorFormatToZXing,
+  mapZXingFormatsToBarcodeDetectorFormats,
+  renderBarcode,
+  validateBarcodeValue,
+} from './barcode'
 
 // happy-dom has no 2D canvas context, so drawing is faked: each scale step adds 100 px of width.
 vi.mock('bwip-js/browser', async (importOriginal) => ({
@@ -83,5 +90,36 @@ describe('renderBarcode', () => {
     expect(options.scale).toBe(3)
     expect(options.height).toBeUndefined()
     expect(element.style.width).toBe('150px')
+  })
+})
+
+describe('UPC and Codabar', () => {
+  it('encodes UPC-A, UPC-E and Codabar values', () => {
+    expect(validateBarcodeValue(BarcodeFormat.UPC_A, '036000291452')).toBeUndefined()
+    expect(validateBarcodeValue(BarcodeFormat.UPC_E, '01234565')).toBeUndefined()
+    expect(validateBarcodeValue(BarcodeFormat.CODABAR, 'A40156B')).toBeUndefined()
+    expect(validateBarcodeValue(BarcodeFormat.UPC_A, '036000291453')).toBe(
+      'Incorrect UPC check digit provided',
+    )
+  })
+
+  it('adds Codabar start and stop characters when the scanner left them out', () => {
+    expect(validateBarcodeValue(BarcodeFormat.CODABAR, '40156')).toBeUndefined()
+  })
+
+  it('maps the formats to and from the native barcode detector', () => {
+    expect(
+      mapZXingFormatsToBarcodeDetectorFormats([
+        BarcodeFormat.UPC_A,
+        BarcodeFormat.UPC_E,
+        BarcodeFormat.CODABAR,
+      ]),
+    ).toEqual(['upc_a', 'upc_e', 'codabar'])
+    expect(mapBarcodeDetectorFormatToZXing('upc_a')).toBe(BarcodeFormat.UPC_A)
+    expect(mapBarcodeDetectorFormatToZXing('codabar')).toBe(BarcodeFormat.CODABAR)
+  })
+
+  it('groups UPC-A digits like the printed number', () => {
+    expect(formatBarcodeValue(BarcodeFormat.UPC_A, '036000291452')).toBe('0 36000 29145 2')
   })
 })
