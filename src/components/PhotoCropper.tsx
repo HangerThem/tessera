@@ -90,8 +90,19 @@ export function PhotoCropper({
           ? "Drag the corners onto the card's corners if they're off."
           : "Tessera couldn't find the card. Drag the corners onto its corners."}
       </p>
-      <div ref={frameRef} className="relative select-none touch-none">
-        <img src={imageUrl} alt="" className="block w-full rounded-md" draggable={false} />
+      {/* Holding a corner shouldn't open the long-press menu, select the photo or scroll. */}
+      <div
+        ref={frameRef}
+        data-crop-frame
+        className="relative no-touch-callout touch-none"
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        <img
+          src={imageUrl}
+          alt=""
+          className="block w-full rounded-md pointer-events-none"
+          draggable={false}
+        />
         <svg
           className="absolute inset-0 w-full h-full"
           viewBox={`0 0 ${imageWidth} ${imageHeight}`}

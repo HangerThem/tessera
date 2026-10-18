@@ -32,3 +32,10 @@
 body {
   @apply min-h-screen font-sans bg-background text-foreground p-3;
 }
+
+/* For touch targets held down, like crop corners: no iOS callout ("Save Image", previews) and no text selection. */
+@utility no-touch-callout {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
