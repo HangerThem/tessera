@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { blobToDataUrl, dataUrlToBlob, fitWithin } from './image'
+import { blobToDataUrl, cardOutputSize, dataUrlToBlob, defaultCorners, fitWithin } from './image'
 
 describe('fitWithin', () => {
   it('scales the long side down to the limit, keeping the aspect ratio', () => {
@@ -25,5 +25,40 @@ describe('data URLs', () => {
     expect(new Uint8Array(await restored.arrayBuffer())).toEqual(
       new Uint8Array([255, 216, 255, 0, 1, 2]),
     )
+  })
+})
+
+describe('cardOutputSize', () => {
+  it('is 1000 × 630, the shape of a card, for a card held sideways', () => {
+    const corners = [
+      { x: 10, y: 20 },
+      { x: 410, y: 30 },
+      { x: 400, y: 280 },
+      { x: 0, y: 260 },
+    ]
+
+    expect(cardOutputSize(corners)).toEqual({ width: 1000, height: 630 })
+  })
+
+  it('is 630 × 1000 for a card held upright', () => {
+    const corners = [
+      { x: 20, y: 10 },
+      { x: 280, y: 0 },
+      { x: 270, y: 400 },
+      { x: 30, y: 410 },
+    ]
+
+    expect(cardOutputSize(corners)).toEqual({ width: 630, height: 1000 })
+  })
+})
+
+describe('defaultCorners', () => {
+  it('starts just inside the edges of the photo, for the user to adjust', () => {
+    expect(defaultCorners(1000, 500)).toEqual([
+      { x: 80, y: 40 },
+      { x: 920, y: 40 },
+      { x: 920, y: 460 },
+      { x: 80, y: 460 },
+    ])
   })
 })
