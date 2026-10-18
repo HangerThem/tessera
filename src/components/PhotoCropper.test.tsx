@@ -100,3 +100,25 @@ describe('PhotoCropper', () => {
     expect(onCancel).toHaveBeenCalledOnce()
   })
 })
+
+describe('PhotoCropper long press', () => {
+  afterEach(cleanup)
+
+  it("doesn't open the browser's long-press menu while moving corners", () => {
+    renderCropper()
+
+    // fireEvent returns false when the event's default action was prevented.
+    expect(fireEvent.contextMenu(handle('Top-left corner'))).toBe(false)
+    expect(fireEvent.contextMenu(document.querySelector('img')!)).toBe(false)
+  })
+
+  it('keeps the photo from being selected, dragged or long-pressed', () => {
+    renderCropper()
+    const image = document.querySelector('img')!
+
+    expect(image.getAttribute('draggable')).toBe('false')
+    // The corners take the touches; the photo underneath ignores them.
+    expect(image.className).toContain('pointer-events-none')
+    expect(image.closest('[data-crop-frame]')!.className).toContain('no-touch-callout')
+  })
+})
