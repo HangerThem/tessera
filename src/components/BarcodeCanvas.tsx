@@ -21,13 +21,14 @@ const { wrapper, canvas } = tv({
         wrapper: 'w-40 h-40',
       },
       barcode: {
-        wrapper: 'h-20',
+        wrapper: 'h-24',
       },
     },
   },
 })()
 
 export function BarcodeCanvas({ value, format }: RenderBarcodeProps) {
+  const wrapperRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [hasError, setHasError] = useState(false)
   const isQRCode = isQRCodeFormat(format)
@@ -44,7 +45,15 @@ export function BarcodeCanvas({ value, format }: RenderBarcodeProps) {
     if (!bwipjsFormat) return
 
     try {
-      renderBarcode({ element: el, value, format: bwipjsFormat, isQRCode })
+      renderBarcode({
+        element: el,
+        value,
+        format: bwipjsFormat,
+        isQRCode,
+        // clientWidth is 0 before layout, so fall back to renderBarcode's default width.
+        width: wrapperRef.current?.clientWidth || undefined,
+        pixelRatio: window.devicePixelRatio || 1,
+      })
       setHasError(false)
     } catch (err) {
       console.error('Error rendering barcode:', err)
@@ -54,7 +63,7 @@ export function BarcodeCanvas({ value, format }: RenderBarcodeProps) {
   }, [value, format])
 
   return (
-    <div className={wrapper({ format: isQRCode ? 'qrcode' : 'barcode' })}>
+    <div className={wrapper({ format: isQRCode ? 'qrcode' : 'barcode' })} ref={wrapperRef}>
       {hasError && (
         <div role="alert" className="flex flex-col items-center gap-1 text-center text-neutral-600">
           <p className="flex items-center gap-1 text-sm font-bold">
