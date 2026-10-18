@@ -23,14 +23,25 @@ const isInside = (point: Point, polygon: Point[]) => {
   return inside
 }
 
-/** A grayscale "photo": a light card on a darker, noisy background, with a few lines of text on the card. */
-function photo(card: Point[] | null) {
+type RGB = [number, number, number]
+
+/**
+ * An RGBA "photo": a card on a noisy background, with a few lines of text on the card. By default
+ * a light card on a darker background.
+ */
+function photo(
+  card: Point[] | null,
+  cardColour: RGB = [215, 215, 215],
+  background: RGB = [70, 70, 70],
+) {
   const random = createPRNG(42)
-  const pixels = new Uint8ClampedArray(WIDTH * HEIGHT)
+  const pixels = new Uint8ClampedArray(WIDTH * HEIGHT * 4)
+  const paint = (i: number, [r, g, b]: RGB, noise = 0) =>
+    pixels.set([r + noise, g + noise, b + noise, 255], i * 4)
   for (let y = 0; y < HEIGHT; y++) {
     for (let x = 0; x < WIDTH; x++) {
       const onCard = card !== null && isInside({ x: x + 0.5, y: y + 0.5 }, card)
-      pixels[y * WIDTH + x] = (onCard ? 215 : 70) + (random() - 0.5) * 30
+      paint(y * WIDTH + x, onCard ? cardColour : background, (random() - 0.5) * 30)
     }
   }
   if (card) {
@@ -40,7 +51,7 @@ function photo(card: Point[] | null) {
       for (let s = 0.15; s < 0.6; s += 0.002) {
         const x = Math.round(tl.x + (tr.x - tl.x) * s + (bl.x - tl.x) * t)
         const y = Math.round(tl.y + (tr.y - tl.y) * s + (bl.y - tl.y) * t)
-        for (let dy = 0; dy < 3; dy++) pixels[(y + dy) * WIDTH + x] = 40
+        for (let dy = 0; dy < 3; dy++) paint((y + dy) * WIDTH + x, [40, 40, 40])
       }
     }
   }
@@ -95,6 +106,15 @@ describe('detectCardCorners', () => {
     ]
 
     expectCorners(detectCardCorners(photo(card)), card)
+  })
+
+  it('finds a card that only differs from the background in colour, not brightness', () => {
+    const card = rotated(-8)
+    // A dark blue card on brown: about the same brightness in grayscale.
+    const blue: RGB = [30, 58, 138]
+    const brown: RGB = [91, 70, 54]
+
+    expectCorners(detectCardCorners(photo(card, blue, brown)), card)
   })
 
   it('finds nothing in a photo without a card', () => {
