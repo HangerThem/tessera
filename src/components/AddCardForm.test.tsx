@@ -121,6 +121,23 @@ describe('AddCardForm camera flow', () => {
     )
   })
 
+  it('keeps the format of a scanned UPC-A card', () => {
+    const { onSave } = renderForm()
+    const scanner = startScanning()
+    act(() => scanner.options.onStateChange?.('active'))
+
+    act(() => {
+      scanner.stop()
+      scanner.options.onDetect('036000291452', BarcodeFormat.UPC_A)
+    })
+    fireEvent.input(screen.getByLabelText('Card name'), { target: { value: 'Grocery' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ barcodeValue: '036000291452', barcodeFormat: BarcodeFormat.UPC_A }),
+    )
+  })
+
   it('stops the camera when the form is closed', () => {
     const { onClose } = renderForm()
     const scanner = startScanning()
