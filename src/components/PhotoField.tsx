@@ -39,7 +39,7 @@ export function PhotoField({ photo, onChange }: Props) {
   }
 
   return (
-    <fieldset className="flex flex-col gap-2 border-0 p-0 m-0">
+    <fieldset className="flex flex-col gap-2 border-0 p-0">
       <legend className="text-sm font-medium text-foreground/70">
         Photo of the card
         <span className="text-foreground/50 text-xs ml-1">(optional)</span>

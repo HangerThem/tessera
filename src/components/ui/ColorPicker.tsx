@@ -24,7 +24,7 @@ export default function ColorPicker({ colors, allowCustom, value, onChange }: Co
   const colorOptions = colors || PRESET_COLORS
 
   return (
-    <fieldset className="flex flex-col border-0 p-0 m-0">
+    <fieldset className="flex flex-col border-0 p-0">
       <legend className="text-sm font-medium text-foreground/70">Card colour</legend>
       {/* One row at any phone width: swatches shrink to fit, up to 32 px. */}
       <div className="grid grid-cols-10 gap-1.5 mt-1 justify-items-center">
