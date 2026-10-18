@@ -53,16 +53,16 @@ describe('install prompt dismissal', () => {
   })
 })
 
+function mockStorage(persisted: boolean) {
+  const storage = { persisted: vi.fn(async () => persisted), persist: vi.fn(async () => true) }
+  Object.defineProperty(navigator, 'storage', { value: storage, configurable: true })
+  return storage
+}
+
 describe('requestPersistentStorage', () => {
   afterEach(() =>
     Object.defineProperty(navigator, 'storage', { value: undefined, configurable: true }),
   )
-
-  function mockStorage(persisted: boolean) {
-    const storage = { persisted: vi.fn(async () => persisted), persist: vi.fn(async () => true) }
-    Object.defineProperty(navigator, 'storage', { value: storage, configurable: true })
-    return storage
-  }
 
   it("asks the browser to keep the app's storage", async () => {
     const storage = mockStorage(false)
