@@ -14,6 +14,7 @@ const cards: Card[] = [
     isFavorite: true,
     color: '#3b82f6',
     note: 'PIN 1234',
+    lastUsedAt: 1_792_324_800_000,
   },
   {
     id: 'card-2',
@@ -92,6 +93,7 @@ describe('parseBackup', () => {
       { ...cards[0], isFavorite: 'yes' },
       { ...cards[0], color: 42 },
       { ...cards[0], note: 42 },
+      { ...cards[0], lastUsedAt: 'yesterday' },
     ]) {
       expect(() => parseBackup(backupWith(card))).toThrow(
         "This backup is damaged and can't be imported.",

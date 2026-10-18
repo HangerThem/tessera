@@ -19,6 +19,29 @@ export const isAddCardFormVisible = signal(false)
 export const editCardId = signal<string | null>(null)
 export const isDeleteConfirmVisible = signal(false)
 export const isBackupVisible = signal(false)
+export type SortOrder = 'name' | 'recent'
+
+const SORT_ORDER_KEY = 'tessera.sortOrder'
+
+function readSortOrder(): SortOrder {
+  try {
+    return localStorage.getItem(SORT_ORDER_KEY) === 'recent' ? 'recent' : 'name'
+  } catch {
+    return 'name'
+  }
+}
+
+/** How the card list is sorted, remembered on this device. Favourites always come first. */
+export const sortOrder = signal<SortOrder>(readSortOrder())
+
+effect(() => {
+  try {
+    localStorage.setItem(SORT_ORDER_KEY, sortOrder.value)
+  } catch {
+    // Blocked storage: the choice lasts until the app is closed.
+  }
+})
+
 /** Whether the cards have been read from storage yet. */
 export const loadState = signal<'loading' | 'ready' | 'failed'>('loading')
 
@@ -82,6 +105,23 @@ effect(() => {
   }
 })
 
+// Record when each card is opened, for sorting by recently used.
+effect(() => {
+  const id = activeCardId.value
+  if (id !== null) void markCardUsed(id)
+})
+
+async function markCardUsed(id: string): Promise<void> {
+  const lastUsedAt = Date.now()
+  // peek, so the effect above doesn't re-run when the cards change.
+  cards.value = cards.peek().map((c) => (c.id === id ? { ...c, lastUsedAt } : c))
+  try {
+    await updateCard(id, { lastUsedAt })
+  } catch (err) {
+    console.error('Recording card use failed:', err)
+  }
+}
+
 // Re-acquire if tab becomes visible while a card is open
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && activeCardId.value !== null) {
@@ -111,9 +151,10 @@ export async function saveCard(card: Card): Promise<void> {
  */
 export async function updateCardById(id: string, card: Card): Promise<void> {
   editCardId.value = null
-  activeCardId.value = id
   await saveCardToDB({ ...card, id })
   await refreshCards()
+  // After saving, so recording the use can't write the old card back over the edit.
+  activeCardId.value = id
 }
 
 /** Deletes a card and refreshes the list. */

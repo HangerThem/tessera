@@ -10,6 +10,8 @@ export type Card = {
   color?: string
   /** A short note, e.g. a PIN or membership tier. Hidden at checkout until tapped. */
   note?: string
+  /** When the card was last opened, in milliseconds since the epoch. Never opened if missing. */
+  lastUsedAt?: number
 }
 
 /**

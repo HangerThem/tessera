@@ -93,7 +93,8 @@ function hasCardFields(value: unknown): value is Record<string, unknown> {
     typeof card.barcodeValue === 'string' &&
     typeof card.isFavorite === 'boolean' &&
     (card.color === undefined || typeof card.color === 'string') &&
-    (card.note === undefined || typeof card.note === 'string')
+    (card.note === undefined || typeof card.note === 'string') &&
+    (card.lastUsedAt === undefined || Number.isFinite(card.lastUsedAt))
   )
 }
 
