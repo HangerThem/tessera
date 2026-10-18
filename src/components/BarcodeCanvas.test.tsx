@@ -21,6 +21,20 @@ describe('BarcodeCanvas', () => {
     expect(screen.queryByRole('alert')).toBeNull()
   })
 
+  it('fills the width available at the device pixel ratio', () => {
+    vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(3)
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(350)
+    vi.mocked(toCanvas).mockImplementation((canvas, options) => {
+      canvas.width = 100 * options.scale!
+    })
+
+    render(<BarcodeCanvas value="12345678" format={BarcodeFormat.CODE_128} />)
+
+    expect(vi.mocked(toCanvas).mock.lastCall![1].scale).toBe(10)
+    const canvas = screen.getByRole('img', { name: 'Barcode for 12345678' }) as HTMLCanvasElement
+    expect(parseFloat(canvas.style.width)).toBeCloseTo(1000 / 3)
+  })
+
   it("explains when the code can't be rendered", () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     vi.mocked(toCanvas).mockImplementation(() => {
