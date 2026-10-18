@@ -28,14 +28,14 @@ export function CardItem({ card }: Props) {
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold">{card.name}</h2>
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 w-full">
           <p
             className={`${isDark ? 'text-white' : 'text-black'} text-sm font-mono opacity-70`}
             aria-label={`Card ending in ${card.barcodeValue.slice(-4)}`}
           >
             {encodeBarcodeValue(card.format, card.barcodeValue)}
           </p>
-          <div className="flex gap-2 items-end justify-between" aria-hidden="true">
+          <div className="flex gap-2 items-end justify-between w-full" aria-hidden="true">
             <div className="flex gap-px items-end">
               {decorativeBars.map((bar) => (
                 <div
