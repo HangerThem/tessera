@@ -6,6 +6,7 @@ import type { Card } from '../types/Card.type'
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner'
 import { useFocusTrap } from '../hooks/useFocusTrap'
+import { validateBarcodeValue } from '../utils/barcode'
 import { holdKeyboardFocus } from '../utils/keyboard'
 import { formatToLabel } from '../utils/text'
 import { BarcodeScannerView } from './BarcodeScannerView'
@@ -29,6 +30,7 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
   )
   const [color, setColor] = useState<string>(initialCard.color ?? PRESET_COLORS[0])
   const [errors, setErrors] = useState<Record<string, boolean>>({})
+  const [invalidValueError, setInvalidValueError] = useState<string>()
   const [showAdvanced, setShowAdvanced] = useState(false)
   const dialogRef = useFocusTrap<HTMLDivElement>(true)
 
@@ -70,6 +72,14 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
     }
     setErrors(nextErrors)
     if (Object.values(nextErrors).some(Boolean)) return
+
+    const invalidReason =
+      validateBarcodeValue(barcodeFormat, barcodeValue) ??
+      validateBarcodeValue(qrCodeFormat, barcodeValue)
+    setInvalidValueError(
+      invalidReason && `${invalidReason}. Check the number or change the format.`,
+    )
+    if (invalidReason) return
 
     onSave({
       id: initialCard.id,
@@ -135,8 +145,9 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
             onInput={(e) => {
               setBarcodeValue((e.target as HTMLInputElement).value)
               setErrors((prev) => ({ ...prev, barcodeValue: false }))
+              setInvalidValueError(undefined)
             }}
-            error={errors.barcodeValue ? 'Please enter a barcode number' : undefined}
+            error={errors.barcodeValue ? 'Please enter a barcode number' : invalidValueError}
           />
 
           <ColorPicker allowCustom value={color} onChange={setColor} />
@@ -156,6 +167,7 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
               onChange={(e) => {
                 setBarcodeFormat(Number((e.target as HTMLSelectElement).value) as BarcodeFormat)
                 setErrors((prev) => ({ ...prev, barcodeFormat: false }))
+                setInvalidValueError(undefined)
               }}
               error={errors.barcodeFormat ? 'Please select a barcode format' : undefined}
             >
@@ -179,9 +191,10 @@ export function EditCardForm({ initialCard, onSave, onClose }: EditCardFormProps
                 </>
               }
               value={qrCodeFormat}
-              onChange={(e) =>
+              onChange={(e) => {
                 setQRCodeFormat(Number((e.target as HTMLSelectElement).value) as QRCodeFormat)
-              }
+                setInvalidValueError(undefined)
+              }}
               error={errors.qrCodeFormat ? 'Please select a QR code format' : undefined}
             >
               <option value="" disabled>
