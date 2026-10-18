@@ -111,7 +111,12 @@ export function ActiveCard({ card }: ActiveCardProps) {
       isQRCode ? (card.qrCodeFormat ?? card.barcodeFormat) : card.barcodeFormat,
     )
 
-    renderBarcode({ element: offscreen, value: card.barcodeValue, format, isQRCode })
+    try {
+      renderBarcode({ element: offscreen, value: card.barcodeValue, format, isQRCode })
+    } catch (err) {
+      console.error('Error rendering barcode:', err)
+      return
+    }
 
     const blob = await new Promise<Blob | null>((resolve) => offscreen.toBlob(resolve, 'image/png'))
     if (!blob) return
