@@ -10,16 +10,15 @@ const cards: Card[] = [
     id: 'card-1',
     name: 'Grocery',
     barcodeValue: '4006381333931',
-    barcodeFormat: BarcodeFormat.EAN_13,
-    qrCodeFormat: QRCodeFormat.QR_CODE,
+    format: BarcodeFormat.EAN_13,
     isFavorite: true,
     color: '#3b82f6',
   },
   {
     id: 'card-2',
     name: 'Library',
-    barcodeValue: 'A123',
-    barcodeFormat: BarcodeFormat.CODE_39,
+    barcodeValue: 'https://example.com/member/123',
+    format: QRCodeFormat.QR_CODE,
     isFavorite: false,
   },
 ]
@@ -58,12 +57,37 @@ describe('parseBackup', () => {
     )
   })
 
+  it('reads version 1 backups, which stored a barcode and a QR code format', () => {
+    const backup = JSON.stringify({
+      app: 'tessera',
+      version: 1,
+      exportedAt: '2026-10-18T12:00:00.000Z',
+      cards: [
+        { ...cards[0], format: undefined, barcodeFormat: BarcodeFormat.EAN_13, qrCodeFormat: 11 },
+        { ...cards[1], format: undefined, barcodeFormat: BarcodeFormat.CODE_128 },
+      ],
+    })
+
+    // Version 1 didn't record which format a card used, so the barcode format is kept.
+    expect(parseBackup(backup)).toEqual([cards[0], { ...cards[1], format: BarcodeFormat.CODE_128 }])
+  })
+
+  it('rejects version 1 backups with invalid formats', () => {
+    const backup = JSON.stringify({
+      app: 'tessera',
+      version: 1,
+      cards: [{ ...cards[0], format: undefined, barcodeFormat: 999 }],
+    })
+
+    expect(() => parseBackup(backup)).toThrow("This backup is damaged and can't be imported.")
+  })
+
   it('rejects backups with invalid cards', () => {
     for (const card of [
       { ...cards[0], id: 1 },
       { ...cards[0], name: undefined },
-      { ...cards[0], barcodeFormat: 999 },
-      { ...cards[0], qrCodeFormat: BarcodeFormat.EAN_13 },
+      { ...cards[0], format: 999 },
+      { ...cards[0], format: undefined },
       { ...cards[0], isFavorite: 'yes' },
       { ...cards[0], color: 42 },
     ]) {
