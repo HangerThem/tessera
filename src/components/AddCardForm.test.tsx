@@ -296,6 +296,24 @@ function choosePhoto() {
 describe('AddCardForm photo', () => {
   afterEach(cleanup)
 
+  it('can take a photo with the camera, or choose one from the library', () => {
+    renderForm()
+    const inputs = [...document.querySelectorAll<HTMLInputElement>('input[type="file"]')]
+    const camera = inputs.find((input) => input.getAttribute('capture') === 'environment')!
+    const library = inputs.find((input) => !input.hasAttribute('capture'))!
+    const cameraClick = vi.spyOn(camera, 'click').mockImplementation(() => {})
+    const libraryClick = vi.spyOn(library, 'click').mockImplementation(() => {})
+
+    fireEvent.click(screen.getByRole('button', { name: 'Take photo' }))
+    expect(cameraClick).toHaveBeenCalledOnce()
+    expect(libraryClick).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Choose photo' }))
+    expect(libraryClick).toHaveBeenCalledOnce()
+    expect(camera.accept).toBe('image/*')
+    expect(library.accept).toBe('image/*')
+  })
+
   it('crops the chosen photo to the card it found, and saves it with the card', async () => {
     const { onSave } = renderForm()
     fillIn()
