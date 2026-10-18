@@ -24,7 +24,7 @@ A simple, privacy-first loyalty and membership card manager. Scan your physical 
 
 ## Supported Formats
 
-**Barcodes:** Code 39, Code 93, Code 128, EAN-8, EAN-13, ITF, PDF-417
+**Barcodes:** Codabar, Code 39, Code 93, Code 128, EAN-8, EAN-13, ITF, PDF-417, UPC-A, UPC-E
 
 **2D codes:** QR Code, Micro QR Code, Aztec, Data Matrix, MaxiCode
 

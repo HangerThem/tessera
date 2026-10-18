@@ -121,6 +121,42 @@ describe('AddCardForm camera flow', () => {
     )
   })
 
+  it('keeps the format of a scanned UPC-A card', () => {
+    const { onSave } = renderForm()
+    const scanner = startScanning()
+    act(() => scanner.options.onStateChange?.('active'))
+
+    act(() => {
+      scanner.stop()
+      scanner.options.onDetect('036000291452', BarcodeFormat.UPC_A)
+    })
+    fireEvent.input(screen.getByLabelText('Card name'), { target: { value: 'Grocery' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ barcodeValue: '036000291452', barcodeFormat: BarcodeFormat.UPC_A }),
+    )
+  })
+
+  it('warns when the scanned format is not supported', () => {
+    renderForm()
+    const scanner = startScanning()
+    act(() => scanner.options.onStateChange?.('active'))
+
+    act(() => {
+      scanner.stop()
+      scanner.options.onDetect('0101234567890128', undefined)
+    })
+
+    expect(barcodeInput()?.value).toBe('0101234567890128')
+    expect(screen.getByRole('status').textContent).toBe(
+      "Tessera can't show this barcode's format yet, so the card may not scan at checkout.",
+    )
+
+    fireEvent.input(barcodeInput()!, { target: { value: '12345678' } })
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+
   it('stops the camera when the form is closed', () => {
     const { onClose } = renderForm()
     const scanner = startScanning()
