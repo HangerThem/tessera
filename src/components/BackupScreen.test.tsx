@@ -39,14 +39,14 @@ describe('BackupScreen export', () => {
   })
 
   it('shares the backup file where sharing files is supported', async () => {
-    const share = vi.fn(async () => {})
+    const share = vi.fn(async (_data: ShareData) => {})
     Object.assign(navigator, { share, canShare: () => true })
     render(<BackupScreen onClose={() => {}} />)
 
     fireEvent.click(exportButton())
 
     await waitFor(() => expect(share).toHaveBeenCalledOnce())
-    const [file] = share.mock.calls[0][0].files as File[]
+    const [file] = share.mock.calls[0][0].files!
     expect(file.name).toBe('tessera-backup-2026-10-18.json')
     expect(parseBackup(await file.text())).toEqual([card])
   })
