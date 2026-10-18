@@ -11,6 +11,7 @@ import {
   saveCard as saveCardToDB,
   updateCard,
 } from './cards'
+import { requestPersistentStorage } from './utils/install'
 
 export const cards = signal<Card[]>([])
 export const activeCardId = signal<string | null>(null)
@@ -91,6 +92,8 @@ document.addEventListener('visibilitychange', () => {
 /** Reloads cards from storage. */
 export async function refreshCards(): Promise<void> {
   cards.value = await getCards()
+  // Asked once there are cards to lose, so the browser doesn't clear them under storage pressure.
+  if (cards.value.length > 0) void requestPersistentStorage()
 }
 
 /** Persists a new card and refreshes the list. */

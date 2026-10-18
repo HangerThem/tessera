@@ -9,6 +9,7 @@ import { AddCardForm } from './components/AddCardForm'
 import { BackupScreen } from './components/BackupScreen'
 import { CardList } from './components/CardList'
 import { EditCardForm } from './components/EditCardForm'
+import { InstallPrompt } from './components/InstallPrompt'
 import { StorageError } from './components/StorageError'
 import { ThemeToggle } from './components/ThemeToggle'
 import { Input } from './components/ui/Input'
@@ -28,9 +29,17 @@ import {
   updateCardById,
 } from './store'
 import { applyUpdate, isUpdateAvailable } from './sw'
+import {
+  dismissInstallPrompt,
+  isInstallPromptDismissed,
+  needsHomeScreenInstall,
+} from './utils/install'
 
 export function App() {
   const [query, setQuery] = useState('')
+  const [isInstallPromptHidden, setIsInstallPromptHidden] = useState(
+    () => !needsHomeScreenInstall() || isInstallPromptDismissed(Date.now()),
+  )
 
   useEffect(() => {
     // Keep one extra history entry while a screen is open, so back closes it instead of leaving the
@@ -103,6 +112,15 @@ export function App() {
             await updateCardById(editCardId.value!, card)
           }}
           onClose={() => (editCardId.value = null)}
+        />
+      )}
+      {/* Only once there are cards to lose. */}
+      {!isInstallPromptHidden && loadState.value === 'ready' && cards.value.length > 0 && (
+        <InstallPrompt
+          onDismiss={() => {
+            dismissInstallPrompt(Date.now())
+            setIsInstallPromptHidden(true)
+          }}
         />
       )}
       {loadState.value === 'failed' ? (

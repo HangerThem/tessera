@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Card } from './types/Card.type'
 
@@ -15,7 +15,7 @@ vi.mock('idb-keyval', () => ({
     void db.set(key, updater(db.get(key))),
 }))
 
-const { cards, importCards, refreshCards } = await import('./store')
+const { cards, importCards, loadCards, refreshCards, saveCard } = await import('./store')
 
 const card = (id: string, name: string): Card => ({
   id,
@@ -51,5 +51,44 @@ describe('importCards', () => {
 
     expect(result).toEqual({ added: 1, skipped: 1 })
     expect(cards.value).toHaveLength(2)
+  })
+})
+
+describe('persistent storage', () => {
+  let persist: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    db.clear()
+    persist = vi.fn(async () => true)
+    Object.defineProperty(navigator, 'storage', {
+      value: { persisted: async () => false, persist },
+      configurable: true,
+    })
+  })
+
+  afterEach(() => {
+    Object.defineProperty(navigator, 'storage', { value: undefined, configurable: true })
+  })
+
+  it('is requested once there are cards to keep', async () => {
+    await loadCards()
+    expect(persist).not.toHaveBeenCalled()
+
+    await saveCard(card('card-1', 'Grocery'))
+    await vi.waitFor(() => expect(persist).toHaveBeenCalledOnce())
+  })
+
+  it('is requested when cards are imported', async () => {
+    await importCards([card('card-2', 'Library')])
+
+    await vi.waitFor(() => expect(persist).toHaveBeenCalled())
+  })
+
+  it('is requested on startup when there are cards', async () => {
+    db.set('card-1', card('card-1', 'Grocery'))
+
+    await loadCards()
+
+    await vi.waitFor(() => expect(persist).toHaveBeenCalled())
   })
 })

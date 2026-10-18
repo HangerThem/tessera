@@ -28,7 +28,7 @@ vi.mock('idb-keyval', () => ({
   createStore: () => ({}),
   get: async () => undefined,
   keys: () => idb.keys(),
-  getMany: async () => [card],
+  getMany: async (keys: string[]) => keys.map(() => card),
   set: async () => {},
   del: async () => {},
   update: async () => {},
@@ -38,6 +38,9 @@ const cardDialog = () => screen.queryByRole('dialog', { name: 'Grocery' })
 const deleteDialog = () => screen.queryByRole('dialog', { name: 'Delete card confirmation' })
 const editDialog = () => screen.queryByRole('dialog', { name: 'Edit Card' })
 const backupDialog = () => screen.queryByRole('dialog', { name: 'Backup' })
+
+const installPrompt = () =>
+  screen.queryByRole('region', { name: 'Add Tessera to your Home Screen' })
 
 const pressEscape = () => fireEvent.keyDown(document, { key: 'Escape' })
 const pressBack = () => fireEvent(window, new PopStateEvent('popstate'))
@@ -165,5 +168,51 @@ describe('App loading', () => {
     render(<App />)
 
     expect(screen.queryByText('No cards yet')).toBeNull()
+  })
+})
+
+describe('App home screen prompt', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    // Safari on iOS, not on the home screen.
+    Object.defineProperty(navigator, 'standalone', { value: false, configurable: true })
+  })
+
+  afterEach(() => {
+    cleanup()
+    localStorage.clear()
+    Object.defineProperty(navigator, 'standalone', { value: undefined, configurable: true })
+  })
+
+  it('asks Safari users with cards to add the app to the home screen, until dismissed', async () => {
+    await loadCards()
+    render(<App />)
+
+    expect(installPrompt()?.textContent).toContain("Safari may delete your cards if you don't open")
+
+    fireEvent.click(screen.getByRole('button', { name: 'Not now' }))
+    expect(installPrompt()).toBeNull()
+
+    cleanup()
+    render(<App />)
+    expect(installPrompt()).toBeNull()
+  })
+
+  it("doesn't ask before there are any cards", async () => {
+    // loadCards reads the keys twice: for the format migration and for the cards.
+    idb.keys.mockResolvedValue([])
+    await loadCards()
+    render(<App />)
+
+    expect(installPrompt()).toBeNull()
+    idb.keys.mockImplementation(async () => ['card-1'])
+  })
+
+  it("doesn't ask in other browsers", async () => {
+    Object.defineProperty(navigator, 'standalone', { value: undefined, configurable: true })
+    await loadCards()
+    render(<App />)
+
+    expect(installPrompt()).toBeNull()
   })
 })
