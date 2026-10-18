@@ -26,7 +26,7 @@ import {
   favoriteCard,
   isDeleteConfirmVisible,
 } from '../store'
-import { formatBarcodeValue, renderBarcode } from '../utils/barcode'
+import { formatBarcodeValue, mapZXingFormatToBWIPJS, renderBarcode } from '../utils/barcode'
 import { contrastColor, isDarkColor } from '../utils/color'
 import { formatToLabel } from '../utils/text'
 import { BarcodeCanvas } from './BarcodeCanvas'
@@ -107,11 +107,16 @@ export function ActiveCard({ card }: ActiveCardProps) {
   const handleShareImage = async () => {
     const offscreen = document.createElement('canvas')
     const isQRCode = displayFormat === 'qr'
-    const format = isQRCode
-      ? BarcodeFormat[card.qrCodeFormat ?? card.barcodeFormat]
-      : BarcodeFormat[card.barcodeFormat]
+    const format = mapZXingFormatToBWIPJS(
+      isQRCode ? (card.qrCodeFormat ?? card.barcodeFormat) : card.barcodeFormat,
+    )
 
-    renderBarcode({ element: offscreen, value: card.barcodeValue, format, isQRCode })
+    try {
+      renderBarcode({ element: offscreen, value: card.barcodeValue, format, isQRCode })
+    } catch (err) {
+      console.error('Error rendering barcode:', err)
+      return
+    }
 
     const blob = await new Promise<Blob | null>((resolve) => offscreen.toBlob(resolve, 'image/png'))
     if (!blob) return
