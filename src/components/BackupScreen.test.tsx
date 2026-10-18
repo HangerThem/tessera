@@ -19,8 +19,8 @@ vi.mock('idb-keyval', () => ({
 
 // The transfer itself is covered in DeviceTransfer.test.tsx.
 vi.mock('./DeviceTransfer', async () => {
-  const { createBackup } = await import('../backup')
-  const library = {
+  const backup = await import('../backup')
+  const gym = {
     id: 'card-3',
     name: 'Gym',
     barcodeValue: '87654321',
@@ -29,7 +29,9 @@ vi.mock('./DeviceTransfer', async () => {
   }
   return {
     ReceiveCards: ({ onReceived }: { onReceived: (backup: string) => void }) => (
-      <button onClick={() => onReceived(createBackup([library as Card]))}>Finish receiving</button>
+      <button onClick={() => onReceived(backup.createBackup([gym as Card]))}>
+        Finish receiving
+      </button>
     ),
     SendCards: ({ payload, cardCount }: { payload: string; cardCount: number }) => (
       <p data-testid="sending" data-payload={payload}>
