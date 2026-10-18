@@ -26,6 +26,12 @@ const card: Card = {
   color: '#3b82f6',
 }
 
+const qrCard = (barcodeValue: string): Card => ({
+  ...card,
+  barcodeValue,
+  format: QRCodeFormat.QR_CODE,
+})
+
 const shareImageButton = () => screen.getByRole('button', { name: 'Share as Image' })
 
 describe('ActiveCard share as image', () => {
@@ -128,12 +134,7 @@ describe('ActiveCard format', () => {
   })
 
   it('opens a QR code card as a QR code', () => {
-    const qrCard: Card = {
-      ...card,
-      barcodeValue: 'https://example.com/member/123',
-      format: QRCodeFormat.QR_CODE,
-    }
-    render(<ActiveCard card={qrCard} />)
+    render(<ActiveCard card={qrCard('https://example.com/member/123')} />)
 
     expect(screen.getByRole('img', { name: /^QR code for/ })).toBeTruthy()
     expect(screen.getByText('QR code')).toBeTruthy()
@@ -145,11 +146,6 @@ describe('ActiveCard format', () => {
     vi.mocked(toSVG).mockImplementation(
       ({ text }) => `<svg viewBox="0 0 ${String(text).length * 25} 161"></svg>`,
     )
-    const qrCard = (barcodeValue: string): Card => ({
-      ...card,
-      barcodeValue,
-      format: QRCodeFormat.QR_CODE,
-    })
 
     render(<ActiveCard card={qrCard('https://example.com/member/123')} />)
     expect(screen.queryByRole('group', { name: 'Display format' })).toBeNull()
