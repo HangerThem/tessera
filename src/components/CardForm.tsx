@@ -11,7 +11,7 @@ import { holdKeyboardFocus } from '../utils/keyboard'
 import { formatToLabel } from '../utils/text'
 import { BarcodeScannerView } from './BarcodeScannerView'
 import { Button } from './ui/Button'
-import ColorPicker, { PRESET_COLORS } from './ui/ColorPicker'
+import ColorPicker, { DEFAULT_CARD_COLOR } from './ui/ColorPicker'
 import { Input } from './ui/Input'
 import { Select } from './ui/Select'
 
@@ -35,7 +35,7 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
   const [qrCodeFormat, setQRCodeFormat] = useState<QRCodeFormat>(
     initialCard?.qrCodeFormat ?? QRCodeFormat.QR_CODE,
   )
-  const [color, setColor] = useState<string>(initialCard?.color ?? PRESET_COLORS[0])
+  const [color, setColor] = useState<string>(initialCard?.color ?? DEFAULT_CARD_COLOR)
   const [errors, setErrors] = useState<Record<string, boolean>>({})
   const [invalidValueError, setInvalidValueError] = useState<string>()
   const [showAdvanced, setShowAdvanced] = useState(false)
