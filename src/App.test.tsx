@@ -28,7 +28,8 @@ vi.mock('idb-keyval', () => ({
   createStore: () => ({}),
   get: async () => undefined,
   keys: () => idb.keys(),
-  getMany: async (keys: string[]) => keys.map(() => card),
+  getMany: async (keys: string[]) =>
+    keys.map((key) => (key === 'card-1' ? card : { ...card, id: key, name: 'Library' })),
   set: async () => {},
   del: async () => {},
   update: async () => {},
@@ -41,6 +42,8 @@ const backupDialog = () => screen.queryByRole('dialog', { name: 'Backup' })
 
 const installPrompt = () =>
   screen.queryByRole('region', { name: 'Add Tessera to your Home Screen' })
+
+const sortSelect = () => screen.queryByLabelText('Sort by') as HTMLSelectElement | null
 
 const pressEscape = () => fireEvent.keyDown(document, { key: 'Escape' })
 const pressBack = () => fireEvent(window, new PopStateEvent('popstate'))
@@ -214,5 +217,37 @@ describe('App home screen prompt', () => {
     render(<App />)
 
     expect(installPrompt()).toBeNull()
+  })
+})
+
+describe('App sorting', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    cleanup()
+    localStorage.clear()
+    idb.keys.mockImplementation(async () => ['card-1'])
+  })
+
+  it('offers sorting once there are cards to sort, and remembers the choice', async () => {
+    idb.keys.mockResolvedValue(['card-1', 'card-2'])
+    await loadCards()
+    render(<App />)
+    expect(sortSelect()!.value).toBe('name')
+
+    fireEvent.change(sortSelect()!, { target: { value: 'recent' } })
+    cleanup()
+    render(<App />)
+
+    expect(sortSelect()!.value).toBe('recent')
+  })
+
+  it("doesn't offer sorting for a single card", async () => {
+    await loadCards()
+    render(<App />)
+
+    expect(sortSelect()).toBeNull()
   })
 })
