@@ -92,7 +92,8 @@ function hasCardFields(value: unknown): value is Record<string, unknown> {
     typeof card.name === 'string' &&
     typeof card.barcodeValue === 'string' &&
     typeof card.isFavorite === 'boolean' &&
-    (card.color === undefined || typeof card.color === 'string')
+    (card.color === undefined || typeof card.color === 'string') &&
+    (card.note === undefined || typeof card.note === 'string')
   )
 }
 
