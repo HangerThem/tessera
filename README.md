@@ -18,6 +18,7 @@ A simple, privacy-first loyalty and membership card manager. Scan your physical 
 - **Share** — share the card number as text or the barcode as an image (where supported by the browser)
 - **Copy** — copy the raw card value to clipboard in one tap
 - **Backup** — export your cards to a file and import them on another device or after a reset
+- **Direct transfer** — move your cards to a phone on the same Wi-Fi by scanning a code on each, with no server in between
 - **Offline support** — works without a connection once installed
 - **Private by design** — all data stored locally on your device via IndexedDB; nothing leaves your browser
 
