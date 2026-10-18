@@ -2,21 +2,41 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Card } from './types/Card.type'
 
-const db = vi.hoisted(() => new Map<string, unknown>())
+// One map per database, like IndexedDB: cards and photos are both keyed by card id. Calls without a
+// store use idb-keyval's default one.
+const databases = vi.hoisted(() => new Map<string, Map<string, unknown>>())
+const database = (store?: { name: string }) => {
+  const name = store?.name ?? 'default'
+  if (!databases.has(name)) databases.set(name, new Map())
+  return databases.get(name)!
+}
+const db = database({ name: 'tessera' })
+const photoDb = database({ name: 'tessera-photos' })
 
 vi.mock('idb-keyval', () => ({
-  createStore: () => ({}),
-  get: async (key: string) => db.get(key),
-  set: async (key: string, value: unknown) => void db.set(key, value),
-  del: async (key: string) => void db.delete(key),
-  keys: async () => [...db.keys()],
-  getMany: async (keys: string[]) => keys.map((key) => db.get(key)),
-  update: async (key: string, updater: (value: unknown) => unknown) =>
-    void db.set(key, updater(db.get(key))),
+  createStore: (name: string) => ({ name }),
+  get: async (key: string, store?: { name: string }) => database(store).get(key),
+  set: async (key: string, value: unknown, store?: { name: string }) =>
+    void database(store).set(key, value),
+  del: async (key: string, store?: { name: string }) => void database(store).delete(key),
+  keys: async (store?: { name: string }) => [...database(store).keys()],
+  getMany: async (keys: string[], store?: { name: string }) =>
+    keys.map((key) => database(store).get(key)),
+  update: async (key: string, updater: (value: unknown) => unknown, store?: { name: string }) =>
+    void database(store).set(key, updater(database(store).get(key))),
+  entries: async (store?: { name: string }) => [...database(store).entries()],
 }))
 
-const { activeCardId, cards, importCards, loadCards, refreshCards, saveCard, updateCardById } =
-  await import('./store')
+const {
+  activeCardId,
+  cards,
+  deleteCard,
+  importCards,
+  loadCards,
+  refreshCards,
+  saveCard,
+  updateCardById,
+} = await import('./store')
 
 const card = (id: string, name: string): Card => ({
   id,
@@ -130,5 +150,57 @@ describe('recording use', () => {
     const openedAt = new Date('2026-10-18T12:00:00Z').getTime()
     expect(cards.value[0].lastUsedAt).toBe(openedAt)
     await vi.waitFor(() => expect(db.get('card-1')).toMatchObject({ lastUsedAt: openedAt }))
+  })
+})
+
+describe('photos', () => {
+  const photo = new Blob(['jpeg'], { type: 'image/jpeg' })
+
+  beforeEach(async () => {
+    activeCardId.value = null
+    db.clear()
+    photoDb.clear()
+    await refreshCards()
+  })
+
+  it('saves a new card with its photo', async () => {
+    await saveCard(card('card-1', 'Grocery'), photo)
+
+    expect(photoDb.get('card-1')).toBe(photo)
+  })
+
+  it('replaces, keeps or removes the photo when a card is edited', async () => {
+    await saveCard(card('card-1', 'Grocery'), photo)
+
+    const newPhoto = new Blob(['new'], { type: 'image/jpeg' })
+    await updateCardById('card-1', card('card-1', 'Grocery'), newPhoto)
+    expect(photoDb.get('card-1')).toBe(newPhoto)
+
+    await updateCardById('card-1', card('card-1', 'Grocery'))
+    expect(photoDb.get('card-1')).toBe(newPhoto)
+
+    await updateCardById('card-1', card('card-1', 'Grocery'), null)
+    expect(photoDb.has('card-1')).toBe(false)
+  })
+
+  it("deletes a card's photo with the card", async () => {
+    await saveCard(card('card-1', 'Grocery'), photo)
+
+    await deleteCard('card-1')
+
+    expect(photoDb.has('card-1')).toBe(false)
+  })
+
+  it('imports photos only for the cards it adds', async () => {
+    await saveCard(card('card-1', 'Grocery'))
+    const imported = new Blob(['imported'], { type: 'image/jpeg' })
+
+    await importCards([card('card-1', 'Renamed'), card('card-2', 'Library')], {
+      'card-1': imported,
+      'card-2': imported,
+    })
+
+    expect(photoDb.has('card-1')).toBe(false)
+    expect(photoDb.get('card-2')).toBe(imported)
   })
 })
