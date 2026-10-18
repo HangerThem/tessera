@@ -24,6 +24,9 @@ const cards: Card[] = [
   },
 ]
 
+const backupWith = (card: object) =>
+  JSON.stringify({ app: 'tessera', version: BACKUP_VERSION, cards: [card] })
+
 describe('createBackup', () => {
   it('writes the cards with the app name and schema version', () => {
     const backup = JSON.parse(createBackup(cards, new Date('2026-10-18T12:00:00Z')))
@@ -56,9 +59,6 @@ describe('parseBackup', () => {
   })
 
   it('rejects backups with invalid cards', () => {
-    const backup = (card: object) =>
-      JSON.stringify({ app: 'tessera', version: BACKUP_VERSION, cards: [card] })
-
     for (const card of [
       { ...cards[0], id: 1 },
       { ...cards[0], name: undefined },
@@ -67,7 +67,7 @@ describe('parseBackup', () => {
       { ...cards[0], isFavorite: 'yes' },
       { ...cards[0], color: 42 },
     ]) {
-      expect(() => parseBackup(backup(card))).toThrow(
+      expect(() => parseBackup(backupWith(card))).toThrow(
         "This backup is damaged and can't be imported.",
       )
     }
