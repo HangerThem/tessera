@@ -1,8 +1,19 @@
 import { Camera, Trash2 } from 'lucide-preact'
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 
-import { resizePhoto } from '../utils/image'
+import type { Point } from '../utils/perspective'
+
+import { cropCard, defaultCorners, findCardInPhoto, loadPhoto, resizePhoto } from '../utils/image'
+import { PhotoCropper } from './PhotoCropper'
 import { Button } from './ui/Button'
+
+type Cropping = {
+  file: File
+  bitmap: ImageBitmap
+  url: string
+  corners: Point[]
+  detected: boolean
+}
 
 interface Props {
   /** The photo shown, if any. */
@@ -11,14 +22,23 @@ interface Props {
   onChange: (photo: Blob | null) => void
 }
 
-/** Takes or picks a photo of the card, shown with options to replace or remove it. */
+/**
+ * Takes or picks a photo of the card, then crops it to the card and straightens it, or uses it
+ * whole. The photo is shown with options to replace or remove it.
+ */
 export function PhotoField({ photo, onChange }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string>()
   const [isResizing, setIsResizing] = useState(false)
+  const [cropping, setCropping] = useState<Cropping | null>(null)
   const url = useMemo(() => photo && URL.createObjectURL(photo), [photo])
 
   useEffect(() => () => url && URL.revokeObjectURL(url), [url])
+
+  const fail = (err: unknown) => {
+    console.error('Preparing the photo failed:', err)
+    setError("This photo couldn't be used. Try another one.")
+  }
 
   const handleChosen = async (input: HTMLInputElement) => {
     const file = input.files?.[0]
@@ -29,13 +49,52 @@ export function PhotoField({ photo, onChange }: Props) {
     setError(undefined)
     setIsResizing(true)
     try {
-      onChange(await resizePhoto(file))
+      const bitmap = await loadPhoto(file)
+      const found = findCardInPhoto(bitmap)
+      setCropping({
+        file,
+        bitmap,
+        url: URL.createObjectURL(file),
+        corners: found ?? defaultCorners(bitmap.width, bitmap.height),
+        detected: found !== null,
+      })
     } catch (err) {
-      console.error('Resizing the photo failed:', err)
-      setError("This photo couldn't be used. Try another one.")
+      fail(err)
     } finally {
       setIsResizing(false)
     }
+  }
+
+  const finishCropping = async (makePhoto?: (current: Cropping) => Promise<Blob>) => {
+    const current = cropping!
+    setCropping(null)
+    try {
+      if (makePhoto) {
+        setIsResizing(true)
+        onChange(await makePhoto(current))
+      }
+    } catch (err) {
+      fail(err)
+    } finally {
+      setIsResizing(false)
+      current.bitmap.close()
+      URL.revokeObjectURL(current.url)
+    }
+  }
+
+  if (cropping) {
+    return (
+      <PhotoCropper
+        imageUrl={cropping.url}
+        imageWidth={cropping.bitmap.width}
+        imageHeight={cropping.bitmap.height}
+        initialCorners={cropping.corners}
+        detected={cropping.detected}
+        onConfirm={(corners) => finishCropping((current) => cropCard(current.bitmap, corners))}
+        onUseWholePhoto={() => finishCropping((current) => resizePhoto(current.file))}
+        onCancel={() => finishCropping()}
+      />
+    )
   }
 
   return (

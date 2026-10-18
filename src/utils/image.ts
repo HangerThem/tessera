@@ -90,6 +90,11 @@ export function defaultCorners(width: number, height: number): Point[] {
   ]
 }
 
+/** Decodes a chosen photo. `createImageBitmap` applies its EXIF orientation, like `<img>` does. */
+export function loadPhoto(file: Blob): Promise<ImageBitmap> {
+  return createImageBitmap(file)
+}
+
 /** Draws a bitmap onto a new canvas, scaled to fit within `maxSize`. */
 function drawScaled(bitmap: ImageBitmap, maxSize: number) {
   const { width, height } = fitWithin(bitmap.width, bitmap.height, maxSize)
