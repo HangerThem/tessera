@@ -111,6 +111,7 @@ describe('updateCardById', () => {
 
 describe('recording use', () => {
   beforeEach(async () => {
+    activeCardId.value = null
     db.clear()
     db.set('card-1', card('card-1', 'Grocery'))
     await refreshCards()
