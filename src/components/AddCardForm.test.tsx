@@ -131,3 +131,32 @@ describe('AddCardForm camera flow', () => {
     expect(onClose).toHaveBeenCalled()
   })
 })
+
+describe('AddCardForm barcode validation', () => {
+  afterEach(cleanup)
+
+  it("doesn't save a barcode that doesn't fit its format, and says why", () => {
+    const { onSave } = renderForm()
+    fireEvent.input(screen.getByLabelText('Card name'), { target: { value: 'Grocery' } })
+    fireEvent.change(screen.getByLabelText('Barcode format'), {
+      target: { value: String(BarcodeFormat.EAN_13) },
+    })
+    fireEvent.input(barcodeInput()!, { target: { value: '12345' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+
+    expect(onSave).not.toHaveBeenCalled()
+    expect(barcodeInput()?.getAttribute('aria-invalid')).toBe('true')
+    expect(screen.getByText(/EAN-13 must be 12 or 13 digits/)).toBeTruthy()
+
+    fireEvent.input(barcodeInput()!, { target: { value: '4006381333931' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        barcodeValue: '4006381333931',
+        barcodeFormat: BarcodeFormat.EAN_13,
+      }),
+    )
+  })
+})
