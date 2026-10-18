@@ -1,4 +1,4 @@
-import { toCanvas } from 'bwip-js/browser'
+import { toCanvas, toSVG } from 'bwip-js/browser'
 
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { hashString } from './hash'
@@ -199,6 +199,26 @@ export function encodeBarcodeValue(format: BarcodeFormat | QRCodeFormat, value: 
     })
     .toReversed()
     .join('')
+}
+
+/**
+ * Checks whether a value can be encoded in the given format.
+ *
+ * @param {BarcodeFormat | QRCodeFormat} format - The format to encode the value in.
+ * @param {string} value - The value to encode.
+ * @returns {string | undefined} Why the value doesn't fit the format, or undefined if it does.
+ */
+export function validateBarcodeValue(
+  format: BarcodeFormat | QRCodeFormat,
+  value: string,
+): string | undefined {
+  try {
+    toSVG({ bcid: mapZXingFormatToBWIPJS(format), text: value })
+    return undefined
+  } catch (err) {
+    // bwip-js errors look like "bwipp.ean13badLength#6878: EAN-13 must be 12 or 13 digits".
+    return String((err as Error).message ?? err).replace(/^bwipp\.\w+(#\d+)?: /, '')
+  }
 }
 
 type RenderBarcodeOptions = {
