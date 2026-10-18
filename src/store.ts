@@ -15,6 +15,7 @@ export const activeCardId = signal<string | null>(null)
 export const isAddCardFormVisible = signal(false)
 export const editCardId = signal<string | null>(null)
 export const isDeleteConfirmVisible = signal(false)
+export const isBackupVisible = signal(false)
 
 export const activeCard = computed(
   () => cards.value.find((c) => c.id === activeCardId.value) ?? null,
@@ -22,12 +23,16 @@ export const activeCard = computed(
 
 /** Whether any screen is open on top of the card list. */
 export const isAnyScreenOpen = computed(
-  () => activeCardId.value !== null || editCardId.value !== null || isAddCardFormVisible.value,
+  () =>
+    activeCardId.value !== null ||
+    editCardId.value !== null ||
+    isAddCardFormVisible.value ||
+    isBackupVisible.value,
 )
 
 /**
  * Closes the topmost open screen: the delete confirmation, then the edit form, then the card
- * detail or add form.
+ * detail, add form or backup screen.
  *
  * @returns Whether a screen was closed.
  */
@@ -40,6 +45,8 @@ export function closeTopScreen(): boolean {
     activeCardId.value = null
   } else if (isAddCardFormVisible.value) {
     isAddCardFormVisible.value = false
+  } else if (isBackupVisible.value) {
+    isBackupVisible.value = false
   } else {
     return false
   }

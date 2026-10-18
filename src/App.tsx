@@ -1,11 +1,12 @@
 import { effect } from '@preact/signals'
-import { CreditCard, Plus } from 'lucide-preact'
+import { CreditCard, DatabaseBackup, Plus } from 'lucide-preact'
 import { useEffect, useState } from 'preact/hooks'
 
 import type { Card } from './types/Card.type'
 
 import { ActiveCard } from './components/ActiveCard'
 import { AddCardForm } from './components/AddCardForm'
+import { BackupScreen } from './components/BackupScreen'
 import { CardList } from './components/CardList'
 import { EditCardForm } from './components/EditCardForm'
 import { ThemeToggle } from './components/ThemeToggle'
@@ -19,6 +20,7 @@ import {
   editCardId,
   isAddCardFormVisible,
   isAnyScreenOpen,
+  isBackupVisible,
   saveCard,
   updateCardById,
 } from './store'
@@ -65,7 +67,18 @@ export function App() {
     <main>
       <div className="flex items-center justify-between mb-1">
         <h1 className="text-2xl font-bold">Tessera</h1>
-        <ThemeToggle />
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => (isBackupVisible.value = true)}
+            aria-label="Backup"
+            title="Backup"
+            className="p-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/10 cursor-pointer transition-colors"
+          >
+            <DatabaseBackup className="w-5 h-5" aria-hidden="true" />
+          </button>
+          <ThemeToggle />
+        </div>
       </div>
       <div className="sticky top-0 bg-background/90 backdrop-blur-sm z-10 py-2" role="search">
         <Input
@@ -126,6 +139,7 @@ export function App() {
           onClose={() => (isAddCardFormVisible.value = false)}
         />
       )}
+      {isBackupVisible.value && <BackupScreen onClose={() => (isBackupVisible.value = false)} />}
       {isUpdateAvailable.value && (
         <UpdatePrompt onReload={applyUpdate} onDismiss={() => (isUpdateAvailable.value = false)} />
       )}
