@@ -25,7 +25,9 @@ describe('BarcodeCanvas', () => {
     vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(3)
     vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(350)
     vi.mocked(toCanvas).mockImplementation((canvas, options) => {
-      canvas.width = 100 * options.scale!
+      const element = canvas as HTMLCanvasElement
+      element.width = 100 * options.scale!
+      return element
     })
 
     render(<BarcodeCanvas value="12345678" format={BarcodeFormat.CODE_128} />)
