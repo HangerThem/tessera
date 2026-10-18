@@ -3,14 +3,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Card } from '../types/Card.type'
 
-import { parseBackup } from '../backup'
+import { createBackup, parseBackup } from '../backup'
 import { cards } from '../store'
 import { BackupScreen } from './BackupScreen'
+
+const db = vi.hoisted(() => ({ set: vi.fn(async () => {}) }))
 
 vi.mock('idb-keyval', () => ({
   createStore: () => ({}),
   get: async () => undefined,
-  set: async () => {},
+  set: db.set,
   keys: async () => [],
   getMany: async () => [],
 }))
@@ -70,5 +72,64 @@ describe('BackupScreen export', () => {
     render(<BackupScreen onClose={() => {}} />)
 
     expect(exportButton().disabled).toBe(true)
+  })
+})
+
+describe('BackupScreen import', () => {
+  beforeEach(() => {
+    cards.value = [card]
+    db.set.mockClear()
+  })
+
+  afterEach(cleanup)
+
+  function chooseFile(contents: string) {
+    const input = document.querySelector<HTMLInputElement>('input[type="file"]')!
+    const file = new File([contents], 'backup.json', { type: 'application/json' })
+    Object.defineProperty(input, 'files', { value: [file], configurable: true })
+    fireEvent.change(input)
+  }
+
+  const otherCard: Card = { ...card, id: 'card-2', name: 'Library' }
+
+  it('imports the cards after confirming, keeping the ones already here', async () => {
+    render(<BackupScreen onClose={() => {}} />)
+
+    chooseFile(createBackup([card, otherCard]))
+    await screen.findByText('Import 2 cards from this backup?')
+    fireEvent.click(screen.getByRole('button', { name: 'Import' }))
+
+    expect((await screen.findByRole('status')).textContent).toBe(
+      'Added 1 card. 1 was already on this device.',
+    )
+    expect(db.set).toHaveBeenCalledWith('card-2', otherCard, expect.anything())
+    expect(db.set).not.toHaveBeenCalledWith('card-1', expect.anything(), expect.anything())
+  })
+
+  it("doesn't import when cancelled", async () => {
+    render(<BackupScreen onClose={() => {}} />)
+
+    chooseFile(createBackup([otherCard]))
+    await screen.findByText('Import 1 card from this backup?')
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.queryByText('Import 1 card from this backup?')).toBeNull()
+    expect(db.set).not.toHaveBeenCalled()
+  })
+
+  it("explains why a file can't be imported", async () => {
+    render(<BackupScreen onClose={() => {}} />)
+
+    chooseFile('{"cards": []}')
+
+    expect((await screen.findByRole('alert')).textContent).toBe("This file isn't a Tessera backup.")
+  })
+
+  it('says when a backup has no cards', async () => {
+    render(<BackupScreen onClose={() => {}} />)
+
+    chooseFile(createBackup([]))
+
+    expect((await screen.findByRole('alert')).textContent).toBe('This backup has no cards.')
   })
 })
