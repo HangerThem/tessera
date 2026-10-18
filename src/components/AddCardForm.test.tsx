@@ -5,15 +5,24 @@ import type { BarcodeScannerOptions } from '../barcodeScanner'
 import type { CameraError } from '../types/Camera.type'
 
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
-import { resizePhoto } from '../utils/image'
+import { cropCard, findCardInPhoto, resizePhoto } from '../utils/image'
 import { AddCardForm } from './AddCardForm'
 
 const scanners = vi.hoisted(
   () => [] as { options: BarcodeScannerOptions; start: () => void; stop: () => void }[],
 )
 
-vi.mock('../utils/image', () => ({
-  // happy-dom has no canvas, so resizing is faked.
+vi.mock('../utils/image', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../utils/image')>()),
+  // happy-dom has no canvas, so drawing photos is faked.
+  loadPhoto: vi.fn(async () => ({ width: 400, height: 200, close: () => {} })),
+  findCardInPhoto: vi.fn(() => [
+    { x: 40, y: 20 },
+    { x: 360, y: 20 },
+    { x: 360, y: 180 },
+    { x: 40, y: 180 },
+  ]),
+  cropCard: vi.fn(async () => new Blob(['cropped'], { type: 'image/jpeg' })),
   resizePhoto: vi.fn(async () => new Blob(['resized'], { type: 'image/jpeg' })),
 }))
 
@@ -275,23 +284,60 @@ describe('AddCardForm note', () => {
   })
 })
 
+function choosePhoto() {
+  Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:photo'), revokeObjectURL: vi.fn() })
+  const chosen = new File(['big photo'], 'card.jpg', { type: 'image/jpeg' })
+  const input = document.querySelector<HTMLInputElement>('input[type="file"]')!
+  Object.defineProperty(input, 'files', { value: [chosen], configurable: true })
+  fireEvent.change(input)
+  return chosen
+}
+
 describe('AddCardForm photo', () => {
   afterEach(cleanup)
 
-  it('resizes a chosen photo and saves it with the card', async () => {
-    Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:photo'), revokeObjectURL: vi.fn() })
+  it('crops the chosen photo to the card it found, and saves it with the card', async () => {
     const { onSave } = renderForm()
     fillIn()
-    const chosen = new File(['big photo'], 'card.jpg', { type: 'image/jpeg' })
-    const input = document.querySelector<HTMLInputElement>('input[type="file"]')!
-    Object.defineProperty(input, 'files', { value: [chosen], configurable: true })
 
-    fireEvent.change(input)
+    choosePhoto()
+    expect(await screen.findByRole('button', { name: 'Top-left corner' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Use photo' }))
+    expect(await screen.findByRole('img', { name: 'Card photo' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+
+    expect(findCardInPhoto).toHaveBeenCalled()
+    expect(vi.mocked(cropCard).mock.calls[0][1]).toEqual([
+      { x: 40, y: 20 },
+      { x: 360, y: 20 },
+      { x: 360, y: 180 },
+      { x: 40, y: 180 },
+    ])
+    expect(await (onSave.mock.calls[0][1] as Blob).text()).toBe('cropped')
+  })
+
+  it('can use the whole photo instead, resized', async () => {
+    const { onSave } = renderForm()
+    fillIn()
+
+    const chosen = choosePhoto()
+    fireEvent.click(await screen.findByRole('button', { name: 'Use whole photo' }))
     expect(await screen.findByRole('img', { name: 'Card photo' })).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
 
     expect(resizePhoto).toHaveBeenCalledWith(chosen)
-    const [, photo] = onSave.mock.calls[0]
-    expect(await (photo as Blob).text()).toBe('resized')
+    expect(await (onSave.mock.calls[0][1] as Blob).text()).toBe('resized')
+  })
+
+  it('keeps the form as it was when cropping is cancelled', async () => {
+    const { onSave } = renderForm()
+    fillIn()
+
+    choosePhoto()
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+
+    expect(screen.queryByRole('img', { name: 'Card photo' })).toBeNull()
+    expect(onSave.mock.calls[0][1]).toBeUndefined()
   })
 })
