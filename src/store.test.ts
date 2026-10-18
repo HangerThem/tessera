@@ -15,7 +15,7 @@ vi.mock('idb-keyval', () => ({
     void db.set(key, updater(db.get(key))),
 }))
 
-const { cards, importCards, loadCards, refreshCards, saveCard, updateCardById } =
+const { activeCardId, cards, importCards, loadCards, refreshCards, saveCard, updateCardById } =
   await import('./store')
 
 const card = (id: string, name: string): Card => ({
@@ -106,5 +106,28 @@ describe('updateCardById', () => {
 
     expect(db.get('card-1')).not.toHaveProperty('note')
     expect(cards.value[0]).not.toHaveProperty('note')
+  })
+})
+
+describe('recording use', () => {
+  beforeEach(async () => {
+    db.clear()
+    db.set('card-1', card('card-1', 'Grocery'))
+    await refreshCards()
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-10-18T12:00:00Z'))
+  })
+
+  afterEach(() => {
+    activeCardId.value = null
+    vi.useRealTimers()
+  })
+
+  it('records when a card is opened', async () => {
+    activeCardId.value = 'card-1'
+
+    const openedAt = new Date('2026-10-18T12:00:00Z').getTime()
+    expect(cards.value[0].lastUsedAt).toBe(openedAt)
+    await vi.waitFor(() => expect(db.get('card-1')).toMatchObject({ lastUsedAt: openedAt }))
   })
 })
