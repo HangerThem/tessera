@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { Card } from '../types/Card.type'
 
-import { BarcodeFormat } from '../enums/codeFormats'
+import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { CardList } from './CardList'
 
 vi.mock('../store', () => ({
@@ -32,5 +32,17 @@ describe('CardList', () => {
 
     const names = Array.from(container.querySelectorAll('li h2')).map((el) => el.textContent)
     expect(names).toEqual(['Tesco', 'Albert', 'Lidl'])
+  })
+
+  it('shows whether each card is a barcode or a QR code', () => {
+    render(
+      <CardList cards={[card('Albert'), { ...card('Gym'), format: QRCodeFormat.QR_CODE }]} />,
+      container,
+    )
+
+    const [barcodeCard, qrCodeCard] = container.querySelectorAll('li')
+    expect(barcodeCard.querySelector('.lucide-barcode')).not.toBeNull()
+    expect(qrCodeCard.querySelector('.lucide-qr-code')).not.toBeNull()
+    expect(container.querySelector('.lucide-credit-card')).toBeNull()
   })
 })
