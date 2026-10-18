@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { blobToDataUrl, cardOutputSize, dataUrlToBlob, defaultCorners, fitWithin } from './image'
+import {
+  blobToDataUrl,
+  cardOutputSize,
+  dataUrlToBlob,
+  defaultCorners,
+  fitWithin,
+  insetCorners,
+} from './image'
 
 describe('fitWithin', () => {
   it('scales the long side down to the limit, keeping the aspect ratio', () => {
@@ -59,6 +66,24 @@ describe('defaultCorners', () => {
       { x: 920, y: 40 },
       { x: 920, y: 460 },
       { x: 80, y: 460 },
+    ])
+  })
+})
+
+describe('insetCorners', () => {
+  it("pulls the corners towards the card's centre, so no background shows at its edges", () => {
+    const corners = [
+      { x: 0, y: 0 },
+      { x: 200, y: 0 },
+      { x: 200, y: 100 },
+      { x: 0, y: 100 },
+    ]
+
+    expect(insetCorners(corners, 0.1)).toEqual([
+      { x: 10, y: 5 },
+      { x: 190, y: 5 },
+      { x: 190, y: 95 },
+      { x: 10, y: 95 },
     ])
   })
 })
