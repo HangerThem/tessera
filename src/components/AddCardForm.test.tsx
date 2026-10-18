@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { BarcodeScannerOptions } from '../barcodeScanner'
 import type { CameraError } from '../types/Camera.type'
 
-import { BarcodeFormat } from '../enums/codeFormats'
+import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { AddCardForm } from './AddCardForm'
 
 const scanners = vi.hoisted(
@@ -155,6 +155,21 @@ describe('AddCardForm camera flow', () => {
 
     fireEvent.input(barcodeInput()!, { target: { value: '12345678' } })
     expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it('saves a scanned QR code card as a QR code', () => {
+    const { onSave } = renderForm()
+    const scanner = startScanning()
+    act(() => scanner.options.onStateChange?.('active'))
+
+    act(() => {
+      scanner.stop()
+      scanner.options.onDetect('https://example.com/member/123', QRCodeFormat.QR_CODE)
+    })
+    fireEvent.input(screen.getByLabelText('Card name'), { target: { value: 'Gym' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ format: QRCodeFormat.QR_CODE }))
   })
 
   it('stops the camera when the form is closed', () => {
