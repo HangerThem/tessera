@@ -1,6 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
-import { decodeSignal, encodeSignal, TransferError } from './transfer'
+import type { Signal } from './transfer'
+
+import { decodeSignal, encodeSignal, startReceiving, startSending, TransferError } from './transfer'
 
 // A Chrome data-channel offer with two hidden (mDNS) local addresses, as created without STUN.
 const chromeOffer = [
@@ -58,5 +60,144 @@ describe('decodeSignal', () => {
     await expect(decodeSignal(answer, 'offer')).rejects.toThrow(
       'This code is from the sending phone. Scan the code shown on the receiving phone.',
     )
+  })
+})
+
+/** Fakes just enough of WebRTC to link two devices in memory. */
+class FakeChannel extends EventTarget {
+  readyState: RTCDataChannelState = 'connecting'
+  bufferedAmount = 0
+  bufferedAmountLowThreshold = 0
+  peer?: FakeChannel
+  /** Simulates a dropped connection after this many messages. */
+  dropAfter = Infinity
+
+  send(data: string) {
+    if (this.dropAfter-- <= 0) {
+      this.close()
+      return
+    }
+    queueMicrotask(() => this.peer?.dispatchEvent(new MessageEvent('message', { data })))
+  }
+
+  open() {
+    this.readyState = 'open'
+    this.dispatchEvent(new Event('open'))
+  }
+
+  close() {
+    if (this.readyState === 'closed') return
+    this.readyState = 'closed'
+    this.dispatchEvent(new Event('close'))
+    this.peer?.close()
+  }
+}
+
+const peers = new Map<string, FakePeerConnection>()
+let nextPeerId = 0
+
+class FakePeerConnection extends EventTarget {
+  static blocked = false
+  static dropAfter = Infinity
+  id = nextPeerId++
+  iceGatheringState: RTCIceGatheringState = 'complete'
+  localDescription: Signal | null = null
+  channel?: FakeChannel
+
+  createDataChannel() {
+    this.channel = new FakeChannel()
+    return this.channel
+  }
+
+  async createOffer() {
+    return { type: 'offer', sdp: `offer-${this.id}` }
+  }
+
+  async createAnswer() {
+    return { type: 'answer', sdp: `answer-${this.id}` }
+  }
+
+  async setLocalDescription(description: Signal) {
+    this.localDescription = description
+    peers.set(description.sdp, this)
+  }
+
+  async setRemoteDescription(description: Signal) {
+    const remote = peers.get(description.sdp)!
+    // The offering side sets the answer last, which is when the devices connect.
+    if (description.type !== 'answer' || FakePeerConnection.blocked) return
+
+    const channel = new FakeChannel()
+    channel.peer = this.channel
+    this.channel!.peer = channel
+    this.channel!.dropAfter = FakePeerConnection.dropAfter
+    channel.dropAfter = FakePeerConnection.dropAfter
+    remote.dispatchEvent(Object.assign(new Event('datachannel'), { channel }))
+    queueMicrotask(() => {
+      channel.open()
+      this.channel!.open()
+    })
+  }
+
+  close() {
+    this.channel?.close()
+  }
+}
+
+const createPeerConnection = () => new FakePeerConnection() as unknown as RTCPeerConnection
+
+describe('device transfer', () => {
+  afterEach(() => {
+    FakePeerConnection.blocked = false
+    FakePeerConnection.dropAfter = Infinity
+    peers.clear()
+  })
+
+  it('sends the payload from one device to the other', async () => {
+    const receiver = await startReceiving({ createPeerConnection })
+    const sender = await startSending(receiver.offerCode, 'the backup', { createPeerConnection })
+
+    const received = await receiver.receive(sender.answerCode)
+
+    expect(received).toBe('the backup')
+    await expect(sender.sent).resolves.toBeUndefined()
+  })
+
+  it('sends large payloads in chunks and reports progress', async () => {
+    const payload = 'x'.repeat(100_000)
+    const progress: number[] = []
+    const receiver = await startReceiving({
+      createPeerConnection,
+      onProgress: (fraction) => progress.push(fraction),
+    })
+    const sender = await startSending(receiver.offerCode, payload, { createPeerConnection })
+
+    expect(await receiver.receive(sender.answerCode)).toBe(payload)
+    expect(progress.length).toBeGreaterThan(2)
+    expect(progress).toEqual(progress.toSorted((a, b) => a - b))
+    expect(progress.at(-1)).toBe(1)
+  })
+
+  it("explains when the devices can't connect", async () => {
+    FakePeerConnection.blocked = true
+    const receiver = await startReceiving({ createPeerConnection, connectTimeout: 20 })
+    const sender = await startSending(receiver.offerCode, 'the backup', { createPeerConnection })
+
+    await expect(receiver.receive(sender.answerCode)).rejects.toThrow(
+      "The phones couldn't connect. Make sure both are on the same Wi-Fi, not a guest network, and try again.",
+    )
+  })
+
+  it('explains when the connection is lost during the transfer', async () => {
+    FakePeerConnection.dropAfter = 2
+    const receiver = await startReceiving({ createPeerConnection })
+    const sender = await startSending(receiver.offerCode, 'x'.repeat(100_000), {
+      createPeerConnection,
+    })
+
+    await expect(receiver.receive(sender.answerCode)).rejects.toThrow(
+      'The connection was lost. Keep both phones close and try again.',
+    )
+    await expect(sender.sent).rejects.toThrow(TransferError)
   })
 })
