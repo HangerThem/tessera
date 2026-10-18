@@ -228,3 +228,37 @@ describe('AddCardForm colour', () => {
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ color: '#ffffff' }))
   })
 })
+
+function fillIn() {
+  fireEvent.input(screen.getByLabelText('Card name'), { target: { value: 'Grocery' } })
+  fireEvent.input(barcodeInput()!, { target: { value: '12345678' } })
+}
+
+describe('AddCardForm note', () => {
+  afterEach(cleanup)
+
+  it('saves the note', () => {
+    const { onSave } = renderForm()
+    fillIn()
+    fireEvent.input(screen.getByLabelText(/^Note/), { target: { value: '  PIN 1234 ' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ note: 'PIN 1234' }))
+  })
+
+  it('saves no note when it is left empty', () => {
+    const { onSave } = renderForm()
+    fillIn()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+
+    expect(onSave.mock.calls[0][0]).not.toHaveProperty('note')
+  })
+
+  it('limits the note to 200 characters', () => {
+    renderForm()
+
+    expect((screen.getByLabelText(/^Note/) as HTMLInputElement).maxLength).toBe(200)
+  })
+})
