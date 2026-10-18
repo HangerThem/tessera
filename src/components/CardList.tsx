@@ -1,10 +1,9 @@
 import { useMemo } from 'preact/hooks'
 
+import type { SortOrder } from '../store'
 import type { Card } from '../types/Card.type'
 
 import { CardItem } from './CardItem'
-
-export type SortOrder = 'name' | 'recent'
 
 interface Props {
   cards: Card[]

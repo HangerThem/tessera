@@ -26,6 +26,8 @@ import {
   loadCards,
   loadState,
   saveCard,
+  sortOrder,
+  type SortOrder,
   updateCardById,
 } from './store'
 import { applyUpdate, isUpdateAvailable } from './sw'
@@ -114,6 +116,23 @@ export function App() {
           onClose={() => (editCardId.value = null)}
         />
       )}
+      {loadState.value === 'ready' && cards.value.length > 1 && (
+        <div className="flex justify-end mt-1">
+          <label className="flex items-center gap-1.5 text-xs text-foreground/70">
+            Sort by
+            <select
+              value={sortOrder.value}
+              onChange={(e) =>
+                (sortOrder.value = (e.target as HTMLSelectElement).value as SortOrder)
+              }
+              className="rounded-md bg-foreground/5 px-2 py-1 text-xs text-foreground cursor-pointer outline-none focus:ring-1 focus:ring-foreground/50"
+            >
+              <option value="name">Name</option>
+              <option value="recent">Recently used</option>
+            </select>
+          </label>
+        </div>
+      )}
       {/* Only once there are cards to lose. */}
       {!isInstallPromptHidden && loadState.value === 'ready' && cards.value.length > 0 && (
         <InstallPrompt
@@ -126,7 +145,7 @@ export function App() {
       {loadState.value === 'failed' ? (
         <StorageError onRetry={loadCards} />
       ) : loadState.value === 'loading' ? null : filteredCards.length > 0 ? (
-        <CardList cards={filteredCards} />
+        <CardList cards={filteredCards} sortOrder={sortOrder.value} />
       ) : (
         <div className="text-center mt-8">
           {query.trim() === '' ? (

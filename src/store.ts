@@ -19,6 +19,29 @@ export const isAddCardFormVisible = signal(false)
 export const editCardId = signal<string | null>(null)
 export const isDeleteConfirmVisible = signal(false)
 export const isBackupVisible = signal(false)
+export type SortOrder = 'name' | 'recent'
+
+const SORT_ORDER_KEY = 'tessera.sortOrder'
+
+function readSortOrder(): SortOrder {
+  try {
+    return localStorage.getItem(SORT_ORDER_KEY) === 'recent' ? 'recent' : 'name'
+  } catch {
+    return 'name'
+  }
+}
+
+/** How the card list is sorted, remembered on this device. Favourites always come first. */
+export const sortOrder = signal<SortOrder>(readSortOrder())
+
+effect(() => {
+  try {
+    localStorage.setItem(SORT_ORDER_KEY, sortOrder.value)
+  } catch {
+    // Blocked storage: the choice lasts until the app is closed.
+  }
+})
+
 /** Whether the cards have been read from storage yet. */
 export const loadState = signal<'loading' | 'ready' | 'failed'>('loading')
 
