@@ -81,7 +81,7 @@ describe('BackupScreen export', () => {
     await waitFor(() => expect(share).toHaveBeenCalledOnce())
     const [file] = share.mock.calls[0][0].files!
     expect(file.name).toBe('tessera-backup-2026-10-18.json')
-    expect(parseBackup(await file.text())).toEqual([card])
+    expect(parseBackup(await file.text()).cards).toEqual([card])
   })
 
   it('downloads the backup file where sharing files is not supported', async () => {
@@ -175,7 +175,7 @@ describe('BackupScreen transfer to another device', () => {
 
     const sending = screen.getByTestId('sending')
     expect(sending.textContent).toBe('Sending 1')
-    expect(parseBackup(sending.dataset.payload!)).toEqual([card])
+    expect(parseBackup(sending.dataset.payload!).cards).toEqual([card])
   })
 
   it('asks before importing the cards received from the other phone', async () => {

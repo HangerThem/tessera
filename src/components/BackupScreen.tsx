@@ -49,7 +49,7 @@ export function BackupScreen({ onClose }: Props) {
     setImportError(undefined)
     setImportResult(undefined)
     try {
-      const imported = parseBackup(backup)
+      const { cards: imported } = parseBackup(backup)
       if (imported.length === 0) {
         setImportError('This backup has no cards.')
         return
@@ -88,7 +88,7 @@ export function BackupScreen({ onClose }: Props) {
   const handleExport = async () => {
     setExportError(undefined)
     const now = new Date()
-    const file = new File([createBackup(cards.value, now)], backupFileName(now), {
+    const file = new File([createBackup(cards.value, { now })], backupFileName(now), {
       type: 'application/json',
     })
     try {
