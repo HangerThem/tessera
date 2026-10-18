@@ -13,6 +13,9 @@ export enum BarcodeFormat {
   UPC_E = BarcodeFormatZxing.UPC_E,
 }
 
+/** Any format a card's code can be in. */
+export type CodeFormat = BarcodeFormat | QRCodeFormat
+
 export enum QRCodeFormat {
   AZTEC = BarcodeFormatZxing.AZTEC,
   DATA_MATRIX = BarcodeFormatZxing.DATA_MATRIX,

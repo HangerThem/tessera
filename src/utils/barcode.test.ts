@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import {
+  canDisplayLegibly,
   formatBarcodeValue,
   getBarcodeScale,
   mapBarcodeDetectorFormatToZXing,
@@ -121,5 +122,23 @@ describe('UPC and Codabar', () => {
 
   it('groups UPC-A digits like the printed number', () => {
     expect(formatBarcodeValue(BarcodeFormat.UPC_A, '036000291452')).toBe('0 36000 29145 2')
+  })
+})
+
+describe('canDisplayLegibly', () => {
+  it('accepts barcodes whose bars are at least a pixel wide on a phone', () => {
+    expect(canDisplayLegibly(BarcodeFormat.CODE_128, 'MEMBER-123')).toBe(true)
+  })
+
+  it('rejects barcodes too dense to scan from a phone screen', () => {
+    expect(canDisplayLegibly(BarcodeFormat.CODE_128, 'https://example.com/member/123')).toBe(false)
+  })
+
+  it("rejects values that don't fit the format", () => {
+    expect(canDisplayLegibly(BarcodeFormat.EAN_13, 'MEMBER-123')).toBe(false)
+  })
+
+  it('accepts QR codes of short values', () => {
+    expect(canDisplayLegibly(QRCodeFormat.QR_CODE, 'https://example.com/member/123')).toBe(true)
   })
 })

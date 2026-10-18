@@ -1,9 +1,15 @@
-import type { Card } from './types/Card.type'
+import type { Card, LegacyCard } from './types/Card.type'
 
 import { BarcodeFormat, QRCodeFormat } from './enums/codeFormats'
+import { fromLegacyCard } from './legacyCard'
 
-/** Bump when the backup format changes, and keep `parseBackup` reading older versions. */
-export const BACKUP_VERSION = 1
+/**
+ * Bump when the backup format changes, and keep `parseBackup` reading older versions.
+ *
+ * - 1: cards had a barcode format and an optional QR code format.
+ * - 2: cards have a single format.
+ */
+export const BACKUP_VERSION = 2
 
 type Backup = {
   app: 'tessera'
@@ -57,7 +63,17 @@ export function parseBackup(text: string): Card[] {
       'This backup was made by a newer version of Tessera. Update the app and try again.',
     )
   }
-  if (!Array.isArray(backup.cards) || !backup.cards.every(isCard)) {
+  if (!Array.isArray(backup.cards)) {
+    throw new BackupError("This backup is damaged and can't be imported.")
+  }
+  if (backup.version === 1) {
+    const legacyCards: unknown[] = backup.cards
+    if (!legacyCards.every(isLegacyCard)) {
+      throw new BackupError("This backup is damaged and can't be imported.")
+    }
+    return legacyCards.map(fromLegacyCard)
+  }
+  if (!backup.cards.every(isCard)) {
     throw new BackupError("This backup is damaged and can't be imported.")
   }
 
@@ -67,16 +83,30 @@ export function parseBackup(text: string): Card[] {
 const isEnumValue = (enumObject: object, value: unknown) =>
   typeof value === 'number' && Object.values(enumObject).includes(value)
 
-function isCard(value: unknown): value is Card {
+/** Checks the fields every version of a card has. */
+function hasCardFields(value: unknown): value is Record<string, unknown> {
   if (typeof value !== 'object' || value === null) return false
   const card = value as Partial<Record<keyof Card, unknown>>
   return (
     typeof card.id === 'string' &&
     typeof card.name === 'string' &&
     typeof card.barcodeValue === 'string' &&
-    isEnumValue(BarcodeFormat, card.barcodeFormat) &&
-    (card.qrCodeFormat === undefined || isEnumValue(QRCodeFormat, card.qrCodeFormat)) &&
     typeof card.isFavorite === 'boolean' &&
     (card.color === undefined || typeof card.color === 'string')
+  )
+}
+
+function isCard(value: unknown): value is Card {
+  return (
+    hasCardFields(value) &&
+    (isEnumValue(BarcodeFormat, value.format) || isEnumValue(QRCodeFormat, value.format))
+  )
+}
+
+function isLegacyCard(value: unknown): value is LegacyCard {
+  return (
+    hasCardFields(value) &&
+    isEnumValue(BarcodeFormat, value.barcodeFormat) &&
+    (value.qrCodeFormat === undefined || isEnumValue(QRCodeFormat, value.qrCodeFormat))
   )
 }

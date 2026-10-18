@@ -3,12 +3,16 @@ import { useEffect, useId, useRef, useState } from 'preact/hooks'
 
 import type { Card } from '../types/Card.type'
 
-import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
+import { BarcodeFormat, type CodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner'
 import { useFocusTrap } from '../hooks/useFocusTrap'
-import { validateBarcodeValue } from '../utils/barcode'
+import {
+  BARCODE_FORMATS,
+  formatLabel,
+  QR_CODE_FORMATS,
+  validateBarcodeValue,
+} from '../utils/barcode'
 import { holdKeyboardFocus } from '../utils/keyboard'
-import { formatToLabel } from '../utils/text'
 import { BarcodeScannerView } from './BarcodeScannerView'
 import { Button } from './ui/Button'
 import ColorPicker, { DEFAULT_CARD_COLOR } from './ui/ColorPicker'
@@ -29,12 +33,7 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
   const titleId = useId()
   const [name, setName] = useState(initialCard?.name ?? '')
   const [barcodeValue, setBarcodeValue] = useState(initialCard?.barcodeValue ?? '')
-  const [barcodeFormat, setBarcodeFormat] = useState<BarcodeFormat>(
-    initialCard?.barcodeFormat ?? BarcodeFormat.CODE_128,
-  )
-  const [qrCodeFormat, setQRCodeFormat] = useState<QRCodeFormat>(
-    initialCard?.qrCodeFormat ?? QRCodeFormat.QR_CODE,
-  )
+  const [format, setFormat] = useState<CodeFormat>(initialCard?.format ?? BarcodeFormat.CODE_128)
   const [color, setColor] = useState<string>(initialCard?.color ?? DEFAULT_CARD_COLOR)
   const [errors, setErrors] = useState<Record<string, boolean>>({})
   const [invalidValueError, setInvalidValueError] = useState<string>()
@@ -43,14 +42,12 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
   const dialogRef = useFocusTrap<HTMLDivElement>(true)
 
   const { cameraState, cameraError, videoRef, start, stop } = useBarcodeScanner({
-    onDetect: (value, format) => {
+    onDetect: (value, scannedFormat) => {
       setBarcodeValue(value)
       setInvalidValueError(undefined)
       setIsUnsupportedScan(false)
-      if (format in BarcodeFormat) {
-        setBarcodeFormat(format as BarcodeFormat)
-      } else if (format in QRCodeFormat) {
-        setQRCodeFormat(format as QRCodeFormat)
+      if (scannedFormat in BarcodeFormat || scannedFormat in QRCodeFormat) {
+        setFormat(scannedFormat as CodeFormat)
       } else {
         setIsUnsupportedScan(true)
       }
@@ -78,15 +75,13 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
     const nextErrors = {
       name: !name,
       barcodeValue: !barcodeValue,
-      barcodeFormat: !barcodeFormat,
-      qrCodeFormat: qrCodeFormat === undefined,
+      // Not !format: Aztec's id is 0.
+      format: format === undefined || Number.isNaN(format),
     }
     setErrors(nextErrors)
     if (Object.values(nextErrors).some(Boolean)) return
 
-    const invalidReason =
-      validateBarcodeValue(barcodeFormat, barcodeValue) ??
-      validateBarcodeValue(qrCodeFormat, barcodeValue)
+    const invalidReason = validateBarcodeValue(format, barcodeValue)
     setInvalidValueError(
       invalidReason && `${invalidReason}. Check the number or change the format.`,
     )
@@ -96,8 +91,7 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
       id: initialCard?.id ?? crypto.randomUUID(),
       name,
       barcodeValue,
-      barcodeFormat: Number(barcodeFormat) as BarcodeFormat,
-      qrCodeFormat: Number(qrCodeFormat) as QRCodeFormat,
+      format: Number(format) as CodeFormat,
       isFavorite: initialCard?.isFavorite ?? false,
       color,
     })
@@ -180,50 +174,28 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
           <div className={`${showAdvanced ? 'flex flex-col gap-2 mb-4' : 'hidden'}`}>
             <Select
               label="Barcode format"
-              value={barcodeFormat}
+              value={format}
               onChange={(e) => {
-                setBarcodeFormat(Number((e.target as HTMLSelectElement).value) as BarcodeFormat)
-                setErrors((prev) => ({ ...prev, barcodeFormat: false }))
+                setFormat(Number((e.target as HTMLSelectElement).value) as CodeFormat)
+                setErrors((prev) => ({ ...prev, format: false }))
                 setInvalidValueError(undefined)
               }}
-              error={errors.barcodeFormat ? 'Please select a barcode format' : undefined}
+              error={errors.format ? 'Please select a barcode format' : undefined}
             >
-              <option value="" disabled>
-                Select format
-              </option>
-              {Object.keys(BarcodeFormat)
-                .filter((key) => isNaN(Number(key)))
-                .map((key) => (
-                  <option value={BarcodeFormat[key as keyof typeof BarcodeFormat]} key={key}>
-                    {formatToLabel(key)}
+              <optgroup label="Barcodes">
+                {BARCODE_FORMATS.map((option) => (
+                  <option value={option} key={option}>
+                    {formatLabel(option)}
                   </option>
                 ))}
-            </Select>
-
-            <Select
-              label={
-                <>
-                  QR code format
-                  <span className="text-foreground/50 text-xs ml-1">(optional)</span>
-                </>
-              }
-              value={qrCodeFormat}
-              onChange={(e) => {
-                setQRCodeFormat(Number((e.target as HTMLSelectElement).value) as QRCodeFormat)
-                setInvalidValueError(undefined)
-              }}
-              error={errors.qrCodeFormat ? 'Please select a QR code format' : undefined}
-            >
-              <option value="" disabled>
-                Select format
-              </option>
-              {Object.keys(QRCodeFormat)
-                .filter((key) => isNaN(Number(key)))
-                .map((key) => (
-                  <option value={QRCodeFormat[key as keyof typeof QRCodeFormat]} key={key}>
-                    {formatToLabel(key)}
+              </optgroup>
+              <optgroup label="2D codes">
+                {QR_CODE_FORMATS.map((option) => (
+                  <option value={option} key={option}>
+                    {formatLabel(option)}
                   </option>
                 ))}
+              </optgroup>
             </Select>
           </div>
         </div>

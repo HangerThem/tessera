@@ -5,6 +5,7 @@ import type { Card } from './types/Card.type'
 import {
   deleteCards as deleteCardsFromDB,
   getCards,
+  migrateCardFormats,
   migrateIfNeeded,
   saveCard as saveCardToDB,
   updateCard,
@@ -147,4 +148,5 @@ export async function favoriteCard(id: string): Promise<void> {
 }
 
 await migrateIfNeeded()
+await migrateCardFormats()
 await refreshCards()

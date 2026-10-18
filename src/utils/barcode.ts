@@ -121,6 +121,42 @@ export const mapBarcodeDetectorFormatToZXing = (
     )
     .find((zxingFormat) => mapZXingFormatsToBarcodeDetectorFormats([zxingFormat])?.[0] === format)
 
+const FORMAT_LABELS: Record<BarcodeFormat | QRCodeFormat, string> = {
+  [BarcodeFormat.CODABAR]: 'Codabar',
+  [BarcodeFormat.CODE_39]: 'Code 39',
+  [BarcodeFormat.CODE_93]: 'Code 93',
+  [BarcodeFormat.CODE_128]: 'Code 128',
+  [BarcodeFormat.EAN_8]: 'EAN-8',
+  [BarcodeFormat.EAN_13]: 'EAN-13',
+  [BarcodeFormat.ITF]: 'ITF',
+  [BarcodeFormat.PDF_417]: 'PDF417',
+  [BarcodeFormat.UPC_A]: 'UPC-A',
+  [BarcodeFormat.UPC_E]: 'UPC-E',
+  [QRCodeFormat.AZTEC]: 'Aztec',
+  [QRCodeFormat.DATA_MATRIX]: 'Data Matrix',
+  [QRCodeFormat.QR_CODE]: 'QR code',
+  [QRCodeFormat.MICRO_QR_CODE]: 'Micro QR code',
+  [QRCodeFormat.MAXICODE]: 'MaxiCode',
+}
+
+/**
+ * The name of a format as printed on cards and scanners, e.g. "EAN-13".
+ *
+ * @param {BarcodeFormat | QRCodeFormat} format - The format.
+ * @returns {string} The format's name.
+ */
+export function formatLabel(format: BarcodeFormat | QRCodeFormat): string {
+  return FORMAT_LABELS[format]
+}
+
+/** Formats in the order they're offered: barcodes, then 2D codes. */
+export const BARCODE_FORMATS = Object.values(BarcodeFormat).filter(
+  (format): format is BarcodeFormat => typeof format === 'number',
+)
+export const QR_CODE_FORMATS = Object.values(QRCodeFormat).filter(
+  (format): format is QRCodeFormat => typeof format === 'number',
+)
+
 /** * Determines if the given format is a QR code format.
  *
  * @param {BarcodeFormat | QRCodeFormat} format - The barcode format to check.
@@ -252,6 +288,30 @@ export function validateBarcodeValue(
     // bwip-js errors look like "bwipp.ean13badLength#6878: EAN-13 must be 12 or 13 digits".
     return String((err as Error).message ?? err).replace(/^bwipp\.\w+(#\d+)?: /, '')
   }
+}
+
+/** The narrowest width a card's barcode is shown at, in CSS pixels. */
+const MIN_DISPLAY_WIDTH = 320
+
+/**
+ * Checks whether a value can be shown in the given format so that a scanner can read it off a phone
+ * screen: it must fit the format, and a barcode's bars must be at least one CSS pixel wide. A long
+ * URL fits Code 128, but its bars would be far too thin.
+ *
+ * @param {BarcodeFormat | QRCodeFormat} format - The format to show the value in.
+ * @param {string} value - The value.
+ * @returns {boolean} Whether the code would be legible.
+ */
+export function canDisplayLegibly(format: BarcodeFormat | QRCodeFormat, value: string): boolean {
+  if (validateBarcodeValue(format, value) !== undefined) return false
+  if (isQRCodeFormat(format)) return true
+
+  const bcid = mapZXingFormatToBWIPJS(format)
+  // At scale 1 every bar is a whole number of pixels, so the width is the narrowest it can be drawn.
+  const svg = toSVG({ bcid, text: toEncodableText(bcid, value), padding: 4 })
+  const width = Number(/viewBox="0 0 ([\d.]+)/.exec(svg)?.[1])
+  // An unreadable width (NaN) counts as legible rather than hiding a code that may work.
+  return !(width > MIN_DISPLAY_WIDTH)
 }
 
 /** bwip-js sizes in millimetres at 72 dpi. */

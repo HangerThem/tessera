@@ -1,9 +1,9 @@
-import { CreditCard, Star } from 'lucide-preact'
+import { BarcodeIcon, QrCodeIcon, Star } from 'lucide-preact'
 
 import type { Card } from '../types/Card.type'
 
 import { activeCardId, favoriteCard } from '../store'
-import { encodeBarcodeValue, generateDecorativeBars } from '../utils/barcode'
+import { encodeBarcodeValue, generateDecorativeBars, isQRCodeFormat } from '../utils/barcode'
 import { isDarkColor } from '../utils/color'
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
 export function CardItem({ card }: Props) {
   const decorativeBars = generateDecorativeBars({ count: 20, seed: card.id })
   const isDark = isDarkColor(card.color ?? '#fff')
+  const FormatIcon = isQRCodeFormat(card.format) ? QrCodeIcon : BarcodeIcon
 
   return (
     <li className="relative w-full max-h-55 rounded-xl shadow-[0_-10px_10px_-5px_rgba(0,0,0,0.25)]">
@@ -32,7 +33,7 @@ export function CardItem({ card }: Props) {
             className={`${isDark ? 'text-white' : 'text-black'} text-sm font-mono opacity-70`}
             aria-label={`Card ending in ${card.barcodeValue.slice(-4)}`}
           >
-            {encodeBarcodeValue(card.barcodeFormat, card.barcodeValue)}
+            {encodeBarcodeValue(card.format, card.barcodeValue)}
           </p>
           <div className="flex gap-2 items-end justify-between" aria-hidden="true">
             <div className="flex gap-px items-end">
@@ -47,7 +48,7 @@ export function CardItem({ card }: Props) {
                 />
               ))}
             </div>
-            <CreditCard className="w-5 h-5" />
+            <FormatIcon className="w-5 h-5" />
           </div>
         </div>
       </button>

@@ -21,11 +21,16 @@ const card: Card = {
   id: 'card-1',
   name: 'Grocery',
   barcodeValue: '12345678',
-  barcodeFormat: BarcodeFormat.CODE_128,
-  qrCodeFormat: QRCodeFormat.QR_CODE,
+  format: BarcodeFormat.CODE_128,
   isFavorite: false,
   color: '#3b82f6',
 }
+
+const qrCard = (barcodeValue: string): Card => ({
+  ...card,
+  barcodeValue,
+  format: QRCodeFormat.QR_CODE,
+})
 
 const shareImageButton = () => screen.getByRole('button', { name: 'Share as Image' })
 
@@ -118,5 +123,35 @@ describe('ActiveCard share as image', () => {
     fireEvent.click(screen.getByRole('button', { name: 'QR Code' }))
 
     expect(screen.queryByRole('button', { name: 'Share as Image' })).not.toBeNull()
+  })
+})
+
+describe('ActiveCard format', () => {
+  afterEach(() => {
+    cleanup()
+    vi.mocked(toCanvas).mockReset()
+    vi.mocked(toSVG).mockReset()
+  })
+
+  it('opens a QR code card as a QR code', () => {
+    render(<ActiveCard card={qrCard('https://example.com/member/123')} />)
+
+    expect(screen.getByRole('img', { name: /^QR code for/ })).toBeTruthy()
+    expect(screen.getByText('QR code')).toBeTruthy()
+    expect(vi.mocked(toCanvas).mock.lastCall![1]).toMatchObject({ bcid: 'qrcode' })
+  })
+
+  it('only offers the other kind of code when it would be legible', () => {
+    // bwip-js is mocked, so fake its SVG: about 25 px of bars per character.
+    vi.mocked(toSVG).mockImplementation(
+      ({ text }) => `<svg viewBox="0 0 ${String(text).length * 25} 161"></svg>`,
+    )
+
+    render(<ActiveCard card={qrCard('https://example.com/member/123')} />)
+    expect(screen.queryByRole('group', { name: 'Display format' })).toBeNull()
+    cleanup()
+
+    render(<ActiveCard card={qrCard('MEMBER-12')} />)
+    expect(screen.getByRole('group', { name: 'Display format' })).toBeTruthy()
   })
 })
