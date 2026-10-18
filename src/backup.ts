@@ -93,13 +93,15 @@ function parseCards(version: number, cards: unknown): Card[] {
   return cards
 }
 
+const isImageDataUrl = (photo: unknown) =>
+  typeof photo === 'string' && photo.startsWith('data:image/')
+
 function parsePhotos(photos: unknown): Record<string, string> {
   if (photos === undefined) return {}
   if (typeof photos !== 'object' || photos === null || Array.isArray(photos)) {
     throw new BackupError(DAMAGED_MESSAGE)
   }
-  const isImage = (photo: unknown) => typeof photo === 'string' && photo.startsWith('data:image/')
-  if (!Object.values(photos).every(isImage)) throw new BackupError(DAMAGED_MESSAGE)
+  if (!Object.values(photos).every(isImageDataUrl)) throw new BackupError(DAMAGED_MESSAGE)
   return photos as Record<string, string>
 }
 
