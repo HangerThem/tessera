@@ -5,11 +5,17 @@ import type { BarcodeScannerOptions } from '../barcodeScanner'
 import type { CameraError } from '../types/Camera.type'
 
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
+import { resizePhoto } from '../utils/image'
 import { AddCardForm } from './AddCardForm'
 
 const scanners = vi.hoisted(
   () => [] as { options: BarcodeScannerOptions; start: () => void; stop: () => void }[],
 )
+
+vi.mock('../utils/image', () => ({
+  // happy-dom has no canvas, so resizing is faked.
+  resizePhoto: vi.fn(async () => new Blob(['resized'], { type: 'image/jpeg' })),
+}))
 
 vi.mock('../barcodeScanner', () => ({
   BarcodeScanner: class {
@@ -260,5 +266,26 @@ describe('AddCardForm note', () => {
     renderForm()
 
     expect((screen.getByLabelText(/^Note/) as HTMLInputElement).maxLength).toBe(200)
+  })
+})
+
+describe('AddCardForm photo', () => {
+  afterEach(cleanup)
+
+  it('resizes a chosen photo and saves it with the card', async () => {
+    Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:photo'), revokeObjectURL: vi.fn() })
+    const { onSave } = renderForm()
+    fillIn()
+    const chosen = new File(['big photo'], 'card.jpg', { type: 'image/jpeg' })
+    const input = document.querySelector<HTMLInputElement>('input[type="file"]')!
+    Object.defineProperty(input, 'files', { value: [chosen], configurable: true })
+
+    fireEvent.change(input)
+    expect(await screen.findByRole('img', { name: 'Card photo' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+
+    expect(resizePhoto).toHaveBeenCalledWith(chosen)
+    const [, photo] = onSave.mock.calls[0]
+    expect(await (photo as Blob).text()).toBe('resized')
   })
 })
