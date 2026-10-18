@@ -1,4 +1,3 @@
-import { BarcodeFormat } from '@zxing/library'
 import {
   BarcodeIcon,
   ChevronLeft,
@@ -18,6 +17,7 @@ import { tv } from 'tailwind-variants'
 
 import type { Card } from '../types/Card.type'
 
+import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 import {
   activeCardId,
@@ -28,12 +28,13 @@ import {
 } from '../store'
 import {
   formatBarcodeValue,
+  formatLabel,
+  isQRCodeFormat,
   mapZXingFormatToBWIPJS,
   renderBarcode,
   validateBarcodeValue,
 } from '../utils/barcode'
 import { contrastColor, isDarkColor } from '../utils/color'
-import { formatToLabel } from '../utils/text'
 import { BarcodeCanvas } from './BarcodeCanvas'
 import { Button } from './ui/Button'
 
@@ -81,9 +82,13 @@ const shareButtonStyle = tv({
 })
 
 export function ActiveCard({ card }: ActiveCardProps) {
-  const [displayFormat, setDisplayFormat] = useState<'barcode' | 'qr'>('barcode')
-  const displayedFormat =
-    displayFormat === 'barcode' ? card.barcodeFormat : (card.qrCodeFormat ?? card.barcodeFormat)
+  // Opens in the card's own format. The other one shows the same value as a QR code or a Code 128
+  // barcode, for scanners that only read one kind.
+  const ownKind = isQRCodeFormat(card.format) ? 'qr' : 'barcode'
+  const [displayFormat, setDisplayFormat] = useState<'barcode' | 'qr'>(ownKind)
+  const formatFor = (kind: 'barcode' | 'qr') =>
+    kind === ownKind ? card.format : kind === 'qr' ? QRCodeFormat.QR_CODE : BarcodeFormat.CODE_128
+  const displayedFormat = formatFor(displayFormat)
   const canRenderDisplayed = useMemo(
     () => validateBarcodeValue(displayedFormat, card.barcodeValue) === undefined,
     [displayedFormat, card.barcodeValue],
@@ -108,7 +113,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
     try {
       await navigator.share({
         title: card.name,
-        text: `${card.name}: ${formatBarcodeValue(card.barcodeFormat, card.barcodeValue)}`,
+        text: `${card.name}: ${formatBarcodeValue(card.format, card.barcodeValue)}`,
       })
     } catch (err) {
       if ((err as DOMException).name !== 'AbortError') console.error(err)
@@ -144,7 +149,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
     try {
       await navigator.share({
         title: card.name,
-        text: formatBarcodeValue(card.barcodeFormat, card.barcodeValue),
+        text: formatBarcodeValue(card.format, card.barcodeValue),
         files: [file],
       })
     } catch (err) {
@@ -255,9 +260,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
             </div>
             <div className="mr-auto">
               <p className="text-sm text-black font-bold">{card.name}</p>
-              <p className="text-xs text-neutral-500">
-                {formatToLabel(BarcodeFormat[card.barcodeFormat])}
-              </p>
+              <p className="text-xs text-neutral-500">{formatLabel(card.format)}</p>
             </div>
             <button
               aria-label={card.isFavorite ? 'Unmark as favorite' : 'Mark as favorite'}
@@ -299,7 +302,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
             </div>
             <div className="flex items-center justify-between gap-2 mt-2">
               <p className="text-sm text-neutral-500 text-center font-mono select-none">
-                {formatBarcodeValue(card.barcodeFormat, card.barcodeValue)}
+                {formatBarcodeValue(card.format, card.barcodeValue)}
               </p>
               <button
                 onClick={handleCopy}

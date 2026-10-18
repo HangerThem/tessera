@@ -116,7 +116,7 @@ describe('AddCardForm camera flow', () => {
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         barcodeValue: '4006381333931',
-        barcodeFormat: BarcodeFormat.EAN_13,
+        format: BarcodeFormat.EAN_13,
       }),
     )
   })
@@ -134,7 +134,7 @@ describe('AddCardForm camera flow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
 
     expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({ barcodeValue: '036000291452', barcodeFormat: BarcodeFormat.UPC_A }),
+      expect.objectContaining({ barcodeValue: '036000291452', format: BarcodeFormat.UPC_A }),
     )
   })
 
@@ -206,7 +206,7 @@ describe('AddCardForm barcode validation', () => {
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         barcodeValue: '4006381333931',
-        barcodeFormat: BarcodeFormat.EAN_13,
+        format: BarcodeFormat.EAN_13,
       }),
     )
   })

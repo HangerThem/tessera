@@ -24,7 +24,7 @@ vi.mock('./DeviceTransfer', async () => {
     id: 'card-3',
     name: 'Gym',
     barcodeValue: '87654321',
-    barcodeFormat: 4,
+    format: 4,
     isFavorite: false,
   }
   return {
@@ -45,7 +45,7 @@ const card: Card = {
   id: 'card-1',
   name: 'Grocery',
   barcodeValue: '12345678',
-  barcodeFormat: 4 as Card['barcodeFormat'], // BarcodeFormat.CODE_128
+  format: 4 as Card['format'], // BarcodeFormat.CODE_128
   isFavorite: false,
 }
 

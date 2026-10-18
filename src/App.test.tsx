@@ -12,7 +12,7 @@ const card = vi.hoisted((): Card => ({
   id: 'card-1',
   name: 'Grocery',
   barcodeValue: '12345678',
-  barcodeFormat: 4 as Card['barcodeFormat'], // BarcodeFormat.CODE_128; enums can't be imported here
+  format: 4 as Card['format'], // BarcodeFormat.CODE_128; enums can't be imported here
   isFavorite: false,
   color: '#3b82f6',
 }))

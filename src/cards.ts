@@ -1,6 +1,8 @@
 import { createStore, del, get, getMany, keys, set, update } from 'idb-keyval'
 
-import type { Card } from './types/Card.type'
+import type { Card, LegacyCard } from './types/Card.type'
+
+import { fromLegacyCard, isLegacyCard } from './legacyCard'
 
 const cardStore = createStore('tessera', 'cards')
 
@@ -31,6 +33,17 @@ export async function deleteCard(id: string): Promise<void> {
 
 export async function deleteCards(ids: string[]): Promise<void> {
   await Promise.all(ids.map((id) => del(id, cardStore)))
+}
+
+/** Rewrites cards stored with a barcode and a QR code format to have a single format. */
+export async function migrateCardFormats(): Promise<void> {
+  const allKeys = await keys<string>(cardStore)
+  const stored = await getMany<Card | LegacyCard | undefined>(allKeys, cardStore)
+  await Promise.all(
+    stored.map((card) =>
+      card && isLegacyCard(card) ? set(card.id, fromLegacyCard(card), cardStore) : undefined,
+    ),
+  )
 }
 
 export async function migrateIfNeeded(): Promise<void> {

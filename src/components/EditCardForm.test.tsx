@@ -26,7 +26,7 @@ const card: Card = {
   id: 'card-1',
   name: 'Grocery',
   barcodeValue: '12345678',
-  barcodeFormat: BarcodeFormat.CODE_128,
+  format: BarcodeFormat.CODE_128,
   isFavorite: false,
   color: '#3b82f6',
 }
@@ -111,7 +111,7 @@ describe('EditCardForm camera flow', () => {
       expect.objectContaining({
         id: card.id,
         barcodeValue: '4006381333931',
-        barcodeFormat: BarcodeFormat.EAN_13,
+        format: BarcodeFormat.EAN_13,
       }),
     )
   })
@@ -148,7 +148,7 @@ describe('EditCardForm barcode validation', () => {
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         barcodeValue: '4006381333931',
-        barcodeFormat: BarcodeFormat.EAN_13,
+        format: BarcodeFormat.EAN_13,
       }),
     )
   })

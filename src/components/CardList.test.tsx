@@ -15,7 +15,7 @@ const card = (name: string, isFavorite = false): Card => ({
   id: name,
   name,
   barcodeValue: '12345678',
-  barcodeFormat: BarcodeFormat.CODE_128,
+  format: BarcodeFormat.CODE_128,
   isFavorite,
 })
 

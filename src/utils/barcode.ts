@@ -121,6 +121,42 @@ export const mapBarcodeDetectorFormatToZXing = (
     )
     .find((zxingFormat) => mapZXingFormatsToBarcodeDetectorFormats([zxingFormat])?.[0] === format)
 
+const FORMAT_LABELS: Record<BarcodeFormat | QRCodeFormat, string> = {
+  [BarcodeFormat.CODABAR]: 'Codabar',
+  [BarcodeFormat.CODE_39]: 'Code 39',
+  [BarcodeFormat.CODE_93]: 'Code 93',
+  [BarcodeFormat.CODE_128]: 'Code 128',
+  [BarcodeFormat.EAN_8]: 'EAN-8',
+  [BarcodeFormat.EAN_13]: 'EAN-13',
+  [BarcodeFormat.ITF]: 'ITF',
+  [BarcodeFormat.PDF_417]: 'PDF417',
+  [BarcodeFormat.UPC_A]: 'UPC-A',
+  [BarcodeFormat.UPC_E]: 'UPC-E',
+  [QRCodeFormat.AZTEC]: 'Aztec',
+  [QRCodeFormat.DATA_MATRIX]: 'Data Matrix',
+  [QRCodeFormat.QR_CODE]: 'QR code',
+  [QRCodeFormat.MICRO_QR_CODE]: 'Micro QR code',
+  [QRCodeFormat.MAXICODE]: 'MaxiCode',
+}
+
+/**
+ * The name of a format as printed on cards and scanners, e.g. "EAN-13".
+ *
+ * @param {BarcodeFormat | QRCodeFormat} format - The format.
+ * @returns {string} The format's name.
+ */
+export function formatLabel(format: BarcodeFormat | QRCodeFormat): string {
+  return FORMAT_LABELS[format]
+}
+
+/** Formats in the order they're offered: barcodes, then 2D codes. */
+export const BARCODE_FORMATS = Object.values(BarcodeFormat).filter(
+  (format): format is BarcodeFormat => typeof format === 'number',
+)
+export const QR_CODE_FORMATS = Object.values(QRCodeFormat).filter(
+  (format): format is QRCodeFormat => typeof format === 'number',
+)
+
 /** * Determines if the given format is a QR code format.
  *
  * @param {BarcodeFormat | QRCodeFormat} format - The barcode format to check.

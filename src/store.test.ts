@@ -21,7 +21,7 @@ const card = (id: string, name: string): Card => ({
   id,
   name,
   barcodeValue: '12345678',
-  barcodeFormat: 4 as Card['barcodeFormat'], // BarcodeFormat.CODE_128
+  format: 4 as Card['format'], // BarcodeFormat.CODE_128
   isFavorite: false,
 })
 

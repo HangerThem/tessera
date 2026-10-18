@@ -32,7 +32,7 @@ export function CardItem({ card }: Props) {
             className={`${isDark ? 'text-white' : 'text-black'} text-sm font-mono opacity-70`}
             aria-label={`Card ending in ${card.barcodeValue.slice(-4)}`}
           >
-            {encodeBarcodeValue(card.barcodeFormat, card.barcodeValue)}
+            {encodeBarcodeValue(card.format, card.barcodeValue)}
           </p>
           <div className="flex gap-2 items-end justify-between" aria-hidden="true">
             <div className="flex gap-px items-end">

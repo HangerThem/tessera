@@ -21,8 +21,7 @@ const card: Card = {
   id: 'card-1',
   name: 'Grocery',
   barcodeValue: '12345678',
-  barcodeFormat: BarcodeFormat.CODE_128,
-  qrCodeFormat: QRCodeFormat.QR_CODE,
+  format: BarcodeFormat.CODE_128,
   isFavorite: false,
   color: '#3b82f6',
 }
@@ -128,11 +127,11 @@ describe('ActiveCard format', () => {
   })
 
   it('opens a QR code card as a QR code', () => {
-    const qrCard = {
+    const qrCard: Card = {
       ...card,
       barcodeValue: 'https://example.com/member/123',
       format: QRCodeFormat.QR_CODE,
-    } as unknown as Card
+    }
     render(<ActiveCard card={qrCard} />)
 
     expect(screen.getByRole('img', { name: /^QR code for/ })).toBeTruthy()
