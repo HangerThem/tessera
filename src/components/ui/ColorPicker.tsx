@@ -5,7 +5,11 @@ type ColorPickerProps = {
   onChange: (color: string) => void
 }
 
+/** Cards without a colour are shown in white too, so stored cards look the same. */
+export const DEFAULT_CARD_COLOR = '#ffffff'
+
 export const PRESET_COLORS: Record<string, string> = {
+  [DEFAULT_CARD_COLOR]: 'White',
   '#3b82f6': 'Blue',
   '#10b981': 'Green',
   '#f59e0b': 'Yellow',
