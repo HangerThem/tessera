@@ -13,7 +13,7 @@ import {
   Trash2,
   XIcon,
 } from 'lucide-preact'
-import { useEffect, useState } from 'preact/hooks'
+import { useEffect, useMemo, useState } from 'preact/hooks'
 import { tv } from 'tailwind-variants'
 
 import type { Card } from '../types/Card.type'
@@ -26,7 +26,12 @@ import {
   favoriteCard,
   isDeleteConfirmVisible,
 } from '../store'
-import { formatBarcodeValue, mapZXingFormatToBWIPJS, renderBarcode } from '../utils/barcode'
+import {
+  formatBarcodeValue,
+  mapZXingFormatToBWIPJS,
+  renderBarcode,
+  validateBarcodeValue,
+} from '../utils/barcode'
 import { contrastColor, isDarkColor } from '../utils/color'
 import { formatToLabel } from '../utils/text'
 import { BarcodeCanvas } from './BarcodeCanvas'
@@ -77,6 +82,12 @@ const shareButtonStyle = tv({
 
 export function ActiveCard({ card }: ActiveCardProps) {
   const [displayFormat, setDisplayFormat] = useState<'barcode' | 'qr'>('barcode')
+  const displayedFormat =
+    displayFormat === 'barcode' ? card.barcodeFormat : (card.qrCodeFormat ?? card.barcodeFormat)
+  const canRenderDisplayed = useMemo(
+    () => validateBarcodeValue(displayedFormat, card.barcodeValue) === undefined,
+    [displayedFormat, card.barcodeValue],
+  )
   const isDark = isDarkColor(card.color ?? '#fff')
   // const { root: noteRootClass, input: noteInputClass } = noteInputStyle({ dark: isDark })
   const [canShareText, setCanShareText] = useState(false)
@@ -107,9 +118,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
   const handleShareImage = async () => {
     const offscreen = document.createElement('canvas')
     const isQRCode = displayFormat === 'qr'
-    const format = mapZXingFormatToBWIPJS(
-      isQRCode ? (card.qrCodeFormat ?? card.barcodeFormat) : card.barcodeFormat,
-    )
+    const format = mapZXingFormatToBWIPJS(displayedFormat)
 
     try {
       renderBarcode({ element: offscreen, value: card.barcodeValue, format, isQRCode })
@@ -279,14 +288,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
           </div>
           <div>
             <div className="flex items-center justify-center">
-              <BarcodeCanvas
-                format={
-                  displayFormat === 'barcode'
-                    ? card.barcodeFormat
-                    : (card.qrCodeFormat ?? card.barcodeFormat)
-                }
-                value={card.barcodeValue}
-              />
+              <BarcodeCanvas format={displayedFormat} value={card.barcodeValue} />
             </div>
             <div className="flex items-center justify-between gap-2 mt-2">
               <p className="text-sm text-neutral-500 text-center font-mono select-none">
@@ -306,7 +308,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
           </div>
         </div>
 
-        {(canShareText || canShareFiles) && (
+        {(canShareText || (canShareFiles && canRenderDisplayed)) && (
           <div className="flex gap-2 w-full">
             {canShareText && (
               <button className={shareButtonStyle({ dark: isDark })} onClick={handleShareText}>
@@ -314,7 +316,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
                 <span className="text-sm">Share</span>
               </button>
             )}
-            {canShareFiles && (
+            {canShareFiles && canRenderDisplayed && (
               <button className={shareButtonStyle({ dark: isDark })} onClick={handleShareImage}>
                 <ImageUpIcon className="w-5 h-5" />
                 <span className="text-sm">Share as Image</span>
