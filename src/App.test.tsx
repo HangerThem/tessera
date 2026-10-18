@@ -39,6 +39,9 @@ const deleteDialog = () => screen.queryByRole('dialog', { name: 'Delete card con
 const editDialog = () => screen.queryByRole('dialog', { name: 'Edit Card' })
 const backupDialog = () => screen.queryByRole('dialog', { name: 'Backup' })
 
+const installPrompt = () =>
+  screen.queryByRole('region', { name: 'Add Tessera to your Home Screen' })
+
 const pressEscape = () => fireEvent.keyDown(document, { key: 'Escape' })
 const pressBack = () => fireEvent(window, new PopStateEvent('popstate'))
 
@@ -169,8 +172,6 @@ describe('App loading', () => {
 })
 
 describe('App home screen prompt', () => {
-  const prompt = () => screen.queryByRole('region', { name: 'Add Tessera to your Home Screen' })
-
   beforeEach(() => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     // Safari on iOS, not on the home screen.
@@ -187,14 +188,14 @@ describe('App home screen prompt', () => {
     await loadCards()
     render(<App />)
 
-    expect(prompt()?.textContent).toContain("Safari may delete your cards if you don't open")
+    expect(installPrompt()?.textContent).toContain("Safari may delete your cards if you don't open")
 
     fireEvent.click(screen.getByRole('button', { name: 'Not now' }))
-    expect(prompt()).toBeNull()
+    expect(installPrompt()).toBeNull()
 
     cleanup()
     render(<App />)
-    expect(prompt()).toBeNull()
+    expect(installPrompt()).toBeNull()
   })
 
   it("doesn't ask before there are any cards", async () => {
@@ -203,7 +204,7 @@ describe('App home screen prompt', () => {
     await loadCards()
     render(<App />)
 
-    expect(prompt()).toBeNull()
+    expect(installPrompt()).toBeNull()
     idb.keys.mockImplementation(async () => ['card-1'])
   })
 
@@ -212,6 +213,6 @@ describe('App home screen prompt', () => {
     await loadCards()
     render(<App />)
 
-    expect(prompt()).toBeNull()
+    expect(installPrompt()).toBeNull()
   })
 })
