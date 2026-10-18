@@ -120,3 +120,23 @@ describe('ActiveCard share as image', () => {
     expect(screen.queryByRole('button', { name: 'Share as Image' })).not.toBeNull()
   })
 })
+
+describe('ActiveCard format', () => {
+  afterEach(() => {
+    cleanup()
+    vi.mocked(toCanvas).mockReset()
+  })
+
+  it('opens a QR code card as a QR code', () => {
+    const qrCard = {
+      ...card,
+      barcodeValue: 'https://example.com/member/123',
+      format: QRCodeFormat.QR_CODE,
+    } as unknown as Card
+    render(<ActiveCard card={qrCard} />)
+
+    expect(screen.getByRole('img', { name: /^QR code for/ })).toBeTruthy()
+    expect(screen.getByText('QR code')).toBeTruthy()
+    expect(vi.mocked(toCanvas).mock.lastCall![1]).toMatchObject({ bcid: 'qrcode' })
+  })
+})
