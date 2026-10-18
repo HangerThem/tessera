@@ -27,6 +27,7 @@ import {
   isDeleteConfirmVisible,
 } from '../store'
 import {
+  canDisplayLegibly,
   formatBarcodeValue,
   formatLabel,
   isQRCodeFormat,
@@ -89,6 +90,11 @@ export function ActiveCard({ card }: ActiveCardProps) {
   const formatFor = (kind: 'barcode' | 'qr') =>
     kind === ownKind ? card.format : kind === 'qr' ? QRCodeFormat.QR_CODE : BarcodeFormat.CODE_128
   const displayedFormat = formatFor(displayFormat)
+  const canShowOtherKind = useMemo(
+    () => canDisplayLegibly(formatFor(ownKind === 'qr' ? 'barcode' : 'qr'), card.barcodeValue),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [card.format, card.barcodeValue],
+  )
   const canRenderDisplayed = useMemo(
     () => validateBarcodeValue(displayedFormat, card.barcodeValue) === undefined,
     [displayedFormat, card.barcodeValue],
@@ -274,28 +280,30 @@ export function ActiveCard({ card }: ActiveCardProps) {
               />
             </button>
           </div>
-          <div
-            role="group"
-            aria-label="Display format"
-            className="flex gap-2 items-center justify-center p-2 rounded-lg bg-neutral-100"
-          >
-            <button
-              className={buttonStyle({ active: displayFormat === 'qr' })}
-              onClick={() => setDisplayFormat('qr')}
-              aria-pressed={displayFormat === 'qr'}
+          {canShowOtherKind && (
+            <div
+              role="group"
+              aria-label="Display format"
+              className="flex gap-2 items-center justify-center p-2 rounded-lg bg-neutral-100"
             >
-              <QrCodeIcon className="w-5 h-5" />
-              <span className="text-sm">QR Code</span>
-            </button>
-            <button
-              className={buttonStyle({ active: displayFormat === 'barcode' })}
-              onClick={() => setDisplayFormat('barcode')}
-              aria-pressed={displayFormat === 'barcode'}
-            >
-              <BarcodeIcon className="w-5 h-5" />
-              <span className="text-sm">Barcode</span>
-            </button>
-          </div>
+              <button
+                className={buttonStyle({ active: displayFormat === 'qr' })}
+                onClick={() => setDisplayFormat('qr')}
+                aria-pressed={displayFormat === 'qr'}
+              >
+                <QrCodeIcon className="w-5 h-5" />
+                <span className="text-sm">QR Code</span>
+              </button>
+              <button
+                className={buttonStyle({ active: displayFormat === 'barcode' })}
+                onClick={() => setDisplayFormat('barcode')}
+                aria-pressed={displayFormat === 'barcode'}
+              >
+                <BarcodeIcon className="w-5 h-5" />
+                <span className="text-sm">Barcode</span>
+              </button>
+            </div>
+          )}
           <div>
             <div className="flex items-center justify-center">
               <BarcodeCanvas format={displayedFormat} value={card.barcodeValue} />
