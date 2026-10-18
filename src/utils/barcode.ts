@@ -8,6 +8,8 @@ export const mapZXingFormatToBWIPJS = (format: BarcodeFormat | QRCodeFormat): st
   switch (format) {
     case QRCodeFormat.AZTEC:
       return 'azteccode'
+    case BarcodeFormat.CODABAR:
+      return 'rationalizedCodabar'
     case BarcodeFormat.CODE_39:
       return 'code39'
     case BarcodeFormat.CODE_93:
@@ -30,6 +32,10 @@ export const mapZXingFormatToBWIPJS = (format: BarcodeFormat | QRCodeFormat): st
       return 'qrcode'
     case QRCodeFormat.MICRO_QR_CODE:
       return 'microqrcode'
+    case BarcodeFormat.UPC_A:
+      return 'upca'
+    case BarcodeFormat.UPC_E:
+      return 'upce'
     default:
       throw new Error(`Unsupported barcode format: ${format}`)
   }
@@ -69,6 +75,15 @@ export const mapZXingFormatsToBarcodeDetectorFormats = (
         break
       case BarcodeFormat.PDF_417:
         mapped.push('pdf417')
+        break
+      case BarcodeFormat.UPC_A:
+        mapped.push('upc_a')
+        break
+      case BarcodeFormat.UPC_E:
+        mapped.push('upc_e')
+        break
+      case BarcodeFormat.CODABAR:
+        mapped.push('codabar')
         break
       case QRCodeFormat.AZTEC:
         mapped.push('aztec')
@@ -154,6 +169,7 @@ export function generateDecorativeBars({
  * - For EAN-8, it groups the digits into two groups of four.
  * - For EAN-13, it groups the digits into three groups: one digit, six digits, and six digits.
  * - For ITF, it groups the digits into pairs of two.
+ * - For UPC-A, it groups the digits as printed: one digit, five, five and the check digit.
  * - For other formats, it returns the value as is.
  *
  * @param {BarcodeFormat | QRCodeFormat} format - The format of the barcode.
@@ -168,6 +184,8 @@ export function formatBarcodeValue(format: BarcodeFormat | QRCodeFormat, value: 
       return value.replace(/^(\d{1})(\d{6})(\d{6})$/, '$1 $2 $3')
     case BarcodeFormat.ITF:
       return value.replace(/(\d{2})(?=\d)/g, '$1 ').trim()
+    case BarcodeFormat.UPC_A:
+      return value.replace(/^(\d)(\d{5})(\d{5})(\d)$/, '$1 $2 $3 $4')
     default:
       return value
   }
@@ -202,6 +220,20 @@ export function encodeBarcodeValue(format: BarcodeFormat | QRCodeFormat, value: 
 }
 
 /**
+ * Adjusts a stored value to what bwip-js needs to draw it. Codabar must start and end with A, B, C
+ * or D, which many scanners leave out, so they're added (as A) when missing. The stored value is
+ * left as scanned.
+ *
+ * @param {string} bcid - The bwip-js encoder, e.g. 'rationalizedCodabar'.
+ * @param {string} value - The stored value.
+ * @returns {string} The text to encode.
+ */
+function toEncodableText(bcid: string, value: string): string {
+  if (bcid === 'rationalizedCodabar' && !/^[A-D].*[A-D]$/i.test(value)) return `A${value}A`
+  return value
+}
+
+/**
  * Checks whether a value can be encoded in the given format.
  *
  * @param {BarcodeFormat | QRCodeFormat} format - The format to encode the value in.
@@ -213,7 +245,8 @@ export function validateBarcodeValue(
   value: string,
 ): string | undefined {
   try {
-    toSVG({ bcid: mapZXingFormatToBWIPJS(format), text: value })
+    const bcid = mapZXingFormatToBWIPJS(format)
+    toSVG({ bcid, text: toEncodableText(bcid, value) })
     return undefined
   } catch (err) {
     // bwip-js errors look like "bwipp.ean13badLength#6878: EAN-13 must be 12 or 13 digits".
@@ -269,7 +302,12 @@ export function renderBarcode({
   width = isQRCode ? 160 : 320,
   pixelRatio = 1,
 }: RenderBarcodeOptions): void {
-  const options = { bcid: format, text: value, backgroundcolor: 'FFFFFF', padding: 4 }
+  const options = {
+    bcid: format,
+    text: toEncodableText(format, value),
+    backgroundcolor: 'FFFFFF',
+    padding: 4,
+  }
 
   // Draw once to measure the code's natural width, then again at the scale that fills the width.
   toCanvas(element, { ...options, scale: 1 })
