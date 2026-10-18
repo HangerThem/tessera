@@ -61,6 +61,21 @@ describe('ActiveCard share as image', () => {
     )
   })
 
+  it('shares an image sharp enough for high-DPI screens', async () => {
+    vi.mocked(toCanvas).mockImplementation((canvas, options) => {
+      const element = canvas as HTMLCanvasElement
+      element.width = 100 * options.scale!
+      return element
+    })
+    render(<ActiveCard card={card} />)
+
+    fireEvent.click(shareImageButton())
+
+    await waitFor(() => expect(share).toHaveBeenCalledOnce())
+    const [canvas] = vi.mocked(toCanvas).mock.lastCall!
+    expect((canvas as HTMLCanvasElement).width).toBeGreaterThanOrEqual(900)
+  })
+
   it('shares a PNG of the QR code when it is displayed', async () => {
     render(<ActiveCard card={card} />)
     fireEvent.click(screen.getByRole('button', { name: 'QR Code' }))
