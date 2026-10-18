@@ -17,6 +17,14 @@ vi.mock('idb-keyval', () => ({
   getMany: async () => [],
 }))
 
+const photos = vi.hoisted(() => ({
+  getAllPhotos: vi.fn(async (): Promise<Record<string, Blob>> => ({})),
+  savePhoto: vi.fn(async () => {}),
+  deletePhoto: vi.fn(async () => {}),
+}))
+
+vi.mock('../photos', () => photos)
+
 // The transfer itself is covered in DeviceTransfer.test.tsx.
 vi.mock('./DeviceTransfer', async () => {
   const backup = await import('../backup')
@@ -197,5 +205,53 @@ describe('BackupScreen transfer to another device', () => {
     expect((screen.getByRole('button', { name: 'Send cards' }) as HTMLButtonElement).disabled).toBe(
       true,
     )
+  })
+})
+
+describe('BackupScreen photos', () => {
+  const jpeg = new Blob([new Uint8Array([255, 216, 255])], { type: 'image/jpeg' })
+
+  beforeEach(() => {
+    cards.value = [card]
+    photos.getAllPhotos.mockResolvedValue({ 'card-1': jpeg })
+  })
+
+  afterEach(() => {
+    cleanup()
+    photos.getAllPhotos.mockResolvedValue({})
+    photos.savePhoto.mockClear()
+    Object.assign(navigator, { share: undefined, canShare: undefined })
+  })
+
+  it('includes the photos in an exported backup', async () => {
+    const share = vi.fn(async (_data: ShareData) => {})
+    Object.assign(navigator, { share, canShare: () => true })
+    render(<BackupScreen onClose={() => {}} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Export cards' }))
+
+    await waitFor(() => expect(share).toHaveBeenCalled())
+    const backup = parseBackup(await share.mock.calls[0][0].files![0].text())
+    expect(backup.photos['card-1']).toMatch(/^data:image\/jpeg;base64,/)
+  })
+
+  it('includes the photos when sending cards to another phone', async () => {
+    render(<BackupScreen onClose={() => {}} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Send cards' }))
+
+    const sending = await screen.findByTestId('sending')
+    expect(parseBackup(sending.dataset.payload!).photos).toHaveProperty('card-1')
+  })
+
+  it('restores the photos of imported cards', async () => {
+    cards.value = []
+    render(<BackupScreen onClose={() => {}} />)
+    const backup = createBackup([card], { photos: { 'card-1': 'data:image/jpeg;base64,/9j/' } })
+
+    chooseFile(backup)
+    fireEvent.click(await screen.findByRole('button', { name: 'Import' }))
+
+    await waitFor(() => expect(photos.savePhoto).toHaveBeenCalledWith('card-1', expect.any(Blob)))
   })
 })
