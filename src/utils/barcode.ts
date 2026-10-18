@@ -221,35 +221,64 @@ export function validateBarcodeValue(
   }
 }
 
+/** bwip-js sizes in millimetres at 72 dpi. */
+const PX_PER_MM = 72 / 25.4
+
+/** Height of a linear barcode's bars, in CSS pixels. */
+const BARCODE_BAR_HEIGHT = 64
+
+/**
+ * Picks the largest whole scale at which a code still fits the target width. Whole scales keep every
+ * module a whole number of pixels wide, so the bars stay sharp.
+ *
+ * @param {number} naturalWidth - The code's width in pixels at scale 1.
+ * @param {number} targetWidth - The width available, in device pixels.
+ * @returns {number} The scale to draw at, at least 1.
+ */
+export function getBarcodeScale(naturalWidth: number, targetWidth: number): number {
+  return Math.max(1, Math.floor(targetWidth / naturalWidth))
+}
+
 type RenderBarcodeOptions = {
   element: HTMLCanvasElement
   value: string
   format: string
   isQRCode: boolean
+  width?: number
+  pixelRatio?: number
 }
 
 /** * Renders a barcode or QR code onto a given HTML canvas element using the bwip-js library.
+ *
+ * The code is drawn in device pixels and the canvas is sized back down with CSS, so it stays sharp
+ * on high-DPI screens.
  *
  * @param {RenderBarcodeOptions} options - The options for rendering the barcode.
  * @param {HTMLCanvasElement} options.element - The canvas element where the barcode will be rendered.
  * @param {string} options.value - The value to encode in the barcode.
  * @param {string} options.format - The format of the barcode (e.g., 'code128', 'qrcode').
  * @param {boolean} options.isQRCode - A flag indicating whether the format is a QR code.
+ * @param {number} [options.width] - The width available for the code, in CSS pixels.
+ * @param {number} [options.pixelRatio] - Device pixels per CSS pixel, usually `devicePixelRatio`.
  */
-export function renderBarcode({ element, value, format, isQRCode }: RenderBarcodeOptions): void {
-  const width = isQRCode ? 50 : 200
-  const height = isQRCode ? 50 : 30
+export function renderBarcode({
+  element,
+  value,
+  format,
+  isQRCode,
+  width = isQRCode ? 160 : 320,
+  pixelRatio = 1,
+}: RenderBarcodeOptions): void {
+  const options = { bcid: format, text: value, backgroundcolor: 'FFFFFF', padding: 4 }
 
-  element.width = width
-  element.height = height
-
+  // Draw once to measure the code's natural width, then again at the scale that fills the width.
+  toCanvas(element, { ...options, scale: 1 })
+  const scale = getBarcodeScale(element.width, width * pixelRatio)
   toCanvas(element, {
-    bcid: format,
-    text: value,
-    scale: 1,
-    height: isQRCode ? 50 : 30,
-    width: isQRCode ? 50 : 200,
-    backgroundcolor: 'FFFFFF',
-    padding: 4,
+    ...options,
+    scale,
+    ...(isQRCode ? {} : { height: (BARCODE_BAR_HEIGHT * pixelRatio) / (scale * PX_PER_MM) }),
   })
+
+  element.style.width = `${element.width / pixelRatio}px`
 }

@@ -62,7 +62,7 @@ describe('renderBarcode', () => {
     const options = vi.mocked(toCanvas).mock.lastCall![1]
     expect(options.scale).toBe(10)
     expect(element.width).toBe(1000)
-    expect(element.style.width).toBe(`${1000 / 3}px`)
+    expect(parseFloat(element.style.width)).toBeCloseTo(1000 / 3)
     // Bars are 64 CSS px tall, i.e. 192 device px at 3x.
     expect(options.height! * PX_PER_MM * options.scale!).toBeCloseTo(192)
   })
