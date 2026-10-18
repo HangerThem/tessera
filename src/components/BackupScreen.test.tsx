@@ -17,6 +17,30 @@ vi.mock('idb-keyval', () => ({
   getMany: async () => [],
 }))
 
+// The transfer itself is covered in DeviceTransfer.test.tsx.
+vi.mock('./DeviceTransfer', async () => {
+  const backup = await import('../backup')
+  const gym = {
+    id: 'card-3',
+    name: 'Gym',
+    barcodeValue: '87654321',
+    barcodeFormat: 4,
+    isFavorite: false,
+  }
+  return {
+    ReceiveCards: ({ onReceived }: { onReceived: (backup: string) => void }) => (
+      <button onClick={() => onReceived(backup.createBackup([gym as Card]))}>
+        Finish receiving
+      </button>
+    ),
+    SendCards: ({ payload, cardCount }: { payload: string; cardCount: number }) => (
+      <p data-testid="sending" data-payload={payload}>
+        Sending {cardCount}
+      </p>
+    ),
+  }
+})
+
 const card: Card = {
   id: 'card-1',
   name: 'Grocery',
@@ -133,5 +157,45 @@ describe('BackupScreen import', () => {
     chooseFile(createBackup([]))
 
     expect((await screen.findByRole('alert')).textContent).toBe('This backup has no cards.')
+  })
+})
+
+describe('BackupScreen transfer to another device', () => {
+  beforeEach(() => {
+    cards.value = [card]
+    db.set.mockClear()
+  })
+
+  afterEach(cleanup)
+
+  it('sends all cards to the other phone', () => {
+    render(<BackupScreen onClose={() => {}} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Send cards' }))
+
+    const sending = screen.getByTestId('sending')
+    expect(sending.textContent).toBe('Sending 1')
+    expect(parseBackup(sending.dataset.payload!)).toEqual([card])
+  })
+
+  it('asks before importing the cards received from the other phone', async () => {
+    render(<BackupScreen onClose={() => {}} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Receive cards' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Finish receiving' }))
+    await screen.findByText('Import 1 card from the other phone?')
+    fireEvent.click(screen.getByRole('button', { name: 'Import' }))
+
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('Added 1 card.'))
+    expect(db.set).toHaveBeenCalledWith('card-3', expect.anything(), expect.anything())
+  })
+
+  it("can't send when there are no cards", () => {
+    cards.value = []
+    render(<BackupScreen onClose={() => {}} />)
+
+    expect((screen.getByRole('button', { name: 'Send cards' }) as HTMLButtonElement).disabled).toBe(
+      true,
+    )
   })
 })

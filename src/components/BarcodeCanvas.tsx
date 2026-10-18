@@ -8,6 +8,9 @@ import { isQRCodeFormat, mapZXingFormatToBWIPJS, renderBarcode } from '../utils/
 type RenderBarcodeProps = {
   value: string
   format: BarcodeFormat | QRCodeFormat
+  size?: 'normal' | 'large'
+  /** Accessible name, for codes whose value isn't worth reading out. */
+  label?: string
 }
 
 const { wrapper, canvas } = tv({
@@ -24,10 +27,17 @@ const { wrapper, canvas } = tv({
         wrapper: 'h-24',
       },
     },
+    size: {
+      normal: {},
+      // For dense codes that another phone has to scan, e.g. transfer codes.
+      large: {
+        wrapper: 'w-full h-auto max-w-80 aspect-square',
+      },
+    },
   },
 })()
 
-export function BarcodeCanvas({ value, format }: RenderBarcodeProps) {
+export function BarcodeCanvas({ value, format, size = 'normal', label }: RenderBarcodeProps) {
   const wrapperRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [hasError, setHasError] = useState(false)
@@ -63,7 +73,7 @@ export function BarcodeCanvas({ value, format }: RenderBarcodeProps) {
   }, [value, format])
 
   return (
-    <div className={wrapper({ format: isQRCode ? 'qrcode' : 'barcode' })} ref={wrapperRef}>
+    <div className={wrapper({ format: isQRCode ? 'qrcode' : 'barcode', size })} ref={wrapperRef}>
       {hasError && (
         <div role="alert" className="flex flex-col items-center gap-1 text-center text-neutral-600">
           <p className="flex items-center gap-1 text-sm font-bold">
@@ -81,7 +91,7 @@ export function BarcodeCanvas({ value, format }: RenderBarcodeProps) {
         ref={canvasRef}
         hidden={hasError}
         className={canvas()}
-        aria-label={`${isQRCode ? 'QR code' : 'Barcode'} for ${value}`}
+        aria-label={label ?? `${isQRCode ? 'QR code' : 'Barcode'} for ${value}`}
       />
     </div>
   )

@@ -91,3 +91,22 @@ describe('BarcodeScannerView', () => {
     expect(screen.getByRole('button', { name: 'Enter code manually' })).toBeTruthy()
   })
 })
+
+describe('BarcodeScannerView for other kinds of codes', () => {
+  afterEach(cleanup)
+
+  it('shows a custom hint and no manual entry when it is not offered', () => {
+    render(
+      <BarcodeScannerView
+        cameraState="active"
+        cameraError={null}
+        videoRef={createRef()}
+        onRetry={() => {}}
+        hint="Point the camera at the code on the other phone."
+      />,
+    )
+
+    expect(screen.getByText('Point the camera at the code on the other phone.')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Enter code manually' })).toBeNull()
+  })
+})
