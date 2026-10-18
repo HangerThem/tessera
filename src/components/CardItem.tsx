@@ -15,7 +15,7 @@ export function CardItem({ card }: Props) {
   const isDark = isDarkColor(card.color ?? '#fff')
 
   return (
-    <li className="relative w-full max-h-55 shadow-[0_-10px_10px_-5px_rgba(0,0,0,0.25)]">
+    <li className="relative w-full max-h-55 rounded-xl shadow-[0_-10px_10px_-5px_rgba(0,0,0,0.25)]">
       <button
         onClick={() => (activeCardId.value = card.id)}
         aria-label={`View details for ${card.name}`}
