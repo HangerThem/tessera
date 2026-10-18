@@ -27,6 +27,13 @@ const card: Card = {
 
 const exportButton = () => screen.getByRole('button', { name: 'Export cards' }) as HTMLButtonElement
 
+function chooseFile(contents: string) {
+  const input = document.querySelector<HTMLInputElement>('input[type="file"]')!
+  const file = new File([contents], 'backup.json', { type: 'application/json' })
+  Object.defineProperty(input, 'files', { value: [file], configurable: true })
+  fireEvent.change(input)
+}
+
 describe('BackupScreen export', () => {
   beforeEach(() => {
     cards.value = [card]
@@ -82,13 +89,6 @@ describe('BackupScreen import', () => {
   })
 
   afterEach(cleanup)
-
-  function chooseFile(contents: string) {
-    const input = document.querySelector<HTMLInputElement>('input[type="file"]')!
-    const file = new File([contents], 'backup.json', { type: 'application/json' })
-    Object.defineProperty(input, 'files', { value: [file], configurable: true })
-    fireEvent.change(input)
-  }
 
   const otherCard: Card = { ...card, id: 'card-2', name: 'Library' }
 
