@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Card } from './types/Card.type'
 
 import { App } from './App'
-import { activeCardId, editCardId, isAddCardFormVisible } from './store'
+import { activeCardId, editCardId, isAddCardFormVisible, isBackupVisible } from './store'
 import { applyUpdate, isUpdateAvailable } from './sw'
 
 // Hoisted so the idb-keyval mock below can return it.
@@ -35,6 +35,7 @@ vi.mock('idb-keyval', () => ({
 const cardDialog = () => screen.queryByRole('dialog', { name: 'Grocery' })
 const deleteDialog = () => screen.queryByRole('dialog', { name: 'Delete card confirmation' })
 const editDialog = () => screen.queryByRole('dialog', { name: 'Edit Card' })
+const backupDialog = () => screen.queryByRole('dialog', { name: 'Backup' })
 
 const pressEscape = () => fireEvent.keyDown(document, { key: 'Escape' })
 const pressBack = () => fireEvent(window, new PopStateEvent('popstate'))
@@ -54,6 +55,7 @@ describe('App screen navigation', () => {
     activeCardId.value = null
     editCardId.value = null
     isAddCardFormVisible.value = false
+    isBackupVisible.value = false
     isUpdateAvailable.value = false
   })
 
@@ -90,6 +92,16 @@ describe('App screen navigation', () => {
 
     pressBack()
     expect(cardDialog()).toBeNull()
+  })
+
+  it('opens the backup screen from the header and closes it on back', () => {
+    render(<App />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Backup' }))
+    expect(backupDialog()).not.toBeNull()
+
+    pressBack()
+    expect(backupDialog()).toBeNull()
   })
 
   it('lets back leave the app when no screen is open', () => {
