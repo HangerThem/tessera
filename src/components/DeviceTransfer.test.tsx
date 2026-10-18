@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/preact'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
 
 import type { BarcodeScannerOptions } from '../barcodeScanner'
 
@@ -48,12 +48,12 @@ afterEach(() => {
 })
 
 describe('ReceiveCards', () => {
-  let receive: ReturnType<typeof vi.fn>
-  let close: ReturnType<typeof vi.fn>
+  let receive: Mock<(answerCode: string) => Promise<string>>
+  let close: Mock<() => void>
 
   beforeEach(() => {
-    receive = vi.fn(async () => 'the backup')
-    close = vi.fn()
+    receive = vi.fn(async (_answerCode: string) => 'the backup')
+    close = vi.fn(() => {})
     vi.mocked(startReceiving).mockResolvedValue({ offerCode: 'TESSERA-OFFER:abc', receive, close })
   })
 
@@ -117,10 +117,10 @@ describe('ReceiveCards', () => {
 
 describe('SendCards', () => {
   let resolveSent: () => void
-  let close: ReturnType<typeof vi.fn>
+  let close: Mock<() => void>
 
   beforeEach(() => {
-    close = vi.fn()
+    close = vi.fn(() => {})
     vi.mocked(startSending).mockImplementation(async () => ({
       answerCode: 'TESSERA-ANSWER:xyz',
       sent: new Promise<void>((resolve) => (resolveSent = resolve)),
