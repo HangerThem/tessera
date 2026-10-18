@@ -17,6 +17,8 @@ export const isAddCardFormVisible = signal(false)
 export const editCardId = signal<string | null>(null)
 export const isDeleteConfirmVisible = signal(false)
 export const isBackupVisible = signal(false)
+/** Whether the cards have been read from storage yet. */
+export const loadState = signal<'loading' | 'ready' | 'failed'>('loading')
 
 export const activeCard = computed(
   () => cards.value.find((c) => c.id === activeCardId.value) ?? null,
@@ -147,6 +149,20 @@ export async function favoriteCard(id: string): Promise<void> {
   await updateCard(id, { isFavorite: !card.isFavorite })
 }
 
-await migrateIfNeeded()
-await migrateCardFormats()
-await refreshCards()
+/**
+ * Reads the cards from storage, migrating old data first. Storage can fail to open, e.g. in some
+ * private browsing modes or with a damaged database, which sets `loadState` to "failed" instead of
+ * throwing, so the app can explain and offer to try again.
+ */
+export async function loadCards(): Promise<void> {
+  loadState.value = 'loading'
+  try {
+    await migrateIfNeeded()
+    await migrateCardFormats()
+    await refreshCards()
+    loadState.value = 'ready'
+  } catch (err) {
+    console.error('Loading cards failed:', err)
+    loadState.value = 'failed'
+  }
+}
