@@ -1,4 +1,4 @@
-import { Camera, Trash2 } from 'lucide-preact'
+import { Camera, Images, Trash2 } from 'lucide-preact'
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 
 import type { Point } from '../utils/perspective'
@@ -27,7 +27,8 @@ interface Props {
  * whole. The photo is shown with options to replace or remove it.
  */
 export function PhotoField({ photo, onChange }: Props) {
-  const inputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+  const libraryInputRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string>()
   const [isResizing, setIsResizing] = useState(false)
   const [cropping, setCropping] = useState<Cropping | null>(null)
@@ -103,9 +104,22 @@ export function PhotoField({ photo, onChange }: Props) {
         Photo of the card
         <span className="text-foreground/50 text-xs ml-1">(optional)</span>
       </legend>
-      {/* Lets the phone offer the camera or the photo library. */}
+      {/*
+       * Separate inputs for the camera and the library: with a single image input the phone decides
+       * what to offer, and recent Android opens its photo picker, which has no camera.
+       */}
       <input
-        ref={inputRef}
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        tabIndex={-1}
+        aria-hidden="true"
+        onChange={(e) => handleChosen(e.currentTarget)}
+      />
+      <input
+        ref={libraryInputRef}
         type="file"
         accept="image/*"
         className="hidden"
@@ -122,18 +136,28 @@ export function PhotoField({ photo, onChange }: Props) {
           variant="secondary"
           size="small"
           disabled={isResizing}
-          onClick={() => inputRef.current?.click()}
+          onClick={() => cameraInputRef.current?.click()}
         >
           <Camera className="w-4 h-4" aria-hidden="true" />
-          {photo ? 'Replace photo' : 'Add photo'}
+          Take photo
         </Button>
-        {photo && (
-          <Button type="button" variant="secondary" size="small" onClick={() => onChange(null)}>
-            <Trash2 className="w-4 h-4" aria-hidden="true" />
-            Remove photo
-          </Button>
-        )}
+        <Button
+          type="button"
+          variant="secondary"
+          size="small"
+          disabled={isResizing}
+          onClick={() => libraryInputRef.current?.click()}
+        >
+          <Images className="w-4 h-4" aria-hidden="true" />
+          Choose photo
+        </Button>
       </div>
+      {photo && (
+        <Button type="button" variant="secondary" size="small" onClick={() => onChange(null)}>
+          <Trash2 className="w-4 h-4" aria-hidden="true" />
+          Remove photo
+        </Button>
+      )}
       {error && (
         <p role="alert" className="text-red-500 text-xs">
           {error}
