@@ -14,6 +14,9 @@ A simple, privacy-first loyalty and membership card manager. Scan your physical 
 - **Manual entry** — type in the card number and select the format if scanning isn't an option
 - **Digital wallet** — display your card as a barcode or QR code for scanning at checkout
 - **Favorites** — star cards to mark the ones you use most
+- **Sort** — by name, or with the cards you opened most recently first
+- **Notes** — keep a PIN, membership tier or expiry date with a card, hidden until tapped
+- **Card photos** — attach a photo of the card for checkouts that want to see it
 - **Fuzzy search** — find cards by name or card number
 - **Share** — share the card number as text or the barcode as an image (where supported by the browser)
 - **Copy** — copy the raw card value to clipboard in one tap
