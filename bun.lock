@@ -11,7 +11,7 @@
         "@zxing/library": "^0.23.0",
         "bwip-js": "^4.11.4",
         "idb-keyval": "^6.3.0",
-        "lucide-preact": "^1.48.0",
+        "lucide-preact": "^1.61.0",
         "preact": "^10.29.8",
         "tailwind-variants": "^3.3.1",
       },
@@ -817,7 +817,7 @@
 
     "lru-cache": ["lru-cache@5.1.1", "", { "dependencies": { "yallist": "^3.0.2" } }, "sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w=="],
 
-    "lucide-preact": ["lucide-preact@1.48.0", "", { "peerDependencies": { "preact": "^10.27.2" } }, "sha512-npxBnKSjDvhlPdqWDyQRO3KRJdfA3QtBpkgiGvMAuik8LtCMPuxrrH6Q/DPYcy2a25EDtzkZxAgzgHuvhTm5PQ=="],
+    "lucide-preact": ["lucide-preact@1.61.0", "", { "peerDependencies": { "preact": "^10.27.2 || ^11.0.0-0" } }, "sha512-yrHcfgqY2Fa70c+7b23jcSj1C/O7TEFgZRSBWtQdvaqq02EBpG227mhKi9ClNDSELjxGFvxNwfEpB0c+0Xb91Q=="],
 
     "lz-string": ["lz-string@1.5.0", "", { "bin": { "lz-string": "bin/bin.js" } }, "sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ=="],
 
