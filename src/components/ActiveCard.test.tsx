@@ -5,14 +5,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Card } from '../types/Card.type'
 
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
-import { updateCardById } from '../store'
+import { activeCardId, isDeleteConfirmVisible, updateCardById } from '../store'
 import { ActiveCard } from './ActiveCard'
+
+const idb = vi.hoisted(() => ({ del: vi.fn(async () => {}) }))
 
 vi.mock('idb-keyval', () => ({
   createStore: () => ({}),
   get: async () => undefined,
   set: async () => {},
   update: async () => {},
+  del: idb.del,
   keys: async () => [],
   getMany: async () => [],
 }))
@@ -239,5 +242,26 @@ describe('ActiveCard photo after an edit', () => {
     await updateCardById(card.id, card, photo)
 
     expect(await screen.findByRole('img', { name: 'Photo of Grocery' })).toBeTruthy()
+  })
+})
+
+describe('ActiveCard failed delete', () => {
+  afterEach(() => {
+    cleanup()
+    activeCardId.value = null
+    vi.restoreAllMocks()
+  })
+
+  it("keeps the confirmation open and says the card couldn't be deleted", async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    idb.del.mockRejectedValueOnce(new Error('QuotaExceededError'))
+    activeCardId.value = card.id
+    render(<ActiveCard card={card} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Delete card' }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+
+    expect(await screen.findByText("The card couldn't be deleted. Try again.")).toBeTruthy()
+    expect(isDeleteConfirmVisible.value).toBe(true)
   })
 })

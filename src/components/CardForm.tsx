@@ -29,14 +29,19 @@ interface Props {
   closeLabel: string
   /** The card being edited. Leave out to create a new card. */
   initialCard?: Card
-  /** Called with the card, and its photo change: a new photo, null to remove it, or undefined. */
-  onSave: (card: Card, photo: PhotoChange) => void
+  /**
+   * Called with the card, and its photo change: a new photo, null to remove it, or undefined. If it
+   * rejects, the form stays as it is and says the card couldn't be saved.
+   */
+  onSave: (card: Card, photo: PhotoChange) => Promise<void>
   onClose: () => void
 }
 
 /** Form for creating or editing a card, with barcode scanning and manual entry. */
 export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Props) {
   const titleId = useId()
+  // Chosen once, so trying again after a failed save can't store the same new card twice.
+  const [cardId] = useState(() => initialCard?.id ?? crypto.randomUUID())
   const [name, setName] = useState(initialCard?.name ?? '')
   const [barcodeValue, setBarcodeValue] = useState(initialCard?.barcodeValue ?? '')
   const [format, setFormat] = useState<CodeFormat>(initialCard?.format ?? BarcodeFormat.CODE_128)
@@ -57,6 +62,7 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
   const [invalidValueError, setInvalidValueError] = useState<string>()
   const [isUnsupportedScan, setIsUnsupportedScan] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [saveError, setSaveError] = useState(false)
   const dialogRef = useFocusTrap<HTMLDivElement>(true)
 
   const { cameraState, cameraError, videoRef, start, stop } = useBarcodeScanner({
@@ -89,7 +95,7 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
     stop()
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const nextErrors = {
       name: !name,
       barcodeValue: !barcodeValue,
@@ -108,19 +114,25 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
     // Keeps fields the form doesn't edit, and leaves out an empty note rather than storing "".
     const { note: _previousNote, ...unedited } = initialCard ?? {}
     const trimmedNote = note.trim()
-    onSave(
-      {
-        ...unedited,
-        id: initialCard?.id ?? crypto.randomUUID(),
-        name,
-        barcodeValue,
-        format: Number(format) as CodeFormat,
-        isFavorite: initialCard?.isFavorite ?? false,
-        color,
-        ...(trimmedNote && { note: trimmedNote }),
-      },
-      photoChange,
-    )
+    setSaveError(false)
+    try {
+      await onSave(
+        {
+          ...unedited,
+          id: cardId,
+          name,
+          barcodeValue,
+          format: Number(format) as CodeFormat,
+          isFavorite: initialCard?.isFavorite ?? false,
+          color,
+          ...(trimmedNote && { note: trimmedNote }),
+        },
+        photoChange,
+      )
+    } catch (err) {
+      console.error('Saving the card failed:', err)
+      setSaveError(true)
+    }
   }
 
   const handleClose = () => {
@@ -257,9 +269,16 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
       />
 
       {!showScanner && (
-        <Button type="submit" className="mt-auto" onClick={handleSubmit}>
-          Save Card
-        </Button>
+        <div className="mt-auto flex flex-col gap-2">
+          {saveError && (
+            <p role="alert" className="text-red-500 text-sm text-center">
+              The card couldn't be saved. Try again.
+            </p>
+          )}
+          <Button type="submit" onClick={handleSubmit}>
+            Save Card
+          </Button>
+        </div>
       )}
     </div>
   )

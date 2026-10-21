@@ -5,7 +5,7 @@ import { CardForm } from './CardForm'
 
 interface EditCardFormProps {
   initialCard: Card
-  onSave: (card: Card, photo: PhotoChange) => void
+  onSave: (card: Card, photo: PhotoChange) => Promise<void>
   onClose: () => void
 }
 

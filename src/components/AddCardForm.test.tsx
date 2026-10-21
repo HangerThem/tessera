@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/preact'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/preact'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { BarcodeScannerOptions } from '../barcodeScanner'
@@ -357,5 +357,36 @@ describe('AddCardForm photo', () => {
 
     expect(screen.queryByRole('img', { name: 'Card photo' })).toBeNull()
     expect(onSave.mock.calls[0][1]).toBeUndefined()
+  })
+})
+
+describe('AddCardForm failed save', () => {
+  afterEach(cleanup)
+
+  it("keeps the form open and says the card couldn't be saved", async () => {
+    const { onSave } = renderForm()
+    onSave.mockRejectedValueOnce(new Error('QuotaExceededError'))
+    fillIn()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+
+    expect(await screen.findByText("The card couldn't be saved. Try again.")).toBeTruthy()
+    expect(barcodeInput()?.value).toBe('12345678')
+  })
+
+  it('saves the same card again when trying again, so a partly saved card is not duplicated', async () => {
+    const { onSave } = renderForm()
+    onSave.mockRejectedValueOnce(new Error('QuotaExceededError'))
+    fillIn()
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+    await screen.findByText("The card couldn't be saved. Try again.")
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save Card' }))
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(2))
+    expect(onSave.mock.calls[1][0].id).toBe(onSave.mock.calls[0][0].id)
+    await waitFor(() =>
+      expect(screen.queryByText("The card couldn't be saved. Try again.")).toBeNull(),
+    )
   })
 })

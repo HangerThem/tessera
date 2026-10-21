@@ -119,6 +119,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
   const [canShareText, setCanShareText] = useState(false)
   const [canShareFiles, setCanShareFiles] = useState(false)
   const [justCopied, setJustCopied] = useState(false)
+  const [deleteError, setDeleteError] = useState(false)
   const dialogRef = useFocusTrap<HTMLDivElement>(true)
   const confirmRef = useFocusTrap<HTMLDivElement>(isDeleteConfirmVisible.value)
 
@@ -188,6 +189,16 @@ export function ActiveCard({ card }: ActiveCardProps) {
     }
   }
 
+  const handleDelete = async () => {
+    setDeleteError(false)
+    try {
+      await deleteCard(card.id)
+    } catch (err) {
+      console.error('Deleting the card failed:', err)
+      setDeleteError(true)
+    }
+  }
+
   useEffect(() => {
     document.body.style.overflow = 'hidden'
 
@@ -213,6 +224,11 @@ export function ActiveCard({ card }: ActiveCardProps) {
             <p className="text-sm text-foreground/70 mt-2">
               This action will permanently delete the card "{card.name}". This cannot be undone.
             </p>
+            {deleteError && (
+              <p role="alert" className="text-red-500 text-sm mt-2">
+                The card couldn't be deleted. Try again.
+              </p>
+            )}
             <div className="flex gap-2 mt-4 justify-end">
               <Button
                 variant="primary"
@@ -222,7 +238,7 @@ export function ActiveCard({ card }: ActiveCardProps) {
                 <XIcon className="w-4 h-4" />
                 Cancel
               </Button>
-              <Button variant="secondary" size="small" onClick={() => deleteCard(card.id)}>
+              <Button variant="secondary" size="small" onClick={handleDelete}>
                 <Trash2 className="w-4 h-4" />
                 Delete
               </Button>
@@ -261,7 +277,10 @@ export function ActiveCard({ card }: ActiveCardProps) {
             <button
               aria-label="Delete card"
               className="cursor-pointer p-2 rounded-lg hover:bg-black/10 transition-colors"
-              onClick={() => (isDeleteConfirmVisible.value = true)}
+              onClick={() => {
+                setDeleteError(false)
+                isDeleteConfirmVisible.value = true
+              }}
             >
               <Trash2 className="w-4 h-4" />
             </button>

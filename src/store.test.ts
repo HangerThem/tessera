@@ -12,18 +12,25 @@ const database = (store?: { name: string }) => {
 }
 const db = database({ name: 'tessera' })
 const photoDb = database({ name: 'tessera-photos' })
+// Set to make every write fail, like a full disk or storage cleared mid-session.
+const storage = vi.hoisted(() => ({ failWrites: false }))
+const write = <T>(fn: () => T): T => {
+  if (storage.failWrites) throw new Error('QuotaExceededError')
+  return fn()
+}
 
 vi.mock('idb-keyval', () => ({
   createStore: (name: string) => ({ name }),
   get: async (key: string, store?: { name: string }) => database(store).get(key),
   set: async (key: string, value: unknown, store?: { name: string }) =>
-    void database(store).set(key, value),
-  del: async (key: string, store?: { name: string }) => void database(store).delete(key),
+    write(() => void database(store).set(key, value)),
+  del: async (key: string, store?: { name: string }) =>
+    write(() => void database(store).delete(key)),
   keys: async (store?: { name: string }) => [...database(store).keys()],
   getMany: async (keys: string[], store?: { name: string }) =>
     keys.map((key) => database(store).get(key)),
   update: async (key: string, updater: (value: unknown) => unknown, store?: { name: string }) =>
-    void database(store).set(key, updater(database(store).get(key))),
+    write(() => void database(store).set(key, updater(database(store).get(key)))),
   entries: async (store?: { name: string }) => [...database(store).entries()],
 }))
 
@@ -31,7 +38,11 @@ const {
   activeCardId,
   cards,
   deleteCard,
+  editCardId,
+  favoriteCard,
   importCards,
+  isAddCardFormVisible,
+  isDeleteConfirmVisible,
   loadCards,
   refreshCards,
   saveCard,
@@ -202,5 +213,64 @@ describe('photos', () => {
 
     expect(photoDb.has('card-1')).toBe(false)
     expect(photoDb.get('card-2')).toBe(imported)
+  })
+})
+
+describe('failed writes', () => {
+  beforeEach(async () => {
+    storage.failWrites = false
+    activeCardId.value = null
+    db.clear()
+    db.set('card-1', card('card-1', 'Grocery'))
+    await refreshCards()
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    storage.failWrites = false
+    activeCardId.value = null
+    editCardId.value = null
+    isAddCardFormVisible.value = false
+    isDeleteConfirmVisible.value = false
+    vi.restoreAllMocks()
+  })
+
+  it('keep the add form open when a new card fails to save', async () => {
+    isAddCardFormVisible.value = true
+    storage.failWrites = true
+
+    await expect(saveCard(card('card-2', 'Library'))).rejects.toThrow()
+
+    expect(isAddCardFormVisible.value).toBe(true)
+  })
+
+  it('keep the edit form and the card open when an edit fails to save', async () => {
+    activeCardId.value = 'card-1'
+    editCardId.value = 'card-1'
+    storage.failWrites = true
+
+    await expect(updateCardById('card-1', card('card-1', 'Renamed'))).rejects.toThrow()
+
+    expect(editCardId.value).toBe('card-1')
+    expect(activeCardId.value).toBe('card-1')
+  })
+
+  it('keep the delete confirmation and the card open when deleting fails', async () => {
+    activeCardId.value = 'card-1'
+    isDeleteConfirmVisible.value = true
+    storage.failWrites = true
+
+    await expect(deleteCard('card-1')).rejects.toThrow()
+
+    expect(isDeleteConfirmVisible.value).toBe(true)
+    expect(activeCardId.value).toBe('card-1')
+  })
+
+  it('roll back a favourite that could not be stored', async () => {
+    storage.failWrites = true
+
+    await favoriteCard('card-1')
+
+    expect(cards.value[0].isFavorite).toBe(false)
   })
 })
