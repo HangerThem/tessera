@@ -221,14 +221,22 @@ export async function importCards(
 
 /**
  * Toggles a card's favorite status in-memory first for instant UI feedback,
- * then persists in the background.
+ * then persists in the background. If that fails, the star is set back, so the list never shows a
+ * state that isn't stored.
  */
 export async function favoriteCard(id: string): Promise<void> {
   const card = cards.value.find((c) => c.id === id)
   if (!card) return
 
-  cards.value = cards.value.map((c) => (c.id === id ? { ...c, isFavorite: !c.isFavorite } : c))
-  await updateCard(id, { isFavorite: !card.isFavorite })
+  const setFavorite = (isFavorite: boolean) =>
+    (cards.value = cards.value.map((c) => (c.id === id ? { ...c, isFavorite } : c)))
+  setFavorite(!card.isFavorite)
+  try {
+    await updateCard(id, { isFavorite: !card.isFavorite })
+  } catch (err) {
+    console.error('Saving the favourite failed:', err)
+    setFavorite(card.isFavorite)
+  }
 }
 
 /**
