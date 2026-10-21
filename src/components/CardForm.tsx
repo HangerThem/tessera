@@ -8,12 +8,8 @@ import { BarcodeFormat, type CodeFormat, QRCodeFormat } from '../enums/codeForma
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 import { getPhoto } from '../photos'
-import {
-  BARCODE_FORMATS,
-  formatLabel,
-  QR_CODE_FORMATS,
-  validateBarcodeValue,
-} from '../utils/barcode'
+import { BARCODE_FORMATS, formatLabel, QR_CODE_FORMATS } from '../utils/barcode'
+import { validateBarcodeValue } from '../utils/barcodeRendering'
 import { holdKeyboardFocus } from '../utils/keyboard'
 import { BarcodeScannerView } from './BarcodeScannerView'
 import { PhotoField } from './PhotoField'

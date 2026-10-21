@@ -31,14 +31,12 @@ import {
   photoRevision,
 } from '../store'
 import {
-  canDisplayLegibly,
   formatBarcodeValue,
   formatLabel,
   isQRCodeFormat,
   mapZXingFormatToBWIPJS,
-  renderBarcode,
-  validateBarcodeValue,
 } from '../utils/barcode'
+import { canDisplayLegibly, renderBarcode, validateBarcodeValue } from '../utils/barcodeRendering'
 import { contrastColor, isDarkColor } from '../utils/color'
 import { BarcodeCanvas } from './BarcodeCanvas'
 import { Button } from './ui/Button'

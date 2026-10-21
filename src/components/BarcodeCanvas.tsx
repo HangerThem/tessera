@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from 'preact/hooks'
 import { tv } from 'tailwind-variants'
 
 import { BarcodeFormat, type QRCodeFormat } from '../enums/codeFormats'
-import { isQRCodeFormat, mapZXingFormatToBWIPJS, renderBarcode } from '../utils/barcode'
+import { isQRCodeFormat, mapZXingFormatToBWIPJS } from '../utils/barcode'
+import { renderBarcode } from '../utils/barcodeRendering'
 
 type RenderBarcodeProps = {
   value: string
