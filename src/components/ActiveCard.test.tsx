@@ -1,10 +1,11 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/preact'
 import { toCanvas, toSVG } from 'bwip-js/browser'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Card } from '../types/Card.type'
 
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
+import { loadBarcodeRendering } from '../hooks/useBarcodeRendering'
 import { activeCardId, isDeleteConfirmVisible, updateCardById } from '../store'
 import { ActiveCard } from './ActiveCard'
 
@@ -45,6 +46,9 @@ const qrCard = (barcodeValue: string): Card => ({
   barcodeValue,
   format: QRCodeFormat.QR_CODE,
 })
+
+// Loaded up front, so codes are drawn and checked on the first render.
+beforeAll(loadBarcodeRendering)
 
 const shareImageButton = () => screen.getByRole('button', { name: 'Share as Image' })
 
