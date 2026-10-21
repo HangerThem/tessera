@@ -1,10 +1,11 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/preact'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import type { BarcodeScannerOptions } from '../barcodeScanner'
 import type { CameraError } from '../types/Camera.type'
 
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
+import { loadBarcodeRendering } from '../hooks/useBarcodeRendering'
 import { cropCard, findCardInPhoto, resizePhoto } from '../utils/image'
 import { AddCardForm } from './AddCardForm'
 
@@ -42,6 +43,9 @@ const deniedError: CameraError = {
   message: 'Allow camera access, then try again.',
   retryable: true,
 }
+
+// Loaded up front, so values are checked as soon as the form is saved.
+beforeAll(loadBarcodeRendering)
 
 const barcodeInput = () => screen.queryByLabelText('Barcode number') as HTMLInputElement | null
 

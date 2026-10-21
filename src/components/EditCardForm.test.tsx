@@ -1,11 +1,12 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/preact'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import type { BarcodeScannerOptions } from '../barcodeScanner'
 import type { CameraError } from '../types/Camera.type'
 import type { Card } from '../types/Card.type'
 
 import { BarcodeFormat } from '../enums/codeFormats'
+import { loadBarcodeRendering } from '../hooks/useBarcodeRendering'
 import { EditCardForm } from './EditCardForm'
 
 const scanners = vi.hoisted(
@@ -43,6 +44,9 @@ const inUseError: CameraError = {
   message: 'Close the other app and try again.',
   retryable: true,
 }
+
+// Loaded up front, so values are checked as soon as the form is saved.
+beforeAll(loadBarcodeRendering)
 
 const barcodeInput = () => screen.queryByLabelText('Barcode number') as HTMLInputElement | null
 
