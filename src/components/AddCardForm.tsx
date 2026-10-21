@@ -4,7 +4,7 @@ import type { Card } from '../types/Card.type'
 import { CardForm } from './CardForm'
 
 interface Props {
-  onSave: (card: Card, photo: PhotoChange) => void
+  onSave: (card: Card, photo: PhotoChange) => Promise<void>
   onClose: () => void
 }
 
