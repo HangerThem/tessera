@@ -1,25 +1,26 @@
-import { BarcodeFormat as BarcodeFormatZxing } from '@zxing/library'
+// ZXing's format ids, written out so the app doesn't load ZXing until it scans. Cards and backups
+// store these numbers, so they must not change.
 
 export enum BarcodeFormat {
-  CODABAR = BarcodeFormatZxing.CODABAR,
-  CODE_39 = BarcodeFormatZxing.CODE_39,
-  CODE_93 = BarcodeFormatZxing.CODE_93,
-  CODE_128 = BarcodeFormatZxing.CODE_128,
-  EAN_8 = BarcodeFormatZxing.EAN_8,
-  EAN_13 = BarcodeFormatZxing.EAN_13,
-  ITF = BarcodeFormatZxing.ITF,
-  PDF_417 = BarcodeFormatZxing.PDF_417,
-  UPC_A = BarcodeFormatZxing.UPC_A,
-  UPC_E = BarcodeFormatZxing.UPC_E,
+  CODABAR = 1,
+  CODE_39 = 2,
+  CODE_93 = 3,
+  CODE_128 = 4,
+  EAN_8 = 6,
+  EAN_13 = 7,
+  ITF = 8,
+  PDF_417 = 10,
+  UPC_A = 14,
+  UPC_E = 15,
 }
 
 /** Any format a card's code can be in. */
 export type CodeFormat = BarcodeFormat | QRCodeFormat
 
 export enum QRCodeFormat {
-  AZTEC = BarcodeFormatZxing.AZTEC,
-  DATA_MATRIX = BarcodeFormatZxing.DATA_MATRIX,
-  QR_CODE = BarcodeFormatZxing.QR_CODE,
-  MICRO_QR_CODE = BarcodeFormatZxing.MICRO_QR_CODE,
-  MAXICODE = BarcodeFormatZxing.MAXICODE,
+  AZTEC = 0,
+  DATA_MATRIX = 5,
+  QR_CODE = 11,
+  MICRO_QR_CODE = 17,
+  MAXICODE = 9,
 }

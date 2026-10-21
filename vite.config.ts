@@ -76,17 +76,9 @@ export default defineConfig({
         display: 'standalone',
       },
       workbox: {
-        globPatterns: ['**/*.{css,html,ico,png,svg,webmanifest,woff2}', '**/index-*.js'],
-        runtimeCaching: [
-          {
-            urlPattern: /\/assets\/(zxing|bwip)-.*\.js$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'heavy-chunks',
-              expiration: { maxAgeSeconds: 60 * 60 * 24 * 30 },
-            },
-          },
-        ],
+        // Includes the chunks loaded on demand (ZXing, bwip-js), so a card can be shown or scanned
+        // offline even if it was never opened online. They download in the background, not at startup.
+        globPatterns: ['**/*.{css,html,ico,js,png,svg,webmanifest,woff2}'],
         cleanupOutdatedCaches: true,
       },
     }),

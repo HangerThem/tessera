@@ -20,6 +20,7 @@ import { tv } from 'tailwind-variants'
 import type { Card } from '../types/Card.type'
 
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
+import { useBarcodeRendering } from '../hooks/useBarcodeRendering'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 import { getPhoto } from '../photos'
 import {
@@ -31,13 +32,10 @@ import {
   photoRevision,
 } from '../store'
 import {
-  canDisplayLegibly,
   formatBarcodeValue,
   formatLabel,
   isQRCodeFormat,
   mapZXingFormatToBWIPJS,
-  renderBarcode,
-  validateBarcodeValue,
 } from '../utils/barcode'
 import { contrastColor, isDarkColor } from '../utils/color'
 import { BarcodeCanvas } from './BarcodeCanvas'
@@ -85,14 +83,22 @@ export function ActiveCard({ card }: ActiveCardProps) {
   const formatFor = (kind: 'barcode' | 'qr') =>
     kind === ownKind ? card.format : kind === 'qr' ? QRCodeFormat.QR_CODE : BarcodeFormat.CODE_128
   const displayedFormat = formatFor(displayFormat)
+  // Both stay false until bwip-js has loaded and can check the value.
+  const rendering = useBarcodeRendering()
   const canShowOtherKind = useMemo(
-    () => canDisplayLegibly(formatFor(ownKind === 'qr' ? 'barcode' : 'qr'), card.barcodeValue),
+    () =>
+      rendering?.canDisplayLegibly(
+        formatFor(ownKind === 'qr' ? 'barcode' : 'qr'),
+        card.barcodeValue,
+      ) ?? false,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [card.format, card.barcodeValue],
+    [card.format, card.barcodeValue, rendering],
   )
   const canRenderDisplayed = useMemo(
-    () => validateBarcodeValue(displayedFormat, card.barcodeValue) === undefined,
-    [displayedFormat, card.barcodeValue],
+    () =>
+      rendering !== undefined &&
+      rendering.validateBarcodeValue(displayedFormat, card.barcodeValue) === undefined,
+    [displayedFormat, card.barcodeValue, rendering],
   )
   const isDark = isDarkColor(card.color ?? '#fff')
   // Hidden by default: this screen is shown to staff at checkout, and notes can hold a PIN.
@@ -143,13 +149,14 @@ export function ActiveCard({ card }: ActiveCardProps) {
   }
 
   const handleShareImage = async () => {
+    if (!rendering) return
     const offscreen = document.createElement('canvas')
     const isQRCode = displayFormat === 'qr'
     const format = mapZXingFormatToBWIPJS(displayedFormat)
 
     try {
       // Drawn as for a 3x phone screen, so the image stays sharp wherever it's shown.
-      renderBarcode({
+      rendering.renderBarcode({
         element: offscreen,
         value: card.barcodeValue,
         format,

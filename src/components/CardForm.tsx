@@ -5,15 +5,11 @@ import type { PhotoChange } from '../store'
 import type { Card } from '../types/Card.type'
 
 import { BarcodeFormat, type CodeFormat, QRCodeFormat } from '../enums/codeFormats'
+import { loadBarcodeRendering, useBarcodeRendering } from '../hooks/useBarcodeRendering'
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 import { getPhoto } from '../photos'
-import {
-  BARCODE_FORMATS,
-  formatLabel,
-  QR_CODE_FORMATS,
-  validateBarcodeValue,
-} from '../utils/barcode'
+import { BARCODE_FORMATS, formatLabel, QR_CODE_FORMATS } from '../utils/barcode'
 import { holdKeyboardFocus } from '../utils/keyboard'
 import { BarcodeScannerView } from './BarcodeScannerView'
 import { PhotoField } from './PhotoField'
@@ -35,6 +31,20 @@ interface Props {
    */
   onSave: (card: Card, photo: PhotoChange) => Promise<void>
   onClose: () => void
+}
+
+/**
+ * Checks a value once bwip-js has loaded, for a save before it finished. If it can't be loaded, e.g.
+ * offline before it was ever cached, the value isn't checked rather than keeping the card from being
+ * saved. The card view explains a code it can't show.
+ */
+async function validateOnceLoaded(format: CodeFormat, value: string): Promise<string | undefined> {
+  try {
+    return (await loadBarcodeRendering()).validateBarcodeValue(format, value)
+  } catch (err) {
+    console.error('Loading bwip-js failed, so the value is saved unchecked:', err)
+    return undefined
+  }
 }
 
 /** Form for creating or editing a card, with barcode scanning and manual entry. */
@@ -63,6 +73,8 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
   const [isUnsupportedScan, setIsUnsupportedScan] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [saveError, setSaveError] = useState(false)
+  // Starts loading bwip-js as the form opens, so the value can be checked on save.
+  const rendering = useBarcodeRendering()
   const dialogRef = useFocusTrap<HTMLDivElement>(true)
 
   const { cameraState, cameraError, videoRef, start, stop } = useBarcodeScanner({
@@ -105,7 +117,9 @@ export function CardForm({ title, closeLabel, initialCard, onSave, onClose }: Pr
     setErrors(nextErrors)
     if (Object.values(nextErrors).some(Boolean)) return
 
-    const invalidReason = validateBarcodeValue(format, barcodeValue)
+    const invalidReason = rendering
+      ? rendering.validateBarcodeValue(format, barcodeValue)
+      : await validateOnceLoaded(format, barcodeValue)
     setInvalidValueError(
       invalidReason && `${invalidReason}. Check the number or change the format.`,
     )
