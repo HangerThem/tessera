@@ -150,37 +150,44 @@ export async function refreshCards(): Promise<void> {
   if (cards.value.length > 0) void requestPersistentStorage()
 }
 
-/** Persists a new card and refreshes the list. */
+/**
+ * Persists a new card and refreshes the list. The form is closed only once the card is stored, so
+ * a failed write rejects with the form still open and nothing typed is lost.
+ */
 export async function saveCard(card: Card, photo?: PhotoChange): Promise<void> {
+  await saveCardToDB(card)
+  await applyPhotoChange(card.id, photo)
   isAddCardFormVisible.value = false
   editCardId.value = null
   activeCardId.value = null
-  await saveCardToDB(card)
-  await applyPhotoChange(card.id, photo)
   await refreshCards()
 }
 
 /**
  * Saves an edited card in place of the stored one and refreshes the list. The whole card is
- * replaced, so a field removed in the form, like a cleared note, stays removed.
+ * replaced, so a field removed in the form, like a cleared note, stays removed. Like `saveCard`,
+ * the form stays open if the write fails.
  */
 export async function updateCardById(id: string, card: Card, photo?: PhotoChange): Promise<void> {
-  editCardId.value = null
   await saveCardToDB({ ...card, id })
   await applyPhotoChange(id, photo)
+  editCardId.value = null
   await refreshCards()
   // After saving, so recording the use can't write the old card back over the edit.
   activeCardId.value = id
 }
 
-/** Deletes a card and its photo, and refreshes the list. */
+/**
+ * Deletes a card and its photo, and refreshes the list. The confirmation and the card are closed
+ * only once the card is deleted, so a failed delete rejects with them still open.
+ */
 export async function deleteCard(id: string): Promise<void> {
+  await deleteCardsFromDB([id])
+  await deletePhoto(id)
   if (activeCardId.value === id) {
     activeCardId.value = null
   }
   isDeleteConfirmVisible.value = false
-  await deleteCardsFromDB([id])
-  await deletePhoto(id)
   await refreshCards()
 }
 
