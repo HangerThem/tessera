@@ -1,5 +1,35 @@
 # Changelog
 
+## [v0.4.1] - 2026-10-21
+
+### Chores
+
+- Update lucide-preact, oxlint and vite (#84)
+
+
+- Upgrade to Preact 11 (#85)
+
+
+- Upgrade to TypeScript 7 (#86)
+
+
+- Upgrade to vite-plugin-pwa 2 (#87)
+
+
+
+### Fixed
+
+- Format check fails locally on git-ignored files (#81)
+
+
+- Release notes need manual fixes (#82)
+
+
+- Saving, editing or deleting a card fails silently when storage fails (#83)
+
+
+- App loads ZXing and bwip-js on every start (#88)
+
 ## [v0.4.0] - 2026-10-18
 
 ### Added
