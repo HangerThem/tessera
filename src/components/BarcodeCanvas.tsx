@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'preact/hooks'
 import { tv } from 'tailwind-variants'
 
 import { BarcodeFormat, type QRCodeFormat } from '../enums/codeFormats'
+import { useBarcodeRendering } from '../hooks/useBarcodeRendering'
 import { isQRCodeFormat, mapZXingFormatToBWIPJS } from '../utils/barcode'
-import { renderBarcode } from '../utils/barcodeRendering'
 
 type RenderBarcodeProps = {
   value: string
@@ -43,10 +43,11 @@ export function BarcodeCanvas({ value, format, size = 'normal', label }: RenderB
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [hasError, setHasError] = useState(false)
   const isQRCode = isQRCodeFormat(format)
+  const rendering = useBarcodeRendering()
 
   useEffect(() => {
     const el = canvasRef.current
-    if (!el) return
+    if (!el || !rendering) return
 
     const bwipjsFormat = mapZXingFormatToBWIPJS(format)
 
@@ -56,7 +57,7 @@ export function BarcodeCanvas({ value, format, size = 'normal', label }: RenderB
     if (!bwipjsFormat) return
 
     try {
-      renderBarcode({
+      rendering.renderBarcode({
         element: el,
         value,
         format: bwipjsFormat,
@@ -71,7 +72,7 @@ export function BarcodeCanvas({ value, format, size = 'normal', label }: RenderB
       setHasError(true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, format])
+  }, [value, format, rendering])
 
   return (
     <div className={wrapper({ format: isQRCode ? 'qrcode' : 'barcode', size })} ref={wrapperRef}>

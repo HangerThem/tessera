@@ -1,14 +1,18 @@
 import { cleanup, render, screen } from '@testing-library/preact'
 import { toCanvas } from 'bwip-js/browser'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
+import { loadBarcodeRendering } from '../hooks/useBarcodeRendering'
 import { BarcodeCanvas } from './BarcodeCanvas'
 
 // happy-dom has no 2D canvas context, so bwip-js can't draw.
 vi.mock('bwip-js/browser', () => ({ toCanvas: vi.fn() }))
 
 describe('BarcodeCanvas', () => {
+  // Loaded up front, so codes are drawn on the first render.
+  beforeAll(loadBarcodeRendering)
+
   afterEach(() => {
     cleanup()
     vi.mocked(toCanvas).mockReset()
