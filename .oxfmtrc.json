@@ -10,7 +10,7 @@
   "arrowParens": "always",
   "endOfLine": "lf",
   "insertFinalNewline": true,
-  "ignorePatterns": ["node_modules/**", "public/**", "dist/**", "CHANGELOG.md"],
+  "ignorePatterns": ["node_modules/**", "public/**", "dist/**", "CHANGELOG.md", ".claude/**"],
   "sortImports": {
     "groups": [
       "type-import",
