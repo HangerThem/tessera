@@ -111,7 +111,7 @@ describe('useBarcodeScanner', () => {
     const { result, unmount } = renderScanner()
     result.current.start()
 
-    unmount()
+    act(() => unmount())
 
     expect(scanners[0].stop).toHaveBeenCalled()
   })
