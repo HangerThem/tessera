@@ -9,7 +9,7 @@ import { Button } from './ui/Button'
 interface Props {
   cameraState: CameraState
   cameraError: CameraError | null
-  videoRef: RefObject<HTMLVideoElement>
+  videoRef: RefObject<HTMLVideoElement | null>
   onRetry: () => void
   /** Leave out where there's nothing to type in instead, e.g. for transfer codes. */
   onManualEntry?: () => void
