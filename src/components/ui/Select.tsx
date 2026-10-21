@@ -1,6 +1,8 @@
 import { useId } from 'preact/hooks'
 import { tv } from 'tailwind-variants'
 
+import type { DistributiveOmit } from '../../types/utility.type'
+
 const select = tv({
   slots: {
     root: 'flex flex-col gap-1',
@@ -27,7 +29,10 @@ const select = tv({
   },
 })
 
-type SelectProps = Omit<preact.InputHTMLAttributes<HTMLSelectElement>, 'size'> & {
+type SelectProps = DistributiveOmit<
+  preact.AccessibleSelectHTMLAttributes<HTMLSelectElement>,
+  'size'
+> & {
   label?: string | preact.JSX.Element
   error?: string
   size?: 'small' | 'medium' | 'large'
