@@ -18,6 +18,7 @@ filter_unconventional = true
 commit_parsers = [
   { message = "^feat", group = "Added" },
   { message = "^fix", group = "Fixed" },
+  { message = "^chore: release", skip = true },
   { message = "^chore", group = "Chores" },
   { message = "^refactor", group = "Changed" },
   { message = "^docs", group = "Documentation" },
