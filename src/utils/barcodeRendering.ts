@@ -5,7 +5,7 @@ import type { BarcodeFormat, QRCodeFormat } from '../enums/codeFormats'
 import { isQRCodeFormat, mapZXingFormatToBWIPJS } from './barcode'
 
 // Everything that needs bwip-js (about 900 kB), kept apart from the rest of the barcode utilities so
-// the card list doesn't need it.
+// the card list doesn't need it. Load it with useBarcodeRendering or loadBarcodeRendering.
 
 /**
  * Adjusts a stored value to what bwip-js needs to draw it. Codabar must start and end with A, B, C
