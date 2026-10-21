@@ -33,7 +33,7 @@
     "barcode-detector": "^3.2.2",
     "happy-dom": "^21.0.3",
     "oxfmt": "^0.66.0",
-    "oxlint": "^1.85.0",
+    "oxlint": "^1.89.0",
     "tailwindcss": "^4.3.3",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "~6.0.3",
